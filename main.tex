@@ -309,82 +309,39 @@ The optimal $\Tswitch$ for NLU is consistently high (late switch or pure sequent
 On QNLI, PiSSA slightly outperforms \portal{} (94.2 vs.\ 94.0), likely because QNLI's task structure is well-aligned with $\Wbase$'s principal components.
 
 %-----------------------------------------------------------------------------
-\subsection{Mathematical reasoning}
-\label{sec:math}
+\subsection{Natural language generation}
+\label{sec:nlg}
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
-\caption{Mathematical reasoning on LLaMA-2-7B fine-tuned on MetaMathQA (100K samples, 1 epoch). Evaluated on GSM8K and MATH test sets.}
-\label{tab:math}
+\caption{NLG results on LLaMA-2-7B across three task categories (100K training samples, 1 epoch each). \textbf{Math}: fine-tuned on MetaMathQA, evaluated on GSM8K and MATH. \textbf{Code}: fine-tuned on CodeFeedback, evaluated by pass@1 on HumanEval and MBPP. \textbf{Conv.}: fine-tuned on WizardLM, evaluated on MT-Bench (GPT-4 judge, scale 1--10). All methods use rank $r\!=\!8$ applied to all linear projections (0.30\% trainable params). Best in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:nlg}
 \centering
 \small
-\begin{tabular}{lccccc}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{l cc cc c}
 \toprule
-\textbf{Method} & \textbf{\#Params (\%)} & \textbf{Loss}$\downarrow$ & \textbf{GSM8K}$\uparrow$ & \textbf{MATH}$\uparrow$ \\
+& \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-6}
+\textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-LoRA   & 0.30 & 0.1974 & \textbf{53.1} & 7.54 \\
-DoRA   & 0.30 & 0.1967 & 50.9 & 7.46 \\
-PiSSA  & 0.30 & \underline{0.1906} & \underline{53.5} & \underline{7.76} \\
+LoRA~\citep{hu2022lora}   & \textbf{53.1} & 7.54 & 25.0 & 37.3 & -- \\
+DoRA~\citep{liu2024dora}  & 50.9 & 7.46 & -- & -- & -- \\
+PiSSA~\citep{meng2024pissa} & \underline{53.5} & \underline{7.76} & \textbf{26.8} & \textbf{39.9} & 6.07 \\
 \midrule
-\portal{} ($\Tswitch\!=\!0.8$) & 0.30 & \textbf{0.1948} & 51.3 & \textbf{8.18} \\
+\portal{} & 51.3 & \textbf{8.18} & \underline{25.6} & \underline{38.9} & \textbf{6.22} \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
+\vspace{-2mm}
 \end{table}
 
-Table~\ref{tab:math} shows that \portal{} achieves the highest MATH accuracy (8.18\%), outperforming PiSSA by +0.42 and LoRA by +0.64 points --- an 8.5\% relative improvement over LoRA.
-The optimal $\Tswitch = 0.8$ indicates that mathematical reasoning benefits from an extended sequential phase, during which the adapter deeply integrates with $\Wbase$'s latent reasoning pathways.
+Table~\ref{tab:nlg} presents NLG results across three task categories.
+\portal{} achieves the highest MATH accuracy (8.18\%, +0.42 over PiSSA) and the highest MT-Bench score (6.22, +0.15 over PiSSA), while remaining competitive on code generation.
+The optimal $\Tswitch$ varies by task: 0.8 for math, 0.5 for code and conversation (see Table~\ref{tab:ablation} for the full spectrum).
 
-On GSM8K, PiSSA achieves the top score (53.5\%) with LoRA close behind (53.1\%).
-This divergence between GSM8K and MATH reflects a task-structural difference: GSM8K requires arithmetic chain-of-thought that benefits from LoRA's exploratory initialization, while MATH demands multi-step symbolic reasoning that is better supported by \portal{}'s manifold-aware warm-up.
-
-%-----------------------------------------------------------------------------
-\subsection{Code generation}
-\label{sec:code}
-%-----------------------------------------------------------------------------
-
-\begin{table}[t]
-\caption{Code generation on LLaMA-2-7B fine-tuned on CodeFeedback (100K samples, 1 epoch). Evaluated by pass@1 on HumanEval and MBPP.}
-\label{tab:code}
-\centering
-\small
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Method} & \textbf{Loss}$\downarrow$ & \textbf{HumanEval}$\uparrow$ & \textbf{MBPP}$\uparrow$ \\
-\midrule
-LoRA   & 0.6214 & 25.0 & 37.3 \\
-PiSSA  & 0.6202 & \textbf{26.8} & \textbf{39.9} \\
-\midrule
-\portal{} ($\Tswitch\!=\!0.5$) & \textbf{0.6200} & \underline{25.6} & \underline{38.9} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\portal{} achieves the lowest eval loss and is competitive with PiSSA on code generation (Table~\ref{tab:code}), outperforming LoRA on both benchmarks.
-The intermediate optimal $\Tswitch = 0.5$ suggests that code tasks require a moderate sequential warm-up --- longer than NLG but shorter than NLU.
-
-%-----------------------------------------------------------------------------
-\subsection{Open-ended conversation}
-\label{sec:conversation}
-%-----------------------------------------------------------------------------
-
-\begin{table}[t]
-\caption{Conversational quality on LLaMA-2-7B fine-tuned on WizardLM (100K samples, 1 epoch). MT-Bench scored by GPT-4 judge (scale 1--10).}
-\label{tab:conversation}
-\centering
-\small
-\begin{tabular}{lccc}
-\toprule
-\textbf{Method} & \textbf{Loss}$\downarrow$ & \textbf{MT-Bench}$\uparrow$ \\
-\midrule
-PiSSA  & 0.6125 & 6.07 \\
-\midrule
-\portal{} ($\Tswitch\!=\!0.5$) & \textbf{0.6060} & \textbf{6.22} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\portal{} outperforms PiSSA in both eval loss and MT-Bench score (+0.15; Table~\ref{tab:conversation}).
-Conversation requires the model to maintain coherence and follow complex instructions --- capabilities deeply embedded in $\Wbase$'s representation structure that the sequential warm-up effectively preserves.
+On GSM8K, PiSSA and LoRA achieve higher scores (53.5\% and 53.1\%).
+This divergence between GSM8K and MATH reveals a task-structural difference: GSM8K's arithmetic chain-of-thought benefits from LoRA's broad exploration, while MATH's multi-step symbolic reasoning is better supported by \portal{}'s extended manifold-aware warm-up.
+For code generation, PiSSA's SVD-based initialization provides a slight edge on pass@1 metrics, though \portal{} achieves the lowest eval loss without requiring the expensive $O(d^3)$ initialization.
 
 %=============================================================================
 \section{Analysis}
