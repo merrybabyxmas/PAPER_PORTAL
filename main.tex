@@ -19,6 +19,7 @@
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{caption}
 \usepackage{bbm}
 
 % Theorem environments
@@ -358,11 +359,18 @@ Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning 
 \label{sec:analysis}
 %=============================================================================
 
-\subsection{The $\Tswitch$ spectrum}
+\subsection{The $\Tswitch$ Spectrum}
 \label{sec:ablation}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/tswitch_spectrum.pdf}
+\caption{The $\Tswitch$ spectrum on MetaMath (LLaMA-2-7B). \textbf{Left axis}: eval loss monotonically decreases with later switching, confirming universal optimization benefit. \textbf{Right axis}: downstream benchmarks exhibit task-dependent optima---MATH peaks at $\Tswitch\!=\!0.8$ while GSM8K favors $\Tswitch\!=\!0$ (LoRA). Even $\Tswitch\!=\!0.01$ (1\% of training) yields measurable loss improvement, demonstrating the \emph{micro-probe effect}.}
+\label{fig:spectrum}
+\end{figure}
+
 \begin{table}[t]
-\caption{Effect of $\Tswitch$ on MetaMath (LLaMA-2-7B). $\Tswitch = 0$ reduces to LoRA. Eval loss monotonically improves with later switching; MATH and GSM8K exhibit distinct task-dependent optima.}
+\caption{Detailed $\Tswitch$ spectrum on MetaMath (LLaMA-2-7B). $\Tswitch = 0$ reduces to standard LoRA.}
 \label{tab:ablation}
 \centering
 \small
@@ -381,37 +389,78 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:ablation} reveals three key patterns:
+Figure~\ref{fig:spectrum} and Table~\ref{tab:ablation} reveal three key patterns in the $\Tswitch$ spectrum:
 
 \paragraph{Monotonic loss improvement.}
-Eval loss decreases monotonically from 0.1974 ($\Tswitch = 0$) to 0.1948 ($\Tswitch = 0.8$), a consistent 1.3\% relative improvement, confirming that the sequential warm-up universally improves the optimization landscape.
+Eval loss decreases monotonically from 0.1974 ($\Tswitch = 0$) to 0.1948 ($\Tswitch = 0.8$), a consistent 1.3\% relative improvement. This confirms that any amount of sequential warm-up universally improves the optimization landscape by anchoring the adapter in the pretrained manifold.
 
 \paragraph{Task-dependent benchmark optima.}
 MATH accuracy peaks at $\Tswitch = 0.8$ (8.18\%), while GSM8K favors $\Tswitch = 0$ (53.1\%).
-This suggests that multi-step symbolic reasoning benefits from prolonged manifold interaction, while arithmetic tasks prefer LoRA's broader exploration.
+This divergence reflects a fundamental task-structural difference: MATH's multi-step symbolic reasoning benefits from prolonged manifold interaction, while GSM8K's arithmetic chain-of-thought benefits from LoRA's broader, unconstrained exploration.
 
 \paragraph{Micro-probe effect.}
-Even $\Tswitch = 0.01$ (1\% of training) improves eval loss from 0.1974 to 0.1962, demonstrating that a minimal sequential phase suffices to extract meaningful directional information from $\Wbase$.
+Even $\Tswitch = 0.01$ (merely 1\% of training) reduces eval loss from 0.1974 to 0.1962. This demonstrates that the sequential phase extracts meaningful directional information from $\Wbase$ within an extremely short window---acting as an ultra-fast ``compass calibration'' before entering parallel mode.
 
-\subsection{Task-intrinsic alignment}
+%-----------------------------------------------------------------------------
+\subsection{Task-Intrinsic Alignment}
 \label{sec:alignment}
+%-----------------------------------------------------------------------------
 
-The optimal $\Tswitch$ varies systematically across tasks, reflecting the alignment between the task and $\Wbase$'s manifold:
+\begin{figure}[t]
+\centering
+\begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/nlu_heatmap.pdf}
+    \captionof{figure}{NLU $\Tswitch$ heatmap (DeBERTa-v3-base). Bold borders indicate best per task. Later switching (or pure sequential) consistently dominates, confirming high alignment between NLU tasks and the pretrained manifold.}
+    \label{fig:nlu_heatmap}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/improvement_bar.pdf}
+    \captionof{figure}{Per-task improvement of \portal{} over the strongest baseline (LoRA or PiSSA). Green bars indicate tasks where \portal{} exceeds all baselines; red indicates underperformance.}
+    \label{fig:improvement}
+\end{minipage}
+\end{figure}
 
-\begin{itemize}
-    \item \textbf{High alignment} (NLU classification): $\Tswitch \to 1.0$. The pretrained features are directly useful; extended sequential exploitation is optimal.
-    \item \textbf{Moderate alignment} (code, conversation): $\Tswitch \approx 0.5$. The task builds upon pretrained knowledge but requires significant new directions.
-    \item \textbf{Low alignment} (novel reasoning): $\Tswitch \to 0.01$. A brief micro-probe extracts an initial directional signal before releasing the adapter to explore freely in parallel mode.
-\end{itemize}
+The optimal $\Tswitch$ varies systematically across tasks, providing geometric insight into the alignment between each task's intrinsic subspace and $\Wbase$'s manifold (Figures~\ref{fig:nlu_heatmap}--\ref{fig:improvement}):
 
-This positions $\Tswitch$ as a principled dial between \emph{knowledge retention} (high $\Tswitch$, exploiting what the model knows) and \emph{knowledge acquisition} (low $\Tswitch$, learning new representations).
+\paragraph{High alignment (NLU classification, $\Tswitch \to 1.0$).}
+For tasks like RTE, MRPC, and SST-2, the pretrained features are directly useful for classification.
+The heatmap in Figure~\ref{fig:nlu_heatmap} shows that performance increases monotonically with $\Tswitch$, with pure sequential mode achieving the best scores on 4 out of 5 tasks.
+Extended sequential exploitation preserves and leverages the semantic priors encoded in $\Wbase$.
 
-\subsection{Optimization dynamics at the switching boundary}
+\paragraph{Moderate alignment (code, conversation, $\Tswitch \approx 0.5$).}
+Code generation and conversation build upon pretrained knowledge but require substantial new representational capacity.
+A balanced $\Tswitch = 0.5$ provides enough manifold probing to identify the task-relevant subspace, followed by sufficient parallel training to explore novel directions.
 
-The Task-Isomorphic Projection ensures a smooth transition:
-(1)~By Proposition~\ref{prop:lossless}, the forward output is exactly preserved, so $\mathcal{L}(\Tswitch^-) = \mathcal{L}(\Tswitch^+)$ with no loss spike.
-(2)~The momentum reset prevents stale sequential-space curvature from corrupting parallel-phase updates.
-(3)~Symmetric splitting (Theorem~\ref{thm:condition}) equalizes gradient magnitudes, enabling both $\Bpar$ and $\Apar$ to receive informative gradients from the first post-switch step.
+\paragraph{Low alignment (novel reasoning, $\Tswitch \to 0.01$).}
+For tasks that deviate significantly from the pretrained distribution, over-constraining the adapter to $\Wbase$'s manifold can impede learning.
+In these cases, a minimal micro-probe ($\Tswitch = 0.01$) suffices to extract an initial directional signal before releasing the adapter to explore freely in parallel mode.
+
+This analysis positions $\Tswitch$ as a principled \emph{geometric dial} between knowledge retention (high $\Tswitch$) and knowledge acquisition (low $\Tswitch$), with the optimal setting directly reflecting the task-manifold alignment.
+
+%-----------------------------------------------------------------------------
+\subsection{Optimization Dynamics at the Switching Boundary}
+\label{sec:dynamics}
+%-----------------------------------------------------------------------------
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.6\linewidth]{figures/complexity_bar.pdf}
+\caption{SVD/initialization cost per linear layer on log scale ($d\!=\!4096$, $r\!=\!8$). PiSSA's $O(d^3)$ full-weight SVD is ${\sim}262{,}000\times$ more expensive than \portal{}'s $O(dr^2)$ rank-bounded projection, while LoRA requires no SVD at all.}
+\label{fig:complexity}
+\end{figure}
+
+The Task-Isomorphic Projection ensures a smooth, stable transition at $\Tswitch$ through three complementary mechanisms:
+
+\paragraph{Output-preserving projection (no loss spike).}
+By the algebraic equivalence in Eq.~\ref{eq:equivalence}, the forward output is exactly preserved: $h(\Tswitch^-) = h(\Tswitch^+)$. Therefore, $\mathcal{L}(\Tswitch^-) = \mathcal{L}(\Tswitch^+)$ with zero discontinuity. In practice, we observe no loss spike at any $\Tswitch$ value across all experiments.
+
+\paragraph{Momentum reset (stale inertia removal).}
+The optimizer's momentum and variance accumulators encode curvature information specific to the sequential parameter space $(\Bseq, \Aseq)$, which becomes invalid after projection to the parallel space $(\Bpar, \Apar)$. Resetting these states to zero at $\Tswitch$ prevents stale inertia from corrupting the parallel-phase trajectory, analogous to warm restarts~\citep{loshchilov2019adamw}.
+
+\paragraph{Symmetric conditioning (balanced gradients).}
+By Theorem~\ref{thm:condition}, the symmetric split reduces the maximum condition number from $\kappa(M)$ to $\sqrt{\kappa(M)}$, ensuring that both $\Bpar$ and $\Apar$ receive informative gradients from the first post-switch step. As shown in Figure~\ref{fig:complexity}, this projection incurs negligible computational overhead compared to PiSSA's full-weight SVD.
 
 %=============================================================================
 \section{Conclusion}
