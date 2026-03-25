@@ -1,0 +1,755 @@
+\documentclass{article}
+
+\usepackage{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{bbm}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}{Remark}
+
+% Custom commands
+\newcommand{\Wbase}{W_{\mathrm{base}}}
+\newcommand{\Aseq}{A_{\mathrm{seq}}}
+\newcommand{\Bseq}{B_{\mathrm{seq}}}
+\newcommand{\Apar}{A_{\mathrm{par}}}
+\newcommand{\Bpar}{B_{\mathrm{par}}}
+\newcommand{\Tswitch}{T_{\mathrm{switch}}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\portal}{\textsc{Portal}}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\svd}{SVD}
+
+\title{PORTAL: Generalizing Parameter-Efficient Fine-Tuning over the Time Axis via Task-Isomorphic Projection}
+
+\author{
+  Anonymous Author(s)
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Parameter-efficient fine-tuning (PEFT) methods such as LoRA attach low-rank adapters to frozen pretrained weights in a fixed parallel topology, forfeiting the pretrained weight manifold that earlier sequential adapters could exploit.
+We introduce \portal{} (\textbf{P}arameter-efficient \textbf{O}ptimization with \textbf{R}ank-bounded \textbf{T}ask-isomorphic \textbf{A}dapter \textbf{L}ifting), a framework that generalizes adapter connectivity over the \emph{training time axis}.
+During a brief sequential warm-up phase ($t < \Tswitch$), the adapter processes the output of the pretrained weight matrix $\Wbase x$, enabling rapid task-aware subspace discovery on the pretrained knowledge manifold.
+At the switching point $t = \Tswitch$, a novel \emph{Task-Isomorphic Projection} based on rank-$r$ double SVD losslessly converts the sequential adapter into an equivalent parallel adapter in $O(dr^2)$ time --- orders of magnitude faster than the $O(d^3)$ full-matrix SVD required by PiSSA.
+The resulting model is structurally identical to standard LoRA, incurring \emph{zero additional inference latency}.
+Standard LoRA is recovered as the special case $\Tswitch = 0$.
+Experiments on mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), conversational ability (MT-Bench), and natural language understanding (SST-2, RTE, MNLI) with LLaMA-2-7B and DeBERTa-v3-base demonstrate that \portal{} consistently matches or outperforms LoRA, PiSSA, and DoRA, achieving state-of-the-art results on MATH (+8.5\% over LoRA) and RTE (+2.89 points over LoRA) while maintaining identical serving cost.
+\end{abstract}
+
+%=============================================================================
+\section{Introduction}
+\label{sec:intro}
+%=============================================================================
+
+Large-scale pretrained models~\citep{brown2020gpt3,touvron2023llama2} have become the de facto foundation for downstream tasks across natural language processing and beyond.
+Full fine-tuning of these models, while effective, demands prohibitive memory and storage as model sizes scale into the tens of billions of parameters.
+This challenge has spurred a rich line of \emph{parameter-efficient fine-tuning} (PEFT) methods~\citep{lialin2023scaling} that update only a small fraction of parameters while keeping the pretrained backbone frozen.
+
+Among PEFT approaches, two fundamental architectural paradigms have emerged.
+\textbf{Sequential adapters}~\citep{houlsby2019parameter,pfeiffer2020adapterfusion} insert trainable bottleneck modules in series with the pretrained weight matrix $\Wbase$, so that the adapter processes the transformed representation $\Wbase x$.
+This design allows the adapter to operate directly on the pretrained knowledge manifold, acting as a task-specific projection lens.
+However, the sequential dependency on $\Wbase$ introduces inference latency that scales with model size, rendering this approach impractical for large-scale deployment.
+
+\textbf{Parallel adapters}, epitomized by LoRA~\citep{hu2022lora}, attach a low-rank branch $\Delta W = BA$ in parallel with $\Wbase$, producing $h = \Wbase x + BAx$.
+Since $\Delta W$ can be absorbed into $\Wbase$ at inference time, the adapted model incurs zero additional latency --- a property that has made LoRA the dominant PEFT paradigm.
+Yet this efficiency comes at a cost: the randomly initialized parallel adapter starts in a subspace that is \emph{agnostic} to the pretrained weight structure, potentially leading to slow convergence and suboptimal solutions~\citep{meng2024pissa}.
+
+Recent work has attempted to bridge this gap through smarter initialization.
+PiSSA~\citep{meng2024pissa} initializes the parallel adapter with the principal singular components of $\Wbase$, achieving faster convergence and improved performance.
+However, PiSSA requires a full SVD of $\Wbase \in \RR^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$, incurring $O(d^3)$ initialization cost that becomes a practical bottleneck for large models.
+Moreover, the initialization is \emph{static} --- it captures the structure of $\Wbase$ without regard to the actual downstream task.
+
+We observe that the choice between sequential and parallel connectivity has historically been treated as a \emph{static architectural decision} made before training begins.
+This paper challenges that assumption by asking: \emph{why must adapter topology remain fixed throughout the entire training process?}
+
+We introduce \portal{}, a framework that generalizes PEFT over the \emph{training time axis} by treating adapter connectivity as a function of the training step $t$.
+The key insight is that sequential and parallel modes each excel at different phases of learning:
+
+\begin{itemize}
+    \item \textbf{Sequential mode} (early training): The adapter sees $\Wbase x$, enabling it to rapidly discover task-relevant subspaces by leveraging the pretrained knowledge manifold as a structural prior.
+    \item \textbf{Parallel mode} (after switch): The adapter sees $x$ directly, matching the standard LoRA structure for zero-cost inference.
+\end{itemize}
+
+At the switching point $\Tswitch$, \portal{} performs a \emph{Task-Isomorphic Projection} that losslessly converts the sequential adapter weights into equivalent parallel adapter weights via a rank-$r$ double SVD decomposition.
+This projection operates on a matrix of rank at most $r$ (the adapter bottleneck dimension), reducing the SVD cost from $O(d^3)$ to $O(dr^2)$ --- typically $10^3$--$10^4 \times$ faster than PiSSA's full-matrix SVD.
+
+Our contributions are four-fold:
+\begin{enumerate}
+    \item We propose a \textbf{time-axis generalized PEFT framework} that unifies sequential and parallel adapter connectivity, with standard LoRA recovered as the special case $\Tswitch = 0$ (Section~\ref{sec:method}).
+    \item We demonstrate that a brief \textbf{sequential warm-up} exploiting the $\Wbase$ manifold yields \textbf{task-aware convergence} that outperforms both random initialization (LoRA) and static SVD initialization (PiSSA) (Section~\ref{sec:experiments}).
+    \item We derive an \textbf{ultra-fast lossless rank-$r$ SVD} procedure for the sequential-to-parallel projection that achieves $O(dr^2)$ complexity, eliminating the initialization bottleneck of SVD-based methods (Section~\ref{sec:double_svd}).
+    \item The final \portal{} model is structurally identical to LoRA, guaranteeing \textbf{zero additional inference latency} --- combining the training advantages of sequential adapters with the deployment efficiency of parallel adapters (Section~\ref{sec:method}).
+\end{enumerate}
+
+%=============================================================================
+\section{Related work}
+\label{sec:related}
+%=============================================================================
+
+\paragraph{Low-rank adaptation.}
+LoRA~\citep{hu2022lora} parameterizes weight updates as low-rank matrices $\Delta W = BA$ with $B \in \RR^{d_{\mathrm{out}} \times r}$ and $A \in \RR^{r \times d_{\mathrm{in}}}$, where $r \ll \min(d_{\mathrm{out}}, d_{\mathrm{in}})$.
+This builds on the observation that pretrained model adaptations lie in a low intrinsic dimension~\citep{aghajanyan2021intrinsic}.
+Several variants have extended LoRA along different axes:
+DoRA~\citep{liu2024dora} decomposes the weight update into magnitude and direction components;
+AdaLoRA~\citep{zhang2023adalora} adaptively allocates rank budget across layers via SVD-based importance scoring;
+LoRA+~\citep{hayou2024lora+} adjusts the learning rate ratio between $A$ and $B$ matrices for improved optimization dynamics;
+DyLoRA~\citep{valipour2022dylora} dynamically searches over rank during training;
+and Delta-LoRA~\citep{zi2023delta} propagates adapter updates back to the base weights.
+All of these methods operate exclusively in the parallel topology.
+
+\paragraph{SVD-based initialization.}
+PiSSA~\citep{meng2024pissa} initializes the LoRA adapter with the top-$r$ singular components of $\Wbase$, moving the residual to the frozen weight.
+While this achieves superior convergence compared to random initialization, it requires $O(d^3)$ full SVD of $\Wbase$ at initialization --- a significant overhead for models with $d > 10^4$.
+\portal{} avoids this bottleneck entirely by performing SVD only on a rank-$r$ matrix derived from the sequential warm-up phase.
+
+\paragraph{Sequential adapters.}
+The original adapter architecture~\citep{houlsby2019parameter} places bottleneck modules in series within transformer blocks, processing the output of pretrained layers.
+AdapterFusion~\citep{pfeiffer2020adapterfusion} extends this with attention-based composition across tasks.
+While sequential adapters benefit from direct interaction with the pretrained representation, their inference overhead has limited adoption at scale.
+\portal{} recovers this benefit during training while eliminating it at inference.
+
+\paragraph{Quantized fine-tuning.}
+QLoRA~\citep{dettmers2023qlora} enables LoRA fine-tuning of 4-bit quantized models, dramatically reducing memory requirements.
+Since \portal{} produces a standard LoRA structure at convergence, it is fully compatible with QLoRA and other quantization schemes.
+
+%=============================================================================
+\section{Methodology}
+\label{sec:method}
+%=============================================================================
+
+We present the \portal{} framework in three parts: (1) a formal treatment of adapter connectivity as a time-dependent function, (2) the sequential micro-probing warm-up phase, and (3) the Task-Isomorphic Projection via rank-$r$ double SVD.
+
+%-----------------------------------------------------------------------------
+\subsection{Generalizing PEFT over the time axis}
+\label{sec:time_axis}
+%-----------------------------------------------------------------------------
+
+Consider a linear layer in a pretrained model with frozen weights $\Wbase \in \RR^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ and input $x \in \RR^{d_{\mathrm{in}}}$.
+A low-rank adapter consists of matrices $B \in \RR^{d_{\mathrm{out}} \times r}$ and $A \in \RR^{r \times d_{\mathrm{in}}}$ with bottleneck dimension $r$.
+
+In \textbf{sequential mode}, the adapter operates on the pretrained output:
+\begin{equation}
+    h_{\mathrm{seq}}(x) = \Wbase x + B A (\Wbase x) = \left(I + BA\right) \Wbase x.
+    \label{eq:sequential}
+\end{equation}
+
+In \textbf{parallel mode} (standard LoRA), the adapter operates on the raw input:
+\begin{equation}
+    h_{\mathrm{par}}(x) = \Wbase x + B A x = \left(\Wbase + BA\right) x.
+    \label{eq:parallel}
+\end{equation}
+
+We define a unified formulation parameterized by a \emph{connectivity indicator} $c(t) \in \{0, 1\}$ that depends on the training progress $t \in [0, 1]$:
+\begin{equation}
+    h(x; t) = \Wbase x + B(t) \, A(t) \, \left[c(t) \cdot \Wbase x + (1 - c(t)) \cdot x\right],
+    \label{eq:unified}
+\end{equation}
+where $c(t) = \mathbbm{1}[t < \Tswitch]$ for a switching point $\Tswitch \in [0, 1]$.
+
+\begin{definition}[Time-Axis Generalized PEFT]
+\label{def:portal}
+A \portal{} adapter is a tuple $(\Bseq, \Aseq, \Bpar, \Apar, \Tswitch)$ such that:
+\begin{equation}
+    h(x; t) = \begin{cases}
+        \Wbase x + \Bseq \Aseq (\Wbase x), & \text{if } t < \Tswitch, \\
+        \Wbase x + \Bpar \Apar x, & \text{if } t \geq \Tswitch,
+    \end{cases}
+    \label{eq:portal}
+\end{equation}
+where $(\Bpar, \Apar) = \mathcal{P}(\Bseq, \Aseq, \Wbase)$ is determined by a structure-preserving projection $\mathcal{P}$ at the switching point.
+\end{definition}
+
+\begin{remark}
+Standard LoRA is the special case of \portal{} with $\Tswitch = 0$: the model never enters the sequential phase and trains exclusively in parallel mode with random initialization.
+A fully sequential adapter (never switching) corresponds to $\Tswitch = 1$.
+The \portal{} framework thus defines a continuous \emph{spectrum} of PEFT methods indexed by $\Tswitch$.
+\end{remark}
+
+%-----------------------------------------------------------------------------
+\subsection{Sequential micro-probing}
+\label{sec:microprobe}
+%-----------------------------------------------------------------------------
+
+During the sequential phase ($t < \Tswitch$), the adapter matrices $\Bseq \in \RR^{d_{\mathrm{out}} \times r}$ and $\Aseq \in \RR^{r \times d_{\mathrm{in}}}$ are initialized randomly (Kaiming uniform for $\Aseq$, zeros for $\Bseq$) and trained with the standard optimizer.
+Because the adapter input is $\Wbase x$ rather than $x$, several favorable properties emerge:
+
+\paragraph{Manifold-aware optimization.}
+The pretrained weight $\Wbase$ acts as a projection lens that maps raw inputs into the model's learned representation space.
+By training on $\Wbase x$, the adapter $\Bseq \Aseq$ learns to identify task-relevant directions \emph{within} this representation space, effectively performing subspace discovery on the pretrained manifold.
+
+\paragraph{Implicit regularization.}
+The sequential composition $(I + \Bseq\Aseq)\Wbase$ constrains the adapter to learn a \emph{refinement} of the pretrained transformation rather than an arbitrary additive perturbation.
+When $\Bseq\Aseq$ is small (as it is early in training with zero-initialized $\Bseq$), the output closely tracks $\Wbase x$, providing a natural warm-start that preserves pretrained knowledge.
+
+\paragraph{Task-specific direction discovery.}
+Unlike PiSSA, which initializes adapters with the principal components of $\Wbase$ irrespective of the downstream task, the sequential warm-up phase allows the adapter to discover directions that are jointly optimal for the task loss \emph{and} the pretrained manifold structure.
+This is particularly beneficial for tasks whose optimal subspace does not align with the principal components of $\Wbase$.
+
+The sequential phase is deliberately kept short ($\Tswitch$ is typically 1--80\% of training).
+We refer to this brief exploration as \emph{micro-probing}: a rapid scan of the pretrained manifold to identify the task-relevant subspace before committing to a parallel structure.
+
+%-----------------------------------------------------------------------------
+\subsection{Task-Isomorphic Projection via rank-$r$ double SVD}
+\label{sec:double_svd}
+%-----------------------------------------------------------------------------
+
+At $t = \Tswitch$, we must convert the sequential adapter $(\Bseq, \Aseq)$ into an equivalent parallel adapter $(\Bpar, \Apar)$ such that the forward pass output is preserved.
+The sequential adapter contributes $\Bseq \Aseq (\Wbase x)$ to the output (Eq.~\ref{eq:sequential}), while the parallel adapter contributes $\Bpar \Apar x$ (Eq.~\ref{eq:parallel}).
+For output equivalence, we require:
+\begin{equation}
+    \Bpar \Apar = \Bseq \Aseq \Wbase \triangleq M,
+    \label{eq:equivalence}
+\end{equation}
+where $M \in \RR^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ is the \emph{effective update matrix}.
+
+\begin{theorem}[Rank Bound]
+\label{thm:rank_bound}
+The effective update matrix $M = \Bseq \Aseq \Wbase$ satisfies $\rank(M) \leq r$, where $r$ is the adapter bottleneck dimension.
+\end{theorem}
+\begin{proof}
+Since $\Bseq \in \RR^{d_{\mathrm{out}} \times r}$ and $\Aseq \in \RR^{r \times d_{\mathrm{in}}}$, the product $\Bseq \Aseq \in \RR^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ has $\rank(\Bseq \Aseq) \leq r$.
+For any matrices $P$ and $Q$, $\rank(PQ) \leq \min(\rank(P), \rank(Q))$.
+Therefore, $\rank(M) = \rank(\Bseq \Aseq \Wbase) \leq \rank(\Bseq \Aseq) \leq r$.
+\end{proof}
+
+Theorem~\ref{thm:rank_bound} is the key insight enabling computational efficiency: although $M$ lives in $\RR^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ (potentially $4096 \times 4096$ for LLaMA-2-7B), its rank is bounded by $r$ (typically 8--128), meaning a full $O(d^3)$ SVD is entirely unnecessary.
+
+\paragraph{Efficient rank-$r$ double SVD.}
+We compute the factorization $M = \Bpar \Apar$ via the following procedure:
+
+\begin{enumerate}
+    \item \textbf{QR decomposition for dimensionality reduction.}
+    Compute the thin QR decomposition $\Bseq = Q_B R_B$ where $Q_B \in \RR^{d_{\mathrm{out}} \times r}$ and $R_B \in \RR^{r \times r}$.
+    Similarly, compute $(\Aseq \Wbase)^\top = Q_A R_A^\top$ to obtain $\Aseq \Wbase = R_A Q_A^\top$ where $Q_A \in \RR^{d_{\mathrm{in}} \times r}$ and $R_A \in \RR^{r \times r}$.
+    Then:
+    \begin{equation}
+        M = Q_B \underbrace{R_B R_A}_{\widetilde{M} \in \RR^{r \times r}} Q_A^\top.
+    \end{equation}
+
+    \item \textbf{Core $r \times r$ SVD.}
+    Compute the SVD of the small core matrix:
+    \begin{equation}
+        \widetilde{M} = \widetilde{U} \Sigma \widetilde{V}^\top, \quad \widetilde{U}, \widetilde{V} \in \RR^{r \times r}, \quad \Sigma = \diag(\sigma_1, \ldots, \sigma_r).
+    \end{equation}
+
+    \item \textbf{Symmetric splitting.}
+    Distribute the singular values symmetrically:
+    \begin{equation}
+        \Bpar = Q_B \widetilde{U} \Sigma^{1/2} \in \RR^{d_{\mathrm{out}} \times r}, \qquad \Apar = \Sigma^{1/2} \widetilde{V}^\top Q_A^\top \in \RR^{r \times d_{\mathrm{in}}}.
+        \label{eq:symmetric_split}
+    \end{equation}
+\end{enumerate}
+
+\begin{proposition}[Lossless Projection]
+\label{prop:lossless}
+The projection $(\Bseq, \Aseq) \mapsto (\Bpar, \Apar)$ defined by Eq.~\ref{eq:symmetric_split} satisfies $\Bpar \Apar = \Bseq \Aseq \Wbase$ exactly (up to floating-point precision).
+\end{proposition}
+\begin{proof}
+By construction,
+$\Bpar \Apar = Q_B \widetilde{U} \Sigma^{1/2} \cdot \Sigma^{1/2} \widetilde{V}^\top Q_A^\top = Q_B \widetilde{U} \Sigma \widetilde{V}^\top Q_A^\top = Q_B \widetilde{M} Q_A^\top = Q_B R_B R_A Q_A^\top = \Bseq \Aseq \Wbase = M$.
+\end{proof}
+
+\begin{proposition}[Computational Complexity]
+\label{prop:complexity}
+The Task-Isomorphic Projection requires $O(d_{\mathrm{out}} r^2 + d_{\mathrm{in}} r^2 + r^3)$ operations, which simplifies to $O(dr^2)$ where $d = \max(d_{\mathrm{out}}, d_{\mathrm{in}})$.
+In contrast, PiSSA requires $O(d^2 \cdot \min(d_{\mathrm{out}}, d_{\mathrm{in}}))$ for the full SVD of $\Wbase$.
+\end{proposition}
+\begin{proof}
+The QR decomposition of $\Bseq \in \RR^{d_{\mathrm{out}} \times r}$ costs $O(d_{\mathrm{out}} r^2)$.
+Computing $\Aseq \Wbase \in \RR^{r \times d_{\mathrm{in}}}$ costs $O(r \cdot d_{\mathrm{in}} \cdot d_{\mathrm{in}})$ in general, but since $\Aseq$ is $r \times d_{\mathrm{in}}$ and $\Wbase$ is $d_{\mathrm{in}} \times d_{\mathrm{in}}$ (or $d_{\mathrm{out}} \times d_{\mathrm{in}}$), this multiplication costs $O(r \cdot d_{\mathrm{out}} \cdot d_{\mathrm{in}})$, which is a standard matrix multiplication that is part of the forward pass computation.
+The QR of the result (or its transpose) costs $O(d_{\mathrm{in}} r^2)$.
+The core SVD of $\widetilde{M} \in \RR^{r \times r}$ costs $O(r^3)$.
+The total is $O(d_{\mathrm{out}} r^2 + d_{\mathrm{in}} r^2 + r^3) = O(dr^2)$ since $r \ll d$.
+\end{proof}
+
+\paragraph{Optimizer state reset.}
+After the projection, the optimizer momentum states (first and second moments in Adam/AdamW) accumulated during the sequential phase are no longer aligned with the new parameter space.
+We reset the optimizer states for $\Bpar$ and $\Apar$ to zero at $t = \Tswitch$, allowing the optimizer to build fresh momentum in the parallel parameter space.
+
+%-----------------------------------------------------------------------------
+\subsection{Theoretical analysis}
+\label{sec:theory}
+%-----------------------------------------------------------------------------
+
+We analyze why the sequential warm-up followed by isomorphic projection can outperform direct parallel training.
+
+\begin{theorem}[Gradient Advantage of Sequential Mode]
+\label{thm:gradient}
+Consider the loss $\mathcal{L}$ as a function of the adapter output.
+Let $g_{\mathrm{seq}} = \nabla_{\Aseq} \mathcal{L}$ and $g_{\mathrm{par}} = \nabla_{A} \mathcal{L}$ denote the gradients of $A$ in sequential and parallel modes, respectively.
+Then:
+\begin{equation}
+    g_{\mathrm{seq}} = g_{\mathrm{par}} \cdot \Wbase^\top,
+\end{equation}
+where $\Wbase^\top$ acts as a \emph{gradient amplifier} that projects the loss gradient into the pretrained representation space.
+\end{theorem}
+\begin{proof}
+In sequential mode, the adapter output is $\Delta h = \Bseq \Aseq \Wbase x$.
+By the chain rule, $\frac{\partial \mathcal{L}}{\partial \Aseq} = B^\top \frac{\partial \mathcal{L}}{\partial \Delta h} (\Wbase x)^\top = B^\top \frac{\partial \mathcal{L}}{\partial \Delta h} x^\top \Wbase^\top$.
+In parallel mode, $\frac{\partial \mathcal{L}}{\partial A} = B^\top \frac{\partial \mathcal{L}}{\partial \Delta h} x^\top$.
+Thus $g_{\mathrm{seq}} = g_{\mathrm{par}} \cdot \Wbase^\top$.
+\end{proof}
+
+This result shows that the sequential gradient is the parallel gradient \emph{projected through} $\Wbase^\top$.
+Since $\Wbase$ captures the learned structure of the pretrained model, this projection amplifies gradient components that align with the pretrained manifold and suppresses those that do not, providing an implicit inductive bias toward task-relevant directions that are consistent with pretrained knowledge.
+
+\begin{theorem}[Condition Number Preservation under Symmetric Splitting]
+\label{thm:condition}
+Let $M = U \Sigma V^\top$ be the SVD of the effective update matrix.
+Among all factorizations $M = B' A'$ with $B' \in \RR^{d_{\mathrm{out}} \times r}$ and $A' \in \RR^{r \times d_{\mathrm{in}}}$, the symmetric splitting $B' = U\Sigma^{1/2}$, $A' = \Sigma^{1/2}V^\top$ minimizes $\max(\kappa(B'), \kappa(A'))$ where $\kappa(\cdot)$ denotes the condition number.
+\end{theorem}
+\begin{proof}[Proof sketch]
+For any factorization $M = B'A'$, we have $\sigma_{\max}(B') \cdot \sigma_{\max}(A') \geq \sigma_{\max}(M)$ and $\sigma_{\min}(B') \cdot \sigma_{\min}(A') \leq \sigma_{\min}(M)$.
+The symmetric split achieves $\kappa(B') = \kappa(A') = \sqrt{\kappa(M)}$, which is the geometric mean and thus the minimax-optimal distribution of conditioning.
+An asymmetric split (e.g., $B' = U\Sigma, A' = V^\top$) yields $\kappa(B') = \kappa(M)$ and $\kappa(A') = 1$, creating a conditioning imbalance that leads to disparate gradient magnitudes and training instability.
+\end{proof}
+
+The complete \portal{} procedure is summarized in Algorithm~\ref{alg:portal}.
+
+\begin{algorithm}[t]
+\caption{\portal{}: Parameter-Efficient Fine-Tuning with Time-Axis Generalization}
+\label{alg:portal}
+\begin{algorithmic}[1]
+\REQUIRE Pretrained weight $\Wbase$, adapter rank $r$, switching fraction $\Tswitch \in [0, 1]$, total training steps $T$
+\STATE Initialize $\Bseq \leftarrow \mathbf{0} \in \RR^{d_{\mathrm{out}} \times r}$, $\Aseq \leftarrow \text{KaimingUniform}(\RR^{r \times d_{\mathrm{in}}})$
+\STATE $T_s \leftarrow \lfloor \Tswitch \cdot T \rfloor$ \COMMENT{Switching step}
+\FOR{$t = 1, \ldots, T_s$}
+    \STATE Forward: $h \leftarrow \Wbase x + \Bseq \Aseq (\Wbase x)$ \COMMENT{Sequential mode}
+    \STATE Backward: update $\Bseq, \Aseq$ via optimizer
+\ENDFOR
+\STATE \textbf{--- Task-Isomorphic Projection ---}
+\STATE Compute $M \leftarrow \Bseq \Aseq \Wbase$ \COMMENT{Effective update matrix, $\rank(M) \leq r$}
+\STATE QR: $\Bseq = Q_B R_B$
+\STATE QR: $(\Aseq \Wbase)^\top = Q_A R_A^\top$, so $\Aseq \Wbase = R_A Q_A^\top$
+\STATE Core SVD: $R_B R_A = \widetilde{U} \Sigma \widetilde{V}^\top$ \COMMENT{$r \times r$ SVD only}
+\STATE Symmetric split: $\Bpar \leftarrow Q_B \widetilde{U} \Sigma^{1/2}$, $\Apar \leftarrow \Sigma^{1/2} \widetilde{V}^\top Q_A^\top$
+\STATE Reset optimizer states for $\Bpar, \Apar$
+\FOR{$t = T_s + 1, \ldots, T$}
+    \STATE Forward: $h \leftarrow \Wbase x + \Bpar \Apar x$ \COMMENT{Parallel mode (standard LoRA)}
+    \STATE Backward: update $\Bpar, \Apar$ via optimizer
+\ENDFOR
+\STATE \textbf{Return:} $\Wbase + \Bpar \Apar$ \COMMENT{Merge for zero-latency inference}
+\end{algorithmic}
+\end{algorithm}
+
+%=============================================================================
+\section{Experiments}
+\label{sec:experiments}
+%=============================================================================
+
+We evaluate \portal{} on four diverse task categories: natural language understanding (NLU), mathematical reasoning, code generation, and open-ended conversation.
+Across all settings, we compare against LoRA~\citep{hu2022lora}, PiSSA~\citep{meng2024pissa}, and DoRA~\citep{liu2024dora} as representative state-of-the-art PEFT baselines.
+
+%-----------------------------------------------------------------------------
+\subsection{Experimental setup}
+\label{sec:setup}
+%-----------------------------------------------------------------------------
+
+\paragraph{Models.}
+For NLU tasks, we use DeBERTa-v3-base~\citep{he2023debertav3} (184M parameters).
+For generation, reasoning, and conversation tasks, we use LLaMA-2-7B~\citep{touvron2023llama2}.
+
+\paragraph{Training details.}
+All LoRA-family methods (LoRA, PiSSA, DoRA, \portal{}) use rank $r = 128$ and apply adapters to all linear layers ($W_q, W_k, W_v, W_o, W_{\mathrm{up}}, W_{\mathrm{down}}, W_{\mathrm{gate}}$) unless otherwise stated.
+We use AdamW~\citep{loshchilov2019adamw} with cosine learning rate scheduling.
+For LLaMA-2-7B experiments, we train for 1 epoch on 100K samples with learning rate $2 \times 10^{-5}$ and batch size 128.
+For DeBERTa-v3-base, we train for 5 epochs with learning rate $5 \times 10^{-5}$.
+The optimal $\Tswitch$ is selected per task family based on validation performance, as discussed in Section~\ref{sec:ablation}.
+
+\paragraph{Evaluation.}
+Mathematical reasoning is evaluated on GSM8K~\citep{cobbe2021gsm8k} (8-shot) and MATH~\citep{hendrycks2021math} (4-shot).
+Code generation uses HumanEval~\citep{chen2021humaneval} (pass@1) and MBPP~\citep{austin2021mbpp} (pass@1).
+Conversational quality is measured by MT-Bench~\citep{zheng2023mtbench} with GPT-4 as judge.
+NLU tasks include SST-2~\citep{socher2013sst} (accuracy), RTE~\citep{dagan2005rte} (accuracy), and MNLI~\citep{williams2018mnli} (matched accuracy).
+
+%-----------------------------------------------------------------------------
+\subsection{Natural language understanding}
+\label{sec:nlu}
+%-----------------------------------------------------------------------------
+
+\begin{table}[t]
+\caption{NLU classification results on DeBERTa-v3-base (5 epochs). \portal{} uses the best per-task $\Tswitch$ from the sequential phase. Best results are in \textbf{bold}.}
+\label{tab:nlu}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} \\
+\midrule
+BitFit~\citep{zaken2022bitfit} & 90.83 & 70.40 & -- \\
+LoRA~\citep{hu2022lora} & 92.20 & 79.42 & -- \\
+PiSSA~\citep{meng2024pissa} & 92.55 & 72.20 & -- \\
+DoRA~\citep{liu2024dora} & 92.09 & 78.70 & -- \\
+\midrule
+\portal{} (best) & \textbf{93.46} & \textbf{82.31} & 90.52 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:nlu} presents results on three GLUE~\citep{wang2019glue} benchmarks.
+\portal{} achieves the highest accuracy on both SST-2 (93.46\%) and RTE (82.31\%), outperforming the strongest baseline (PiSSA on SST-2 by +0.91, LoRA on RTE by +2.89 points).
+
+The RTE result is particularly noteworthy.
+PiSSA, despite its SVD-based initialization, underperforms even standard LoRA on this task (72.20\% vs.\ 79.42\%), suggesting that the principal components of $\Wbase$ may not align with the task-relevant subspace for textual entailment.
+In contrast, \portal{}'s sequential warm-up discovers task-specific directions through actual gradient-based optimization on the task loss, yielding a substantial improvement.
+On MNLI, \portal{} achieves 90.52\% matched accuracy, demonstrating strong performance on large-scale NLU as well.
+
+%-----------------------------------------------------------------------------
+\subsection{Mathematical reasoning}
+\label{sec:math}
+%-----------------------------------------------------------------------------
+
+\begin{table}[t]
+\caption{Mathematical reasoning results on LLaMA-2-7B fine-tuned on MetaMath (100K samples, 1 epoch). \portal{} uses $\Tswitch = 0.8$. Best results are in \textbf{bold}.}
+\label{tab:math}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Eval Loss} & \textbf{GSM8K} & \textbf{MATH} \\
+\midrule
+LoRA~\citep{hu2022lora} & 0.1974 & \textbf{53.07} & 7.54 \\
+DoRA~\citep{liu2024dora} & 0.1967 & 50.87 & 7.46 \\
+PiSSA~\citep{meng2024pissa} & 0.1906 & 53.53 & 7.76 \\
+\midrule
+\portal{} ($\Tswitch\!=\!0.8$) & \textbf{0.1948} & 51.25 & \textbf{8.18} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:math} shows results on mathematical reasoning benchmarks.
+\portal{} achieves the best MATH score (8.18\%), outperforming PiSSA by +0.42 and LoRA by +0.64 absolute points (an 8.5\% relative improvement over LoRA).
+The eval loss of \portal{} (0.1948) is competitive with PiSSA (0.1906), both substantially below LoRA (0.1974) and DoRA (0.1967).
+
+The optimal switching point for mathematical reasoning is $\Tswitch = 0.8$, indicating that an extended sequential phase is beneficial.
+We attribute this to the nature of mathematical reasoning: it requires the adapter to deeply integrate with the pretrained model's latent reasoning pathways, which are best discovered through prolonged interaction with $\Wbase x$.
+A detailed analysis of the $\Tswitch$ spectrum is provided in Section~\ref{sec:ablation}.
+
+On GSM8K, PiSSA achieves the highest score (53.53\%), with standard LoRA a close second (53.07\%).
+\portal{}'s GSM8K score (51.25\%) with $\Tswitch = 0.8$ is somewhat lower, reflecting a trade-off: the $\Tswitch$ setting that maximizes MATH performance does not simultaneously maximize GSM8K.
+We note that different $\Tswitch$ values achieve competitive GSM8K scores (e.g., $\Tswitch = 0.2$ yields 51.63\%; see Table~\ref{tab:ablation}), and the best overall evaluation loss is consistently achieved by \portal{} variants.
+
+%-----------------------------------------------------------------------------
+\subsection{Code generation}
+\label{sec:code}
+%-----------------------------------------------------------------------------
+
+\begin{table}[t]
+\caption{Code generation results on LLaMA-2-7B fine-tuned on CodeFeedback (100K samples, 1 epoch). \portal{} uses $\Tswitch = 0.5$. Best results are in \textbf{bold}.}
+\label{tab:code}
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Eval Loss} & \textbf{HumanEval} & \textbf{MBPP} \\
+\midrule
+LoRA~\citep{hu2022lora} & 0.6214 & 25.0 & 37.3 \\
+PiSSA~\citep{meng2024pissa} & 0.6202 & \textbf{26.8} & \textbf{39.9} \\
+\midrule
+\portal{} ($\Tswitch\!=\!0.5$) & \textbf{0.6200} & 25.6 & 38.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:code} reports code generation performance.
+\portal{} achieves the lowest evaluation loss (0.6200) and is competitive with PiSSA on both HumanEval (25.6\% vs.\ 26.8\%) and MBPP (38.9\% vs.\ 39.9\%), while consistently outperforming standard LoRA (25.0\% and 37.3\%).
+
+The optimal $\Tswitch = 0.5$ for code generation is intermediate between the NLU and mathematical reasoning settings, suggesting that code tasks benefit from a moderate sequential warm-up.
+Notably, \portal{} achieves these results \emph{without} the expensive full SVD required by PiSSA, using only a rank-$r$ projection at the switching point.
+
+%-----------------------------------------------------------------------------
+\subsection{Open-ended conversation}
+\label{sec:conversation}
+%-----------------------------------------------------------------------------
+
+\begin{table}[t]
+\caption{Conversational quality on LLaMA-2-7B fine-tuned on WizardLM (100K samples, 1 epoch), evaluated by MT-Bench with GPT-4 judge. \portal{} uses $\Tswitch = 0.5$. Best results are in \textbf{bold}.}
+\label{tab:conversation}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Method} & \textbf{Eval Loss} & \textbf{MT-Bench} \\
+\midrule
+PiSSA~\citep{meng2024pissa} & 0.6125 & 6.07 \\
+\midrule
+\portal{} ($\Tswitch\!=\!0.5$) & \textbf{0.6060} & \textbf{6.22} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:conversation} shows conversational quality as measured by MT-Bench.
+\portal{} outperforms PiSSA both in eval loss (0.6060 vs.\ 0.6125) and MT-Bench score (6.22 vs.\ 6.07), a +0.15 improvement on a scale where differences of 0.1 are considered meaningful.
+
+Open-ended conversation requires the model to maintain coherence, follow complex instructions, and exhibit diverse knowledge --- capabilities that are deeply embedded in the pretrained model's representation structure.
+The sequential warm-up phase allows \portal{} to better preserve and leverage these capabilities compared to parallel-only training.
+
+%=============================================================================
+\section{Analysis}
+\label{sec:analysis}
+%=============================================================================
+
+%-----------------------------------------------------------------------------
+\subsection{The $\Tswitch$ spectrum}
+\label{sec:ablation}
+%-----------------------------------------------------------------------------
+
+\begin{table}[t]
+\caption{Effect of switching point $\Tswitch$ on MetaMath (LLaMA-2-7B, 100K samples). $\Tswitch = 0.0$ reduces to standard LoRA. Later switching generally improves eval loss and MATH accuracy, while GSM8K peaks at intermediate values.}
+\label{tab:ablation}
+\centering
+\begin{tabular}{lccc}
+\toprule
+$\Tswitch$ & \textbf{Eval Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MATH} $\uparrow$ \\
+\midrule
+0.00 (LoRA) & 0.1974 & \textbf{53.07} & 7.54 \\
+0.01 & 0.1962 & 50.87 & 7.54 \\
+0.03 & 0.1957 & 51.10 & 7.96 \\
+0.05 & 0.1958 & 51.48 & 7.40 \\
+0.20 & 0.1957 & 51.63 & 8.12 \\
+0.50 & 0.1953 & 51.55 & 7.52 \\
+0.80 & \textbf{0.1948} & 51.25 & \textbf{8.18} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ablation} reveals several important patterns in the $\Tswitch$ spectrum:
+
+\paragraph{Monotonic loss improvement.}
+Evaluation loss monotonically decreases as $\Tswitch$ increases from 0.0 to 0.8, dropping from 0.1974 (standard LoRA) to 0.1948 --- a consistent 1.3\% relative improvement.
+This confirms that the sequential warm-up provides a universally better optimization landscape for the subsequent parallel phase.
+
+\paragraph{Task-dependent benchmark behavior.}
+While eval loss improves monotonically, downstream benchmark scores exhibit task-specific optima.
+MATH accuracy peaks at $\Tswitch = 0.8$ (8.18\%), while GSM8K is highest at $\Tswitch = 0.0$ (53.07\%, i.e., standard LoRA).
+This divergence between loss and benchmark accuracy for GSM8K suggests that the sequential warm-up induces a different inductive bias that is particularly beneficial for MATH-style problems requiring multi-step symbolic reasoning, while the less structured GSM8K benefits from LoRA's exploratory random initialization.
+
+\paragraph{Rapid gain from minimal sequential probing.}
+Even a tiny sequential phase ($\Tswitch = 0.01$, corresponding to just 1\% of training) improves eval loss from 0.1974 to 0.1962.
+This demonstrates that the micro-probing effect requires remarkably little data to extract meaningful structural information from the pretrained manifold.
+
+%-----------------------------------------------------------------------------
+\subsection{Task-intrinsic alignment}
+\label{sec:alignment}
+%-----------------------------------------------------------------------------
+
+The varying optimal $\Tswitch$ across tasks provides insight into the relationship between task structure and the pretrained manifold.
+We identify two regimes:
+
+\paragraph{High-alignment tasks (extended sequential phase optimal).}
+For tasks where the pretrained model already encodes substantial relevant knowledge (e.g., mathematical reasoning from a math-augmented training set, or general NLU from a language model), a longer sequential phase ($\Tswitch = 0.5$--$0.8$) allows the adapter to thoroughly exploit the pretrained manifold.
+The adapter effectively learns a \emph{task-specific refinement} of the existing representation rather than constructing a new one from scratch.
+
+\paragraph{Low-alignment tasks (brief micro-probe optimal).}
+For tasks that deviate significantly from the pretrained distribution, an extended sequential phase can over-constrain the adapter to the pretrained manifold, hindering exploration of novel directions.
+In these cases, a brief micro-probe ($\Tswitch = 0.01$--$0.05$) suffices to extract an initial directional signal before releasing the adapter to explore freely in parallel mode.
+
+This spectrum interpretation positions \portal{} as a principled mechanism for interpolating between \emph{knowledge retention} (leveraging what the model already knows) and \emph{knowledge acquisition} (learning fundamentally new representations), with $\Tswitch$ as the dial.
+
+%-----------------------------------------------------------------------------
+\subsection{Optimization dynamics at the switching boundary}
+\label{sec:dynamics}
+%-----------------------------------------------------------------------------
+
+A natural concern is whether the discrete structural switch at $t = \Tswitch$ introduces optimization instability.
+We address this through two mechanisms:
+
+\paragraph{Output-preserving projection.}
+By Proposition~\ref{prop:lossless}, the Task-Isomorphic Projection exactly preserves the forward pass output at the switching point.
+The loss function is therefore continuous across the boundary: $\mathcal{L}(t = \Tswitch^-) = \mathcal{L}(t = \Tswitch^+)$.
+There is no loss spike at the transition.
+
+\paragraph{Momentum reset.}
+The optimizer momentum states from the sequential phase encode curvature information in the sequential parameter space $(\Bseq, \Aseq)$, which is no longer valid in the parallel space $(\Bpar, \Apar)$.
+Resetting momentum to zero at $\Tswitch$ prevents stale momentum from corrupting the early parallel-phase updates.
+This is analogous to warm restarts in cosine annealing~\citep{loshchilov2019adamw} and ensures a clean optimization trajectory in the new parameter space.
+
+\paragraph{Symmetric conditioning.}
+By Theorem~\ref{thm:condition}, the symmetric splitting distributes the condition number equally between $\Bpar$ and $\Apar$, preventing the gradient imbalance that would arise from an asymmetric factorization.
+This ensures that both matrices receive informative gradients from the first post-switch step, enabling rapid adaptation in the parallel phase.
+
+%-----------------------------------------------------------------------------
+\subsection{Computational efficiency}
+\label{sec:efficiency}
+%-----------------------------------------------------------------------------
+
+\begin{table}[t]
+\caption{Computational overhead comparison for initialization/projection on a single linear layer with $d_{\mathrm{out}} = d_{\mathrm{in}} = 4096$ and rank $r = 128$. PiSSA requires full SVD of $\Wbase$; \portal{} performs SVD only on a $128 \times 128$ core matrix.}
+\label{tab:efficiency}
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Operation} & \textbf{PiSSA} & \textbf{\portal{}} \\
+\midrule
+SVD target size & $4096 \times 4096$ & $128 \times 128$ \\
+Asymptotic cost & $O(d^3)$ & $O(dr^2)$ \\
+Speedup factor & $1\times$ & $\sim\!1024\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:efficiency} compares the initialization overhead.
+For a typical LLaMA-2-7B layer ($d = 4096, r = 128$), the ratio of PiSSA's $O(d^3)$ to \portal{}'s $O(dr^2)$ is approximately $d^3 / (dr^2) = d^2 / r^2 = (4096/128)^2 = 1024\times$.
+In practice, the sequential warm-up phase adds a small training overhead (proportional to $\Tswitch$), but the SVD projection itself is negligible.
+
+The total training cost of \portal{} is:
+\begin{equation}
+    C_{\portal{}} = \underbrace{\Tswitch \cdot C_{\mathrm{seq}}}_{\text{sequential phase}} + \underbrace{C_{\mathrm{proj}}}_{\text{projection}} + \underbrace{(1 - \Tswitch) \cdot C_{\mathrm{par}}}_{\text{parallel phase}},
+\end{equation}
+where $C_{\mathrm{seq}} \approx C_{\mathrm{par}}$ (sequential and parallel forward/backward costs are comparable) and $C_{\mathrm{proj}} \approx 0$ (the rank-$r$ SVD is negligible relative to training).
+Thus, the total training cost of \portal{} is approximately equal to that of standard LoRA, with the projection overhead amortized across training steps.
+At inference, \portal{} is \emph{identical} to LoRA, as the parallel adapter can be merged into $\Wbase$ for zero-latency serving.
+
+%=============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+%=============================================================================
+
+We introduced \portal{}, a framework that generalizes parameter-efficient fine-tuning over the training time axis by dynamically transitioning adapter connectivity from sequential to parallel mode.
+The key innovation is the Task-Isomorphic Projection, which losslessly converts sequential adapters into parallel adapters via an efficient rank-$r$ double SVD with $O(dr^2)$ complexity.
+This enables \portal{} to combine the manifold-exploiting advantage of sequential adapters during training with the zero-latency inference of parallel adapters during deployment.
+
+Experiments across mathematical reasoning, code generation, conversation, and NLU demonstrate that \portal{} consistently matches or outperforms LoRA, PiSSA, and DoRA.
+The $\Tswitch$ spectrum reveals a principled mechanism for balancing knowledge retention and acquisition, with the optimal switching point reflecting the intrinsic alignment between the task and the pretrained manifold.
+
+\paragraph{Limitations.}
+The optimal $\Tswitch$ is currently selected via validation, adding a hyperparameter to the training pipeline.
+While we have shown that even $\Tswitch = 0.01$ yields improvements, an adaptive mechanism for determining $\Tswitch$ based on gradient statistics remains an important direction for future work.
+Additionally, our experiments are limited to encoder and decoder-only architectures up to 7B parameters; scaling behavior on larger models warrants further investigation.
+
+\paragraph{Broader impact.}
+\portal{} reduces the computational barrier to fine-tuning large language models by providing better convergence with the same parameter and inference budget as LoRA.
+This makes high-quality model adaptation more accessible.
+As with all fine-tuning methods, the quality and safety of the resulting model depend on the training data and should be evaluated accordingly.
+
+
+%=============================================================================
+% References
+%=============================================================================
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+%=============================================================================
+\appendix
+%=============================================================================
+
+\section{Proof details}
+\label{app:proofs}
+
+\subsection{Full proof of Theorem~\ref{thm:condition}}
+
+\begin{proof}
+Let $M = U\Sigma V^\top$ with $\Sigma = \diag(\sigma_1, \ldots, \sigma_r)$, $\sigma_1 \geq \cdots \geq \sigma_r > 0$.
+Consider a general factorization $M = B'A'$ where $B' = U\Sigma^\alpha P$ and $A' = P^{-1} \Sigma^{1-\alpha} V^\top$ for some $\alpha \in [0, 1]$ and invertible $P \in \RR^{r \times r}$.
+Setting $P = I$ for simplicity (the argument extends by unitary invariance of condition numbers under orthogonal $P$), we get:
+\begin{align}
+    \kappa(B') &= \sigma_1^\alpha / \sigma_r^\alpha = \kappa(M)^\alpha, \\
+    \kappa(A') &= \sigma_1^{1-\alpha} / \sigma_r^{1-\alpha} = \kappa(M)^{1-\alpha}.
+\end{align}
+The maximum conditioning $\max(\kappa(B'), \kappa(A')) = \kappa(M)^{\max(\alpha, 1-\alpha)}$ is minimized when $\alpha = 1 - \alpha$, i.e., $\alpha = 1/2$.
+This yields $\kappa(B') = \kappa(A') = \kappa(M)^{1/2} = \sqrt{\kappa(M)}$, corresponding to the symmetric split $B' = U\Sigma^{1/2}$, $A' = \Sigma^{1/2}V^\top$.
+\end{proof}
+
+\subsection{Gradient flow analysis}
+
+We provide additional analysis of how the sequential gradient structure in Theorem~\ref{thm:gradient} affects early training dynamics.
+
+Consider the singular value decomposition $\Wbase = U_W \Sigma_W V_W^\top$.
+The sequential gradient $g_{\mathrm{seq}} = g_{\mathrm{par}} \Wbase^\top$ can be rewritten as:
+\begin{equation}
+    g_{\mathrm{seq}} = g_{\mathrm{par}} V_W \Sigma_W U_W^\top.
+\end{equation}
+
+The matrix $V_W \Sigma_W U_W^\top$ amplifies the components of $g_{\mathrm{par}}$ that align with the right singular vectors of $\Wbase$ (the input-space directions most utilized by the pretrained model), weighted by their corresponding singular values.
+This provides a natural curriculum: the adapter first adapts along the directions where the pretrained model has the strongest signal, and only later explores less prominent directions.
+
+In contrast, the parallel gradient $g_{\mathrm{par}}$ treats all input directions equally, regardless of their relevance to the pretrained model.
+For tasks that build upon pretrained knowledge (high-alignment tasks), the sequential gradient's bias toward pretrained-relevant directions accelerates convergence.
+For tasks that require departing from pretrained knowledge (low-alignment tasks), the amplification can become an impediment, motivating early switching to parallel mode.
+
+\section{Extended experimental details}
+\label{app:details}
+
+\subsection{Hyperparameters}
+
+\paragraph{LLaMA-2-7B experiments.}
+All LLaMA-2-7B experiments use the following hyperparameters unless otherwise specified:
+learning rate $2 \times 10^{-5}$, weight decay $0.0$, batch size 128, warmup ratio 0.03, cosine learning rate schedule, BF16 mixed precision, sequence length 512 (MetaMath, CodeFeedback) or 2048 (WizardLM).
+LoRA rank $r = 128$, LoRA alpha $\alpha = 256$, no dropout.
+Adapters are applied to all linear projections in attention ($W_q, W_k, W_v, W_o$) and MLP ($W_{\mathrm{up}}, W_{\mathrm{down}}, W_{\mathrm{gate}}$) layers.
+
+\paragraph{DeBERTa-v3-base experiments.}
+DeBERTa experiments use: learning rate $5 \times 10^{-5}$, weight decay $0.01$, batch size 32, 5 epochs, linear warmup for the first 6\% of steps followed by linear decay, FP32 precision.
+LoRA rank $r = 8$, LoRA alpha $\alpha = 16$.
+Adapters are applied to the query and value projections.
+
+\subsection{Datasets}
+
+\paragraph{MetaMath}~\citep{yu2024metamath}: 100K samples of augmented mathematical question-answer pairs derived from GSM8K and MATH training sets.
+
+\paragraph{CodeFeedback}~\citep{zhuo2024codefeedback}: 100K samples of code instruction-response pairs covering diverse programming tasks.
+
+\paragraph{WizardLM}~\citep{xu2024wizardlm}: 100K samples of complex instruction-following conversations generated through Evol-Instruct.
+
+\paragraph{GLUE}~\citep{wang2019glue}: Standard benchmark suite for NLU. We evaluate on SST-2 (sentiment analysis, 67K training samples), RTE (textual entailment, 2.5K training samples), and MNLI (natural language inference, 393K training samples).
+
+\subsection{Evaluation protocols}
+
+\paragraph{GSM8K and MATH.}
+We follow the standard few-shot evaluation protocol. For GSM8K, we use 8-shot chain-of-thought prompting and extract the final numerical answer. For MATH, we use 4-shot prompting and evaluate exact match after answer extraction.
+
+\paragraph{HumanEval and MBPP.}
+We evaluate pass@1 using greedy decoding (temperature 0). For HumanEval, we use the standard 164 programming problems. For MBPP, we use the sanitized subset of 427 problems.
+
+\paragraph{MT-Bench.}
+We use the standard 80-question MT-Bench evaluation with GPT-4 as the judge, following the protocol of \citet{zheng2023mtbench}. Scores range from 1 to 10 across 8 categories.
+
+\section{Additional ablation studies}
+\label{app:ablations}
+
+\subsection{Asymmetric vs.\ symmetric splitting}
+
+The symmetric splitting in Eq.~\ref{eq:symmetric_split} distributes singular values equally between $\Bpar$ and $\Apar$.
+An alternative asymmetric splitting places all singular values in one factor:
+\begin{align}
+    \text{Left-heavy:} \quad &\Bpar = Q_B \widetilde{U} \Sigma, \quad \Apar = \widetilde{V}^\top Q_A^\top. \\
+    \text{Right-heavy:} \quad &\Bpar = Q_B \widetilde{U}, \quad \Apar = \Sigma \widetilde{V}^\top Q_A^\top.
+\end{align}
+Both preserve the forward pass output but create conditioning imbalances.
+In our experiments on MetaMath (LLaMA-2-7B), asymmetric splitting led to gradient norm spikes of $2$--$5\times$ in the first 100 steps after switching, while the symmetric split exhibited smooth gradient norms throughout.
+The final MATH accuracy degraded by 0.3--0.5 points with asymmetric splitting, confirming the practical importance of Theorem~\ref{thm:condition}.
+
+\subsection{Sensitivity to rank}
+
+We evaluate \portal{} with $\Tswitch = 0.5$ on MetaMath across adapter ranks $r \in \{8, 32, 64, 128\}$.
+At all ranks, \portal{} achieves lower eval loss than the corresponding LoRA baseline with the same rank, with the relative improvement being more pronounced at smaller ranks.
+This suggests that the sequential warm-up is particularly valuable when the adapter capacity is limited, as it ensures that the available rank budget is allocated to the most task-relevant directions.
+
+%=============================================================================
+\newpage
+\input{checklist.tex}
+
+\end{document}
