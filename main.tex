@@ -422,7 +422,14 @@ Even $\Tswitch = 0.01$ (merely 1\% of training) reduces eval loss from 0.1974 to
 \end{minipage}
 \end{figure}
 
-The optimal $\Tswitch$ varies systematically across tasks, providing geometric insight into the alignment between each task's intrinsic subspace and $\Wbase$'s manifold (Figures~\ref{fig:nlu_heatmap}--\ref{fig:improvement}):
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/alignment_spectrum.pdf}
+\caption{Task-Manifold Alignment Spectrum. Tasks with high alignment to the pretrained manifold (RTE, MRPC) improve monotonically with later switching, while tasks requiring novel reasoning (MATH) peak at intermediate $\Tswitch$ values. $\Tswitch$ thus serves as a geometric indicator of task--manifold alignment.}
+\label{fig:alignment}
+\end{figure}
+
+The optimal $\Tswitch$ varies systematically across tasks, providing geometric insight into the alignment between each task's intrinsic subspace and $\Wbase$'s manifold (Figure~\ref{fig:alignment}):
 
 \paragraph{High alignment (NLU classification, $\Tswitch \to 1.0$).}
 For tasks like RTE, MRPC, and SST-2, the pretrained features are directly useful for classification.
@@ -453,14 +460,37 @@ This analysis positions $\Tswitch$ as a principled \emph{geometric dial} between
 
 The Task-Isomorphic Projection ensures a smooth, stable transition at $\Tswitch$ through three complementary mechanisms:
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/lossless_transition.pdf}
+\caption{Training loss around the switching boundary ($\Tswitch\!=\!0.2$, MetaMath). \textbf{(a)}~Full training curve with phase coloring. \textbf{(b)}~Zoom-in at the switch point: individual step losses (dots) and smoothed trend (line) show \emph{no loss spike} at the structural transition, empirically confirming the lossless projection guaranteed by Eq.~\ref{eq:equivalence}.}
+\label{fig:transition}
+\end{figure}
+
+Figure~\ref{fig:transition} provides direct empirical evidence that the Task-Isomorphic Projection achieves a smooth, stable transition. Three mechanisms ensure this:
+
 \paragraph{Output-preserving projection (no loss spike).}
-By the algebraic equivalence in Eq.~\ref{eq:equivalence}, the forward output is exactly preserved: $h(\Tswitch^-) = h(\Tswitch^+)$. Therefore, $\mathcal{L}(\Tswitch^-) = \mathcal{L}(\Tswitch^+)$ with zero discontinuity. In practice, we observe no loss spike at any $\Tswitch$ value across all experiments.
+By the algebraic equivalence in Eq.~\ref{eq:equivalence}, the forward output is exactly preserved: $h(\Tswitch^-) = h(\Tswitch^+)$. As visible in Figure~\ref{fig:transition}(b), the loss trajectory passes through the switching boundary without any discontinuity or spike, confirming the lossless property in practice.
 
 \paragraph{Momentum reset (stale inertia removal).}
 The optimizer's momentum and variance accumulators encode curvature information specific to the sequential parameter space $(\Bseq, \Aseq)$, which becomes invalid after projection to the parallel space $(\Bpar, \Apar)$. Resetting these states to zero at $\Tswitch$ prevents stale inertia from corrupting the parallel-phase trajectory, analogous to warm restarts~\citep{loshchilov2019adamw}.
 
 \paragraph{Symmetric conditioning (balanced gradients).}
-By Theorem~\ref{thm:condition}, the symmetric split reduces the maximum condition number from $\kappa(M)$ to $\sqrt{\kappa(M)}$, ensuring that both $\Bpar$ and $\Apar$ receive informative gradients from the first post-switch step. As shown in Figure~\ref{fig:complexity}, this projection incurs negligible computational overhead compared to PiSSA's full-weight SVD.
+By Theorem~\ref{thm:condition}, the symmetric split reduces the maximum condition number from $\kappa(M)$ to $\sqrt{\kappa(M)}$, ensuring both $\Bpar$ and $\Apar$ receive informative gradients from the first post-switch step.
+
+%-----------------------------------------------------------------------------
+\subsection{Computational Efficiency Across Model Scales}
+\label{sec:efficiency_analysis}
+%-----------------------------------------------------------------------------
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/efficiency_scaling.pdf}
+\caption{Initialization/projection FLOPs across model scales (log scale, $r\!=\!8$). PiSSA's $O(d^3)$ cost grows cubically while \portal{}'s $O(dr^2)$ scales linearly in $d$. At LLaMA-2-7B scale, \portal{} is ${\sim}262{,}000\times$ cheaper; at 405B scale, the gap exceeds ${\sim}4{,}000{,}000\times$. Annotations show the PiSSA-to-\portal{} speedup ratio.}
+\label{fig:efficiency_scaling}
+\end{figure}
+
+Figure~\ref{fig:efficiency_scaling} visualizes how the initialization cost scales across model sizes from DeBERTa-base (86M) to LLaMA-3-405B. The gap between PiSSA's $O(d^3)$ full-weight SVD and \portal{}'s $O(dr^2)$ rank-bounded projection widens \emph{super-linearly} with model scale. For the largest models ($d\!=\!16384$), PiSSA requires over $10^{15}$ FLOPs for initialization alone, while \portal{}'s projection costs remain below $10^{10}$ --- a ratio exceeding $4{,}000{,}000\times$. This makes \portal{} uniquely practical for scaling PEFT to frontier-scale models where PiSSA's SVD bottleneck becomes prohibitive.
 
 %=============================================================================
 \section{Conclusion}
