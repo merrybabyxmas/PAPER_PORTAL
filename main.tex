@@ -96,6 +96,35 @@ By treating the structural transition as a continuous variable rather than a dis
     \item[\bf C3.] \textbf{Fast SVD Initialization:} We propose a \emph{Task-Isomorphic Projection} that seamlessly converts the learned sequential representations into an equivalent parallel adapter via a lightweight rank-$r$ double SVD. This operation incurs a negligible $O(dr^2)$ cost, completely eliminating PiSSA's $O(d^3)$ initialization bottleneck without any loss of representation power.
     \item[\bf C4.] \textbf{Zero Inference Latency:} Following the projection at $\Tswitch$, the final model continues and concludes training in a purely parallel state. It is structurally identical to standard LoRA, perfectly preserving the zero additional inference latency property.
 \end{itemize}
+
+\begin{figure*}[t]
+\centering
+\begin{subfigure}[b]{0.22\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig1a.png}
+    \caption{Parallel (LoRA)}
+    \label{fig:arch_parallel}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.22\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig1b.png}
+    \caption{Sequential (Houlsby)}
+    \label{fig:arch_sequential}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.52\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/fig1c.png}
+    \caption{\portal{} (Ours)}
+    \label{fig:arch_portal}
+\end{subfigure}
+\caption{\textbf{(a)} Standard parallel composition (e.g., LoRA) for parameter-efficient fine-tuning (PEFT), where adapters are updated statically and unaligned with the frozen pretrained weight ($\Wbase$) manifold, leading to slow early exploration and convergence.
+\textbf{(b)} Standard sequential composition (e.g., Houlsby), which statically probes the base manifold but introduces inference latency during deployment.
+\textbf{(c)} Our proposed \portal{} generalized adapter composition, which dynamically unifies standard static compositions over the fine-tuning time axis ($t \in [0, 1]$). \portal{} initiates with sequential probing (Phase~1, $t < \Tswitch$), leveraging $\Wbase$ as an implicit spectral prior for rapid, manifold-aware probing. It then seamlessly executes a lossless extraction and Task-Isomorphic Projection into parallel space (Phase~2, $t \ge \Tswitch$) via an $O(dr^2)$ rank-bounded Double SVD at $\Tswitch$, continuing to conclusion with zero added inference latency. Standard LoRA is unified as the extreme special case where $\Tswitch\!=\!0$.}
+\label{fig:architecture}
+\end{figure*}
+
 %=============================================================================
 \section{Related Work}
 \label{sec:related}
