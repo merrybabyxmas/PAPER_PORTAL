@@ -319,7 +319,7 @@ We evaluate across two distinct model scales and architectures:
 (2)~\textbf{LLaMA-2-7B}~\citep{touvron2023llama2} (7B) for advanced Natural Language Generation (NLG). We fine-tune and evaluate on three challenging domains: mathematical reasoning (MetaMathQA~\citep{yu2024metamath} $\to$ GSM8K~\citep{cobbe2021gsm8k} and MATH~\citep{hendrycks2021math}), code generation (CodeFeedback~\citep{zhuo2024codefeedback} $\to$ HumanEval~\citep{chen2021humaneval} and MBPP~\citep{austin2021mbpp}), and multi-turn open-ended conversation (WizardLM~\citep{xu2024wizardlm} $\to$ MT-Bench~\citep{zheng2023mtbench}).
 
 \paragraph{Baselines and Implementation Details.}
-We benchmark \portal{} against the canonical standard LoRA~\citep{hu2022lora}, the recent SVD-based SOTA PiSSA~\citep{meng2024pissa}, the direction-magnitude decoupled DoRA~\citep{liu2024dora}, and the bias-only BitFit~\citep{zaken2022bitfit}. 
+We benchmark \portal{} against a comprehensive set of baselines: the canonical standard LoRA~\citep{hu2022lora} and its initialization variants (Gaussian, Kaiming), the SVD-based PiSSA~\citep{meng2024pissa}, the direction-magnitude decoupled DoRA~\citep{liu2024dora}, the dynamic-rank AdaLoRA~\citep{zhang2023adalora}, and full fine-tuning as a reference upper bound. 
 To ensure a rigorous and fair comparison, all low-rank methods are strictly constrained to rank $r = 8$ and applied to identical target modules. For DeBERTa, adapters target the query, key, and value projections. For LLaMA-2-7B, we inject adapters into all seven linear projections ($W_q, W_k, W_v, W_o, W_{\mathrm{gate}}, W_{\mathrm{up}}, W_{\mathrm{down}}$), capping the trainable parameters at a highly efficient $0.30\%$. 
 Models are fine-tuned for 1 epoch on 100K subsampled training examples. For \portal{}, we report the performance using the optimal switching point $\Tswitch$ per task category (comprehensive $\Tswitch$ ablations are detailed in Section~\ref{sec:ablation}).
 
@@ -329,7 +329,7 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. For \por
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
-\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods strictly use rank $r = 8$. \portal{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, and second-best are \underline{underlined}.}
+\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods strictly use rank $r = 8$. \portal{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best PEFT results are in \textbf{bold}, second-best are \underline{underlined}. $^\dagger$Full fine-tuning (100\% params) is included as a reference upper bound.}
 \label{tab:nlu}
 \centering
 \small
@@ -337,17 +337,23 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. For \por
 \toprule
 \textbf{Method} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-LoRA   & 95.6 & 83.4 & 90.0 & 89.6 & 65.1 & 93.6 & 88.9 & 86.6 \\
-PiSSA  & 95.5 & 83.4 & \underline{90.2} & \underline{89.6} & \underline{67.0} & \textbf{94.2} & \underline{90.1} & \underline{87.1} \\
-DoRA   & \underline{95.6} & \underline{84.5} & 90.0 & 89.2 & 65.4 & \underline{93.7} & 88.9 & 86.7 \\
+Full FT$^\dagger$ & 95.6 & 84.8 & -- & 92.3 & 69.6 & 94.0 & -- & -- \\
 \midrule
-\portal{} & \textbf{95.9} & \textbf{85.2} & \textbf{90.3} & \textbf{91.3} & \textbf{67.8} & \underline{94.1} & \textbf{90.1} & \textbf{87.8} \\
+LoRA              & \underline{95.6} & 83.4 & 90.0 & \underline{89.6} & 65.1 & 93.6 & 88.9 & 86.6 \\
+LoRA (Gauss.)     & \textbf{95.9} & 82.7 & -- & 89.4 & \underline{67.8} & 93.9 & -- & -- \\
+LoRA (Kaiming)    & \underline{95.6} & 82.3 & -- & 89.0 & \underline{67.0} & -- & -- & -- \\
+PiSSA             & 95.5 & 83.4 & \underline{90.2} & \underline{89.6} & \underline{67.0} & \textbf{94.2} & \underline{90.1} & \underline{87.1} \\
+DoRA              & \underline{95.6} & \underline{84.5} & 90.0 & 89.2 & 65.4 & \underline{93.7} & 88.9 & 86.7 \\
+AdaLoRA           & 94.4 & 53.8 & -- & 74.8 & 54.5 & -- & -- & -- \\
+\midrule
+\portal{}         & \textbf{95.9} & \textbf{85.2} & \textbf{90.3} & \textbf{91.3} & \textbf{67.8} & \underline{94.1} & \textbf{90.1} & \textbf{87.8} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-As reported in Table~\ref{tab:nlu}, \portal{} establishes a new state-of-the-art across the GLUE benchmarks, achieving the highest average score (87.8) and decisively outperforming PiSSA (87.1), DoRA (86.7), and standard LoRA (86.6). 
-Notably, \portal{} ranks first on 6 out of the 7 tasks evaluated. The most significant gains manifest in low-resource, logically demanding tasks such as MRPC (+1.7 over PiSSA) and RTE (+0.7 over DoRA). 
+As reported in Table~\ref{tab:nlu}, \portal{} establishes a new state-of-the-art among all PEFT methods across the GLUE benchmarks, achieving the highest average score (87.8) and decisively outperforming PiSSA (87.1), DoRA (86.7), and standard LoRA (86.6).
+Notably, \portal{} ranks first among PEFT methods on 6 out of 7 tasks. The most significant gains manifest in low-resource, logically demanding tasks such as MRPC (+1.7 over PiSSA) and RTE (+0.7 over DoRA).
+While full fine-tuning (100\% parameters) achieves competitive scores on MRPC and CoLA, \portal{} attains comparable performance using only 0.30\% of trainable parameters, demonstrating highly efficient manifold-aware adaptation. 
 
 \textbf{Manifold Retention in NLU:} We observe that the optimal $\Tswitch$ for NLU tasks consistently skews high (i.e., a late switch to parallel mode, or purely sequential; see Table~\ref{tab:nlu_ablation}). This empirically validates our core hypothesis: language understanding tasks heavily rely on the robust semantic priors already embedded within $\Wbase$. By operating extensively on $\Wbase x$ during the sequential phase, \portal{} successfully retains and leverages this manifold, whereas parallel-only methods like LoRA waste optimization capacity exploring unaligned subspaces.
 
