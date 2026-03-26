@@ -59,8 +59,8 @@ Parameter-efficient fine-tuning (PEFT) methods such as LoRA fix the adapter topo
 SVD-based initialization methods (e.g., PiSSA) attempt to utilize $\Wbase$ but require $O(d^3)$ decomposition and remain task-agnostic.
 We introduce \portal{}, a PEFT framework that unifies sequential and parallel adaptations along the training time axis.
 During an initial sequential phase, \portal{} projects activations through $\Wbase$ ($\Wbase x$) to identify the task-intrinsic subspace from data.
-At a switching step $\Tswitch$, a lossless \emph{Task-Isomorphic Projection} converts the learned sequential representations into an equivalent parallel adapter via a rank-$r$ double SVD.
-This costs $O(dr^2)$---orders of magnitude below full-weight SVD---while preserving the \emph{zero additional latency} property of LoRA at inference.
+At a switching step $\Tswitch$, a lossless \emph{Task-Isomorphic Projection} converts the learned sequential representations into an equivalent parallel adapter via a lightweight double SVD.
+This costs $O(dr^2)$---orders of magnitude below full-weight SVD---while preserving the zero additional latency property of LoRA at inference.
 Standard LoRA is recovered as the special case $\Tswitch = 0$.
 Experiments on LLaMA-2-7B and DeBERTa-v3-base across mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), conversation (MT-Bench), and seven GLUE tasks show that \portal{} consistently outperforms LoRA, PiSSA, and DoRA, achieving the best score on 6 out of 7 NLU tasks and the highest MATH accuracy.
 We also show that $\Tswitch$ serves as a geometric indicator of the alignment between the target task and the pretrained manifold.
@@ -74,7 +74,7 @@ Large language models (LLMs) with billions of parameters~\citep{brown2020gpt3, t
 Full fine-tuning of these models is expensive in compute and memory, motivating parameter-efficient fine-tuning (PEFT) methods that update only a small fraction of parameters while keeping the pretrained weights frozen~\citep{lialin2023scaling}.
 
 Among PEFT methods, Low-Rank Adaptation (LoRA)~\citep{hu2022lora} has emerged as the dominant paradigm.
-LoRA injects trainable low-rank matrices $B \in \mathbb{R}^{d \times r}$ and $A \in \mathbb{R}^{r \times d}$ in \emph{parallel} with each frozen weight $\Wbase$, yielding the forward pass $h = \Wbase x + BAx$.
+LoRA injects trainable low-rank matrices $B \in \mathbb{R}^{d \times r}$ and $A \in \mathbb{R}^{r \times d}$ in \emph{parallel} with each frozen weight $\Wbase$, yielding the forward pass $h = \Wbase x + BAx$.\footnote{For notational simplicity in the introduction, we assume $d_{\mathrm{in}} = d_{\mathrm{out}} = d$. The general case is treated in Section~\ref{sec:method}.}
 The adapter can be reparameterized into $\Wbase$ after training, guaranteeing \emph{zero additional inference latency}.
 However, LoRA's random initialization means the early optimization steps operate in a subspace disconnected from the pretrained representations of $\Wbase$, leading to slow initial convergence.
 
@@ -171,7 +171,7 @@ Consider a pretrained linear layer $\Wbase \in \mathbb{R}^{d_{\mathrm{out}} \tim
 PEFT architectures split into two topologies based on the adapter's input injection point:
 
 \begin{table}[h]
-\caption{Comparison of PEFT adapter topologies, initialization, and gradient dynamics. \portal{} starts sequential and transitions to parallel via Task-Isomorphic Projection at $O(dr^2)$ cost. $\delta \triangleq \partial \mathcal{L}/\partial h$ denotes the upstream gradient.}
+\caption{Comparison of PEFT adapter topologies, initialization, and gradient dynamics. \portal{} starts sequential and transitions to parallel via Task-Isomorphic Projection at $O(dr^2)$ cost.}
 \label{tab:topology}
 \centering
 \small
@@ -193,10 +193,11 @@ Infer.\ Overhead     & None           & $O(dr)$/layer  & None & None \\
 \end{tabular}}
 \end{table}
 
+Let $\delta \triangleq \partial \mathcal{L}/\partial h$ denote the upstream gradient.
 As shown in Table~\ref{tab:topology}, the sequential gradient $\nabla_A \mathcal{L} = B^\top \delta\, (\Wbase x)^\top$ operates on the pretrained feature space $\Wbase x$, biasing early optimization toward the principal directions of $\Wbase$.
 In contrast, both LoRA and PiSSA compute $\nabla_A \mathcal{L} = B^\top \delta\, x^\top$, treating all input directions uniformly regardless of pretrained structure.
 PiSSA partially addresses this via SVD-based initialization but incurs $O(d^3)$ cost per layer and remains task-agnostic.
-\portal{} uniquely combines sequential probing with parallel inference: it achieves task-aware initialization via a lightweight $O(dr^2)$ rank-bounded double SVD---$262{,}144\times$ cheaper than PiSSA's full-weight SVD for LLaMA-2-7B ($d\!=\!4096$, $r\!=\!8$)---while guaranteeing zero inference overhead.
+This motivates \portal{}'s approach: combining sequential probing with parallel inference, detailed in the following sections.
 
 \subsection{\portal{}: Time-Axis Generalization}
 \label{sec:portal}
@@ -215,6 +216,7 @@ x & \text{if } t \geq \Tswitch \quad (\text{Parallel Phase})
 
 Standard LoRA is recovered as $\Tswitch = 0$; $\Tswitch = 1$ yields a pure sequential adapter.
 Intermediate values enable a task-aware sequential warm-up that probes the subspace before switching to parallel mode.
+For brevity, we denote the weights during the sequential phase ($t < \Tswitch$) as $\Bseq, \Aseq$, and the parallel phase ($t \ge \Tswitch$) as $\Bpar, \Apar$.
 
 \paragraph{Initialization Dynamics.}
 During the initial sequential phase ($t < \Tswitch$), we initialize $A$ with Kaiming uniform and $B \sim \mathcal{N}(0, 10^{-4})$. 
@@ -555,9 +557,10 @@ Our experiments cover models up to 7B parameters; scaling behavior on larger mod
 \subsection{Proof of Theorem~\ref{thm:condition}}
 \begin{proof}
 Let $M = U\Sigma V^\top$ with $\Sigma = \diag(\sigma_1, \ldots, \sigma_r)$, $\sigma_1 \geq \cdots \geq \sigma_r > 0$.
-For a factorization $B' = U\Sigma^\alpha$, $A' = \Sigma^{1-\alpha} V^\top$ with $\alpha \in [0,1]$:
+Since $U$ and $V$ are orthogonal matrices from the SVD, they do not affect the condition number: $\kappa(UX) = \kappa(X)$ for any orthogonal $U$.
+For a factorization $B' = U\Sigma^\alpha$, $A' = \Sigma^{1-\alpha} V^\top$ with $\alpha \in [0,1]$, the condition number is determined solely by the diagonal $\Sigma^\alpha$:
 \begin{align}
-    \kappa(B') = \kappa(M)^\alpha, \quad \kappa(A') = \kappa(M)^{1-\alpha}.
+    \kappa(B') = \kappa(\Sigma^\alpha) = \kappa(M)^\alpha, \quad \kappa(A') = \kappa(\Sigma^{1-\alpha}) = \kappa(M)^{1-\alpha}.
 \end{align}
 The minimax problem $\min_\alpha \max(\kappa(B'), \kappa(A')) = \min_\alpha \kappa(M)^{\max(\alpha, 1-\alpha)}$ is solved at $\alpha = 1/2$, yielding $\kappa(B') = \kappa(A') = \sqrt{\kappa(M)}$.
 \end{proof}
@@ -565,7 +568,7 @@ The minimax problem $\min_\alpha \max(\kappa(B'), \kappa(A')) = \min_\alpha \kap
 \subsection{Gradient flow analysis}
 
 Let $\Wbase = U_W \Sigma_W V_W^\top$.
-The sequential gradient $\nabla_A \mathcal{L}|_{\mathrm{seq}} \propto (\Wbase x)^\top = (V_W \Sigma_W U_W^\top x)^\top$ amplifies input components aligned with $\Wbase$'s right singular vectors, weighted by singular values.
+The sequential gradient $\nabla_A \mathcal{L}|_{\mathrm{seq}} \propto (\Wbase x)^\top = x^\top V_W \Sigma_W U_W^\top$ amplifies input components aligned with $\Wbase$'s right singular vectors, weighted by their singular values.
 The adapter first adapts along directions where $\Wbase$ has the strongest signal.
 The parallel gradient $\nabla_A \mathcal{L}|_{\mathrm{par}} \propto x^\top$ lacks this spectral bias and treats all directions equally.
 
