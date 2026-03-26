@@ -44,26 +44,26 @@
 \DeclareMathOperator{\diag}{diag}
 \DeclareMathOperator{\tr}{tr}
 
-\title{\portal{}: Generalizing Parameter-Efficient Fine-Tuning\\over the Time Axis via Task-Isomorphic Projection}
+\title{\portal{}: Generalizing Parameter-Efficient Fine-Tuning\\over the Time Axis via Linear Projection}
 
 \author{Anonymous Author(s)}
 
 \begin{document}
 
 \maketitle
-
 %=============================================================================
 \begin{abstract}
 %=============================================================================
-Parameter-efficient fine-tuning (PEFT) methods such as LoRA fix the adapter topology to a \emph{parallel} connection, bypassing the pretrained weight manifold ($\Wbase$) that sequential adapters exploit for task adaptation.
-SVD-based initialization methods (e.g., PiSSA) attempt to utilize $\Wbase$ but require $O(d^3)$ decomposition and remain task-agnostic.
-We introduce \portal{}, a PEFT framework that unifies sequential and parallel adaptations along the training time axis.
-During an initial sequential phase, \portal{} projects activations through $\Wbase$ ($\Wbase x$) to identify the task-intrinsic subspace from data.
-At a switching step $\Tswitch$, a lossless \emph{Task-Isomorphic Projection} converts the learned sequential representations into an equivalent parallel adapter via a rank-$r$ double SVD.
-This costs $O(dr^2)$---orders of magnitude below full-weight SVD---while preserving the \emph{zero additional latency} property of LoRA at inference.
-Standard LoRA is recovered as the special case $\Tswitch = 0$.
-Experiments on LLaMA-2-7B and DeBERTa-v3-base across mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), conversation (MT-Bench), and seven GLUE tasks show that \portal{} consistently outperforms LoRA, PiSSA, and DoRA, achieving the best score on 6 out of 7 NLU tasks and the highest MATH accuracy.
-We also show that $\Tswitch$ serves as a geometric indicator of the alignment between the target task and the pretrained manifold.
+Low-Rank Adaptation (LoRA) has become the standard for parameter-efficient fine-tuning (PEFT) due to its zero inference latency. 
+However, its strictly parallel architecture bypasses the rich knowledge embedded in the pretrained weights, which sequential adapters naturally exploit for faster task alignment. 
+Conversely, recent SVD-based initialization methods (e.g., PiSSA) attempt to leverage this pretrained knowledge but suffer from computationally prohibitive decomposition costs and remain task-agnostic. 
+To resolve this dilemma, we introduce \portal{}, a generalized PEFT framework that unifies sequential and parallel adaptations along the training time axis. 
+\portal{} initiates training in a \emph{sequential mode}, using the original pretrained model as a lens to rapidly probe the task-intrinsic subspace from activation data. 
+At an optimal transition point, a lossless \emph{Task-Isomorphic Projection} converts the learned sequential representations into an equivalent parallel adapter via a lightweight double SVD. 
+This transformation reduces the massive SVD bottleneck to a negligible computational footprint while guaranteeing zero extra inference latency. 
+Notably, standard LoRA emerges simply as a special case where the sequential phase is entirely bypassed. 
+Extensive experiments on LLaMA-2-7B and DeBERTa-v3-base across reasoning (MATH, GSM8K), coding, and NLU (GLUE) benchmarks show that \portal{} consistently outperforms LoRA, PiSSA, and DoRA. 
+Furthermore, we theoretically and empirically reveal that the optimal switching timing acts as a geometric indicator, quantifying the alignment between the target task and the pretrained manifold.
 \end{abstract}
 %=============================================================================
 \section{Introduction}
