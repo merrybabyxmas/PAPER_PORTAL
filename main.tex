@@ -173,26 +173,31 @@ Consider a pretrained linear layer $\Wbase \in \mathbb{R}^{d_{\mathrm{out}} \tim
 Historically, PEFT architectures bifurcate into two canonical topologies based on the adapter's input injection point:
 
 \begin{table}[h]
-\caption{Comparison of fundamental adapter topologies. \portal{} bridges this historical dichotomy by starting in sequential mode and transitioning to parallel via a Task-Isomorphic Projection.}
+\caption{Unified comparison of adapter topologies and initialization strategies. \portal{} bridges the historical parallel--sequential dichotomy by starting in sequential mode and transitioning to parallel via a Task-Isomorphic Projection, combining the optimization advantages of sequential probing with the inference efficiency of parallel adapters at a negligible $O(dr^2)$ projection cost.}
 \label{tab:topology}
 \centering
 \small
-\begin{tabular}{lll}
+\begin{tabular}{lccc}
 \toprule
-& \textbf{Parallel (LoRA)} & \textbf{Sequential (Houlsby)} \\
+& \textbf{Parallel (LoRA)} & \textbf{Sequential (Houlsby)} & \textbf{\portal{} (Ours)} \\
 \midrule
-Forward Pass          & $h = \Wbase x + BAx$           & $h = \Wbase x + BA(\Wbase x)$ \\
-Adapter Input         & $x$ (raw input)             & $\Wbase x$ (pretrained output) \\
-Effective $\Delta W$  & $BA$                   & $BA\Wbase$ \\
-Inference Latency     & None (mergeable)        & $O(dr)$ per layer \\
+Forward Pass          & $\Wbase x + BAx$           & $\Wbase x + BA(\Wbase x)$ & Sequential $\to$ Parallel \\
+Adapter Input         & $x$ (raw)             & $\Wbase x$ (pretrained)  & $\Wbase x$ then $x$ \\
+Effective $\Delta W$  & $BA$                   & $BA\Wbase$ & $BA\Wbase \to BA$ \\
+\midrule
+SVD Target      & N/A (Random Init) & N/A & Core $\in \mathbb{R}^{r \times r}$ \\
+Init.\ Cost    & $O(1)$         & $O(1)$ & $O(dr^2)$ \\
+Task-Awareness         & No             & No    & \textbf{Yes} \\
+Inference Overhead     & None           & $O(dr)$ per layer  & None \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-While the parallel topology is favored for its zero-latency inference, the sequential topology possesses a profound, often overlooked optimization advantage. 
-In sequential mode, the gradient with respect to $A$ is formulated as $\nabla_A \mathcal{L} = B^\top (\partial \mathcal{L}/\partial h)(\Wbase x)^\top$. 
-Because the update operates directly on the pretrained feature space $\Wbase x$, it leverages an implicit \emph{spectral prior}. This strongly biases the early optimization steps toward the principal directions where $\Wbase$ already holds robust representations, acting as a natural, data-driven curriculum. 
+While the parallel topology is favored for its zero-latency inference, the sequential topology possesses a profound, often overlooked optimization advantage.
+In sequential mode, the gradient with respect to $A$ is formulated as $\nabla_A \mathcal{L} = B^\top (\partial \mathcal{L}/\partial h)(\Wbase x)^\top$.
+Because the update operates directly on the pretrained feature space $\Wbase x$, it leverages an implicit \emph{spectral prior}, biasing the early optimization toward the principal directions where $\Wbase$ already holds robust representations.
 In contrast, LoRA's gradient $\nabla_A \mathcal{L} = B^\top (\partial \mathcal{L}/\partial h) x^\top$ treats all input directions uniformly, often leading to inefficient early exploration in a suboptimal subspace.
+As shown in Table~\ref{tab:topology}, \portal{} uniquely combines sequential probing with parallel inference: it achieves task-aware initialization via a lightweight $O(dr^2)$ rank-bounded double SVD---$262{,}144\times$ cheaper than PiSSA's $O(d^3)$ full-weight SVD for LLaMA-2-7B ($d\!=\!4096$, $r\!=\!8$)---while guaranteeing zero inference overhead.
 
 \subsection{\portal{}: Time-Axis Generalization}
 \label{sec:portal}
@@ -294,22 +299,7 @@ To ensure the optimization process remains perfectly stable after the structural
 
 \subsection{Computational Complexity Analysis}
 
-\begin{table}[h]
-\caption{Comparison of initialization and projection overhead per linear layer (assuming $d = d_{\mathrm{out}} = d_{\mathrm{in}}$). For a standard LLaMA-2-7B layer ($d = 4096$) with rank $r = 8$, \portal{}'s lightweight double SVD is approximately $262{,}144\times$ computationally cheaper than PiSSA's full-weight SVD, while uniquely maintaining task-awareness.}
-\label{tab:complexity}
-\centering
-\small
-\begin{tabular}{lccc}
-\toprule
-& \textbf{Standard LoRA} & \textbf{PiSSA} & \textbf{\portal{} (Ours)} \\
-\midrule
-SVD Target Matrix      & N/A (Random Init) & $\Wbase \in \mathbb{R}^{d \times d}$ & Core $\in \mathbb{R}^{r \times r}$ \\
-Initialization Cost    & $O(1)$         & $O(d^3)$                       & $O(dr^2)$ \\
-Task-Awareness         & No             & No (Static Pre-computation)    & \textbf{Yes (Data-driven Probe)} \\
-Inference Overhead     & None           & None                           & None \\
-\bottomrule
-\end{tabular}
-\end{table}
+The computational analysis of \portal{}'s projection cost compared to alternative initialization strategies is summarized in Table~\ref{tab:topology}. While PiSSA requires a full-weight SVD of $\Wbase \in \mathbb{R}^{d \times d}$ at $O(d^3)$ cost per layer, \portal{} operates only on the learned core matrix $\in \mathbb{R}^{r \times r}$, reducing the projection cost to $O(dr^2)$.
 %=============================================================================
 \section{Experiments}
 \label{sec:experiments}
