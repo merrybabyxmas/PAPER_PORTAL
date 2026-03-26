@@ -276,28 +276,34 @@ To ensure the optimization process remains perfectly stable after the structural
     \item \textbf{Stale Inertia Reset:} The optimizer's momentum and variance accumulators encode curvature information specific to the sequential parameter space, which is invalid in the parallel space. We explicitly reset these states to zero at $\Tswitch$, akin to a warm restart~\citep{loshchilov2019adamw}, preventing stale inertia from corrupting the parallel trajectory.
 \end{enumerate}
 
-
 \begin{algorithm}[t]
 \caption{\portal{}: Time-Axis Generalized Training via Task-Isomorphic Projection}
 \label{alg:portal}
 \begin{algorithmic}[1]
-\REQUIRE Pretrained weight $\Wbase$, adapter rank $r$, switching step $\Tswitch$, total steps $T$
-\STATE Initialize $A \sim$ Kaiming Uniform, $B \sim \mathcal{N}(0, 10^{-4})$
-\STATE Set adapter topology $\gets$ \texttt{Sequential}
-\FOR{step $t = 0$ \TO $T$}
+\REQUIRE Pretrained weight $\Wbase \in \mathbb{R}^{d_{out} \times d_{in}}$, rank $r$, switch step $\Tswitch$, total steps $T$
+\STATE Initialize $A_{seq} \sim \mathcal{U}_{\text{Kaiming}}, \quad B_{seq} \sim \mathcal{N}(0, 10^{-4})$
+\STATE Initialize optimizer states $m \gets \mathbf{0}, \quad v \gets \mathbf{0}$
+\FOR{$t = 1$ \TO $T$}
     \IF{$t = \Tswitch$}
-        \STATE $M \gets B \cdot A \cdot \Wbase$ \hfill $\triangleright$ Construct effective task-adapted matrix
-        \STATE $U, \Sigma, V^\top \gets \textsc{RankR-DoubleSVD}(M)$ \hfill $\triangleright$ $O(dr^2)$ lossless extraction via Steps 1-2
-        \STATE $B \gets U\Sigma^{1/2}$, $\; A \gets \Sigma^{1/2} V^\top$ \hfill $\triangleright$ Theorem~\ref{thm:condition}: Symmetric splitting
-        \STATE Reset optimizer momentum and variance to $\mathbf{0}$ \hfill $\triangleright$ Clear stale inertia
-        \STATE Set adapter topology $\gets$ \texttt{Parallel}
+        \STATE $M \gets B_{seq} A_{seq} \Wbase$ \hfill $\triangleright$ Task-isomorphic matrix
+        \STATE $U, \Sigma, V^\top \gets \textsc{SVD}_r(M)$ \hfill $\triangleright$ $O(dr^2)$ decomposition
+        \STATE $A_{par} \gets \Sigma^{1/2} V^\top, \quad B_{par} \gets U\Sigma^{1/2}$ \hfill $\triangleright$ Symmetric splitting
+        \STATE $m \gets \mathbf{0}, \quad v \gets \mathbf{0}$ \hfill $\triangleright$ Momentum reset
     \ENDIF
-    \STATE Forward: $h \gets \Wbase x + BA \cdot (\Wbase x \text{ if Sequential, else } x)$
-    \STATE Compute Loss $\mathcal{L}$, Backward pass, and Update $(B, A)$
+    
+    \IF{$t < \Tswitch$}
+        \STATE $h \gets (\mathbf{I} + B_{seq} A_{seq}) \Wbase x$ \hfill $\triangleright$ Sequential forward
+    \ELSE
+        \STATE $h \gets (\Wbase + B_{par} A_{par}) x$ \hfill $\triangleright$ Parallel forward
+    \ENDIF
+    
+    \STATE $\mathcal{L} \gets \text{Loss}(h, y)$
+    \STATE Update active weights $(A, B)$ and states $(m, v)$ via $\nabla \mathcal{L}$
 \ENDFOR
-\STATE \textbf{return} $\Wbase + BA$ \hfill $\triangleright$ Merge weights for zero-latency inference
+\STATE \textbf{return} $\Wbase + B_{par} A_{par}$ \hfill $\triangleright$ Merged weights for zero-latency
 \end{algorithmic}
 \end{algorithm}
+
 
 \subsection{Computational Complexity Analysis}
 
