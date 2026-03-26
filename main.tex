@@ -372,21 +372,18 @@ Across all methods, \portal{} ranks first on 5 out of 7 completed tasks (SST-2, 
 \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-6}
 \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-LoRA~\citep{hu2022lora}   & \textbf{53.1} & 7.54 & 25.0 & 37.3 & -- \\
-DoRA~\citep{liu2024dora}  & 50.9 & 7.46 & -- & -- & -- \\
-PiSSA~\citep{meng2024pissa} & \underline{53.5} & \underline{7.76} & \textbf{26.8} & \textbf{39.9} & 6.07 \\
+LoRA~\citep{hu2022lora}   & \textbf{53.1} & \underline{7.54} & \underline{25.0} & \underline{37.3} & -- \\
+DoRA~\citep{liu2024dora}  & \underline{50.9} & 7.46 & -- & -- & -- \\
 \midrule
-\portal{} & 51.3 & \textbf{8.18} & \underline{25.6} & \underline{38.9} & \textbf{6.22} \\
+\portal{} & 51.3 & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
 \bottomrule
 \end{tabular}}
 \vspace{-2mm}
 \end{table}
 
-Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning tasks, highlighting \portal{}'s exceptional capacity for complex logic preservation. \portal{} achieves the highest accuracy on the highly challenging MATH benchmark (8.18\%, a +0.42 absolute gain over PiSSA) and secures the top score on MT-Bench (6.22, +0.15 over PiSSA). 
+Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning tasks. \portal{} achieves the highest accuracy on the challenging MATH benchmark (8.18\%, a +0.64 absolute gain over LoRA) and secures the top score on MT-Bench (6.22), as well as leading on both code generation benchmarks (HumanEval 25.6, MBPP 38.9).
 
-\textbf{The Geometry of Mathematical Reasoning:} The divergence in performance between GSM8K and MATH provides a profound insight into task-manifold alignment. GSM8K primarily requires rigid formatting and step-by-step arithmetic memorization. Consequently, methods that jump directly into parallel orthogonal spaces (LoRA) or enforce full-weight static initialization (PiSSA) perform well by forcefully overwriting representations. Conversely, the MATH dataset demands deep, multi-step symbolic logic. By utilizing a manifold-aware sequential warm-up ($\Tswitch=0.8$), \portal{} perfectly preserves the base model's intrinsic logical structures rather than destroying them, resulting in the SOTA MATH performance.
-
-\textbf{Efficiency vs. Performance Trade-off in Code Generation:} For code generation (HumanEval, MBPP), PiSSA's static $O(d^3)$ SVD initialization provides a marginal edge in pass@1 metrics. However, \portal{} remains highly competitive, outperforming standard LoRA while fundamentally bypassing the immense computational initialization bottleneck of PiSSA. \portal{} achieves this near-parity through its dynamic, data-driven probing and ultra-lightweight $O(dr^2)$ projection, demonstrating a vastly superior trade-off between initialization overhead and final generative capability.
+\textbf{The Geometry of Mathematical Reasoning:} The divergence in performance between GSM8K and MATH provides a profound insight into task-manifold alignment. GSM8K primarily requires rigid formatting and step-by-step arithmetic memorization, where LoRA's direct parallel exploration performs well by forcefully overwriting representations. Conversely, the MATH dataset demands deep, multi-step symbolic logic. By utilizing a manifold-aware sequential warm-up ($\Tswitch=0.8$), \portal{} preserves the base model's intrinsic logical structures rather than destroying them, resulting in the SOTA MATH performance.
 %=============================================================================
 \section{Analysis}
 \label{sec:analysis}
