@@ -99,21 +99,23 @@ By treating the structural transition as a continuous variable rather than a dis
 
 \begin{figure*}[t]
 \centering
-\begin{subfigure}[b]{0.22\textwidth}
+% Top row: (a) left, (b) right
+\begin{subfigure}[b]{0.38\textwidth}
     \centering
     \includegraphics[width=\textwidth]{figures/fig1a.png}
     \caption{Parallel (LoRA)}
     \label{fig:arch_parallel}
 \end{subfigure}
 \hfill
-\begin{subfigure}[b]{0.22\textwidth}
+\begin{subfigure}[b]{0.58\textwidth}
     \centering
     \includegraphics[width=\textwidth]{figures/fig1b.png}
     \caption{Sequential (Houlsby)}
     \label{fig:arch_sequential}
 \end{subfigure}
-\hfill
-\begin{subfigure}[b]{0.52\textwidth}
+\vspace{0.5em}
+% Bottom row: (c) full width
+\begin{subfigure}[b]{\textwidth}
     \centering
     \includegraphics[width=\textwidth]{figures/fig1c.png}
     \caption{\portal{} (Ours)}
