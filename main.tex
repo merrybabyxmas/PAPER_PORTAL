@@ -19,6 +19,7 @@
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage{pifont}
 \usepackage{caption}
 \usepackage{bbm}
 
@@ -173,31 +174,32 @@ Consider a pretrained linear layer $\Wbase \in \mathbb{R}^{d_{\mathrm{out}} \tim
 Historically, PEFT architectures bifurcate into two canonical topologies based on the adapter's input injection point:
 
 \begin{table}[h]
-\caption{Unified comparison of adapter topologies and initialization strategies. \portal{} bridges the historical parallel--sequential dichotomy by starting in sequential mode and transitioning to parallel via a Task-Isomorphic Projection, combining the optimization advantages of sequential probing with the inference efficiency of parallel adapters at a negligible $O(dr^2)$ projection cost.}
+\caption{Unified comparison of PEFT adapter topologies, initialization strategies, and gradient dynamics. \portal{} uniquely bridges the parallel--sequential dichotomy by starting in sequential mode and transitioning to parallel via a Task-Isomorphic Projection, combining manifold-aware optimization with zero inference overhead at a negligible $O(dr^2)$ projection cost. Here $\delta \triangleq \partial \mathcal{L}/\partial h$ denotes the upstream gradient.}
 \label{tab:topology}
 \centering
 \small
-\begin{tabular}{lccc}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lcccc}
 \toprule
-& \textbf{Parallel (LoRA)} & \textbf{Sequential (Houlsby)} & \textbf{\portal{} (Ours)} \\
+& \textbf{LoRA (Parallel)} & \textbf{Houlsby (Sequential)} & \textbf{PiSSA (Parallel)} & \textbf{\portal{} (Ours)} \\
 \midrule
-Forward Pass          & $\Wbase x + BAx$           & $\Wbase x + BA(\Wbase x)$ & Sequential $\to$ Parallel \\
-Adapter Input         & $x$ (raw)             & $\Wbase x$ (pretrained)  & $\Wbase x$ then $x$ \\
-Effective $\Delta W$  & $BA$                   & $BA\Wbase$ & $BA\Wbase \to BA$ \\
+Forward Pass          & $\Wbase x + BAx$           & $\Wbase x + BA(\Wbase x)$ & $\Wbase x + BAx$ & Seq.\ $\to$ Par.\ at $\Tswitch$ \\
+Adapter Input         & $x$ (raw)             & $\Wbase x$ (pretrained)  & $x$ (raw) & $\Wbase x$ then $x$ \\
+Effective $\Delta W$  & $BA$                   & $BA\Wbase$ & $BA$ & $BA\Wbase \to BA$ \\
+$\nabla_A \mathcal{L}$ & $B^\top \delta \, x^\top$ & $B^\top \delta \, (\Wbase x)^\top$ & $B^\top \delta \, x^\top$ & $B^\top \delta \, (\Wbase x)^\top \to B^\top \delta \, x^\top$ \\
 \midrule
-SVD Target      & N/A (Random Init) & N/A & Core $\in \mathbb{R}^{r \times r}$ \\
-Init.\ Cost    & $O(1)$         & $O(1)$ & $O(dr^2)$ \\
-Task-Awareness         & No             & No    & \textbf{Yes} \\
-Inference Overhead     & None           & $O(dr)$ per layer  & None \\
+SVD Target      & N/A (Random) & N/A & $\Wbase \in \mathbb{R}^{d \times d}$ & Core $\in \mathbb{R}^{r \times r}$ \\
+Init.\ Cost    & $O(1)$         & $O(1)$ & $O(d^3)$ & $O(dr^2)$ \\
+Task-Aware         & \ding{55}             & \ding{55}    & \ding{55} (static) & \ding{51} \\
+Infer.\ Overhead     & None           & $O(dr)$/layer  & None & None \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
-While the parallel topology is favored for its zero-latency inference, the sequential topology possesses a profound, often overlooked optimization advantage.
-In sequential mode, the gradient with respect to $A$ is formulated as $\nabla_A \mathcal{L} = B^\top (\partial \mathcal{L}/\partial h)(\Wbase x)^\top$.
-Because the update operates directly on the pretrained feature space $\Wbase x$, it leverages an implicit \emph{spectral prior}, biasing the early optimization toward the principal directions where $\Wbase$ already holds robust representations.
-In contrast, LoRA's gradient $\nabla_A \mathcal{L} = B^\top (\partial \mathcal{L}/\partial h) x^\top$ treats all input directions uniformly, often leading to inefficient early exploration in a suboptimal subspace.
-As shown in Table~\ref{tab:topology}, \portal{} uniquely combines sequential probing with parallel inference: it achieves task-aware initialization via a lightweight $O(dr^2)$ rank-bounded double SVD---$262{,}144\times$ cheaper than PiSSA's $O(d^3)$ full-weight SVD for LLaMA-2-7B ($d\!=\!4096$, $r\!=\!8$)---while guaranteeing zero inference overhead.
+As shown in Table~\ref{tab:topology}, the sequential gradient $\nabla_A \mathcal{L} = B^\top \delta\, (\Wbase x)^\top$ operates directly on the pretrained feature space $\Wbase x$, leveraging an implicit \emph{spectral prior} that biases early optimization toward the principal directions where $\Wbase$ already holds robust representations.
+In contrast, both LoRA and PiSSA compute $\nabla_A \mathcal{L} = B^\top \delta\, x^\top$, treating all input directions uniformly regardless of pretrained structure.
+While PiSSA partially addresses this via SVD-based initialization, it incurs a prohibitive $O(d^3)$ cost per layer and remains fundamentally task-agnostic.
+\portal{} uniquely combines sequential probing with parallel inference: it achieves task-aware initialization via a lightweight $O(dr^2)$ rank-bounded double SVD---$262{,}144\times$ cheaper than PiSSA's full-weight SVD for LLaMA-2-7B ($d\!=\!4096$, $r\!=\!8$)---while guaranteeing zero inference overhead.
 
 \subsection{\portal{}: Time-Axis Generalization}
 \label{sec:portal}
