@@ -183,14 +183,14 @@ Historically, PEFT architectures bifurcate into two canonical topologies based o
 \toprule
 & \textbf{LoRA (Parallel)} & \textbf{Houlsby (Sequential)} & \textbf{PiSSA (Parallel)} & \textbf{\portal{} (Ours)} \\
 \midrule
-Forward Pass          & $\Wbase x + BAx$           & $\Wbase x + BA(\Wbase x)$ & $\Wbase x + BAx$ & Seq.\ $\to$ Par.\ at $\Tswitch$ \\
-Adapter Input         & $x$ (raw)             & $\Wbase x$ (pretrained)  & $x$ (raw) & $\Wbase x$ then $x$ \\
+Forward Pass          & $\Wbase x + BAx$           & $\Wbase x + BA(\Wbase x)$ & $\Wbase x + BAx$ & $\Wbase x + BA(\Wbase x) \to \Wbase x + BAx$ \\
+Adapter Input         & $x$             & $\Wbase x$  & $x$ & $\Wbase x \to x$ \\
 Effective $\Delta W$  & $BA$                   & $BA\Wbase$ & $BA$ & $BA\Wbase \to BA$ \\
 $\nabla_A \mathcal{L}$ & $B^\top \delta \, x^\top$ & $B^\top \delta \, (\Wbase x)^\top$ & $B^\top \delta \, x^\top$ & $B^\top \delta \, (\Wbase x)^\top \to B^\top \delta \, x^\top$ \\
 \midrule
-SVD Target      & N/A (Random) & N/A & $\Wbase \in \mathbb{R}^{d \times d}$ & Core $\in \mathbb{R}^{r \times r}$ \\
+SVD Target      & N/A & N/A & $\Wbase \in \mathbb{R}^{d \times d}$ & Core $\in \mathbb{R}^{r \times r}$ \\
 Init.\ Cost    & $O(1)$         & $O(1)$ & $O(d^3)$ & $O(dr^2)$ \\
-Task-Aware         & \ding{55}             & \ding{55}    & \ding{55} (static) & \ding{51} \\
+Task-Aware         & \ding{55}             & \ding{55}    & \ding{55}  & \ding{51} \\
 Infer.\ Overhead     & None           & $O(dr)$/layer  & None & None \\
 \bottomrule
 \end{tabular}}
