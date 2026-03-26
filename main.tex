@@ -285,9 +285,9 @@ To ensure the optimization process remains perfectly stable after the structural
 \STATE Initialize optimizer states $m \gets \mathbf{0}, \quad v \gets \mathbf{0}$
 \FOR{$t = 1$ \TO $T$}
     \IF{$t = \Tswitch$}
-        \STATE $M \gets B_{seq} A_{seq} \Wbase$ \hfill $\triangleright$ Task-isomorphic matrix
-        \STATE $U, \Sigma, V^\top \gets \textsc{SVD}_r(M)$ \hfill $\triangleright$ $O(dr^2)$ decomposition
-        \STATE $A_{par} \gets \Sigma^{1/2} V^\top, \quad B_{par} \gets U\Sigma^{1/2}$ \hfill $\triangleright$ Symmetric splitting
+        \STATE $M \gets B_{seq} A_{seq} \Wbase$ \hfill $\triangleright$ Construct $M$
+        \STATE $U, \Sigma, V^\top \gets \textsc{SVD}_r(M)$ \hfill $\triangleright$ SVD projection
+        \STATE $A_{par} \gets \Sigma^{1/2} V^\top, \quad B_{par} \gets U\Sigma^{1/2}$ \hfill $\triangleright$ Energy splitting
         \STATE $m \gets \mathbf{0}, \quad v \gets \mathbf{0}$ \hfill $\triangleright$ Momentum reset
     \ENDIF
     
@@ -298,12 +298,11 @@ To ensure the optimization process remains perfectly stable after the structural
     \ENDIF
     
     \STATE $\mathcal{L} \gets \text{Loss}(h, y)$
-    \STATE Update active weights $(A, B)$ and states $(m, v)$ via $\nabla \mathcal{L}$
+    \STATE $(A, B), m, v \gets \text{Step}(\nabla_{\{A,B\}} \mathcal{L}, m, v)$ \hfill $\triangleright$ Update 
 \ENDFOR
-\STATE \textbf{return} $\Wbase + B_{par} A_{par}$ \hfill $\triangleright$ Merged weights for zero-latency
+\STATE \textbf{return} $\Wbase + B_{par} A_{par}$ \hfill
 \end{algorithmic}
 \end{algorithm}
-
 
 \subsection{Computational Complexity Analysis}
 
