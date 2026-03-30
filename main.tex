@@ -328,8 +328,8 @@ All low-rank methods use rank $r = 8$ on identical target modules. For DeBERTa, 
 Models are fine-tuned for 1 epoch on 100K subsampled training examples. We report \portal{} with the optimal $\Tswitch$ per task category ($\Tswitch$ ablations in Section~\ref{sec:ablation}).
 
 %-----------------------------------------------------------------------------
-\subsection{Natural Language Understanding (NLU)}
-\label{sec:nlu}
+\subsection{Main Results}
+\label{sec:main_results}
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
@@ -354,17 +354,6 @@ AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 8
 \bottomrule
 \end{tabular}}
 \end{table}
-
-As reported in Table~\ref{tab:nlu}, \portal{} achieves the highest average score (87.8) among all PEFT methods, outperforming PiSSA (87.1), DoRA (86.7), and LoRA (86.6).
-Full fine-tuning leads on MRPC (92.3) and CoLA (69.6) with 100\% of parameters; \portal{} attains competitive performance using only 0.24\% ($418\times$ fewer).
-\portal{} ranks first on 5 of 7 tasks, with the largest gains on low-resource tasks: MRPC (+1.7 over PiSSA) and RTE (+0.7 over DoRA).
-
-\textbf{Manifold Retention in NLU:} The optimal $\Tswitch$ for NLU tasks skews high (late switch or pure sequential; see Table~\ref{tab:nlu_ablation}). This confirms that NLU tasks rely on the semantic priors in $\Wbase$: operating on $\Wbase x$ during the sequential phase retains this manifold, while parallel-only methods spend optimization on unaligned subspaces.
-
-%-----------------------------------------------------------------------------
-\subsection{Natural Language Generation and Complex Reasoning}
-\label{sec:nlg}
-%-----------------------------------------------------------------------------
 
 \begin{table}[t]
 \caption{NLG evaluation across various base models. \textbf{Math}: GSM8K, MATH. \textbf{Code}: HumanEval, MBPP (pass@1). \textbf{Conv.}: MT-Bench. Rank $r\!=\!8$. Best in \textbf{bold}, second-best \underline{underlined}.}
@@ -397,8 +386,6 @@ Full fine-tuning leads on MRPC (92.3) and CoLA (69.6) with 100\% of parameters; 
 \vspace{-2mm}
 \end{table}
 
-Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning tasks. \portal{} achieves the highest accuracy on the challenging MATH benchmark (8.18\%, a +0.64 absolute gain over LoRA) and secures the top score on MT-Bench (6.22), as well as leading on both code generation benchmarks (HumanEval 25.6, MBPP 38.9).
-
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/training_dynamics.pdf}
@@ -406,7 +393,9 @@ Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning 
 \label{fig:training_dynamics}
 \end{figure*}
 
-\textbf{The Geometry of Mathematical Reasoning:} The divergence between GSM8K and MATH reflects task-manifold alignment. GSM8K requires step-by-step arithmetic, where LoRA's parallel exploration overwrites representations effectively. MATH demands multi-step symbolic logic; \portal{}'s sequential warm-up ($\Tswitch=0.8$) preserves the base model's logical structures, yielding the best MATH accuracy. Figure~\ref{fig:training_dynamics} visualizes these dynamics: the sequential phase produces faster loss convergence (a), more stable gradient norms (b), and higher intermediate GSM8K accuracy (c).
+\textbf{NLU (Table~\ref{tab:nlu}).} \portal{} achieves the highest average score (87.8) among PEFT methods, outperforming PiSSA (87.1), DoRA (86.7), and LoRA (86.6). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \portal{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
+
+\textbf{NLG (Table~\ref{tab:nlg}).} \portal{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA), MT-Bench (6.22), and leads on both code generation benchmarks. The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \portal{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
 %=============================================================================
 % Analysis subsections integrated into Experiments
 %=============================================================================
