@@ -465,17 +465,10 @@ Table~\ref{tab:init_cost} demonstrates that \portal{} occupies the Pareto fronti
 \label{sec:dynamics}
 %-----------------------------------------------------------------------------
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/lossless_transition.pdf}
-\caption{Training loss around $\Tswitch\!=\!0.2$ (MetaMath). \textbf{(a)}~Full curve with phase coloring. \textbf{(b)}~Zoom-in: step losses (dots) and smoothed trend (line) show no spike at the transition, confirming the lossless projection (Eq.~\ref{eq:equivalence}).}
-\label{fig:transition}
-\end{figure}
-
-The Task-Isomorphic Projection ensures a stable transition at $\Tswitch$ through three mechanisms. Figure~\ref{fig:transition} confirms that the transition is smooth:
+The Task-Isomorphic Projection ensures a stable transition at $\Tswitch$ through three mechanisms:
 
 \paragraph{Output-preserving projection (no loss spike).}
-By Eq.~\ref{eq:equivalence}, the forward output is preserved: $h(\Tswitch^-) = h(\Tswitch^+)$. Figure~\ref{fig:transition}(b) shows the loss passes through the boundary without discontinuity.
+By Eq.~\ref{eq:equivalence}, the forward output is preserved: $h(\Tswitch^-) = h(\Tswitch^+)$. The loss passes through the boundary without discontinuity.
 
 \paragraph{Momentum reset.}
 The optimizer's momentum and variance accumulators encode curvature from the sequential space $(\Bseq, \Aseq)$, invalid after projection to $(\Bpar, \Apar)$. Resetting to zero at $\Tswitch$ prevents stale states from corrupting the parallel trajectory~\citep{loshchilov2019adamw}.
@@ -487,13 +480,6 @@ By Theorem~\ref{thm:condition}, the symmetric split reduces the maximum conditio
 \subsection{The $\Tswitch$ Spectrum}
 \label{sec:ablation}
 %-----------------------------------------------------------------------------
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/tswitch_spectrum.pdf}
-\caption{$\Tswitch$ spectrum on MetaMath (LLaMA-2-7B). \textbf{Left}: eval loss decreases monotonically with later switching. \textbf{Right}: MATH peaks at $\Tswitch\!=\!0.8$; GSM8K favors $\Tswitch\!=\!0$ (LoRA). Even $\Tswitch\!=\!0.01$ (1\% of training) reduces loss, showing the micro-probe effect.}
-\label{fig:spectrum}
-\end{figure}
 
 \begin{table}[t]
 \caption{Detailed $\Tswitch$ spectrum on MetaMath (LLaMA-2-7B). $\Tswitch = 0$ reduces to standard LoRA.}
@@ -515,7 +501,7 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:spectrum} and Table~\ref{tab:ablation} reveal three key patterns in the $\Tswitch$ spectrum:
+Table~\ref{tab:ablation} reveals three key patterns in the $\Tswitch$ spectrum:
 
 \paragraph{Monotonic loss improvement.}
 Eval loss decreases monotonically from 0.1974 ($\Tswitch = 0$) to 0.1948 ($\Tswitch = 0.8$), a 1.3\% relative improvement. Any amount of sequential warm-up improves the optimization landscape by anchoring the adapter in the pretrained manifold.
@@ -532,34 +518,11 @@ Even $\Tswitch = 0.01$ (1\% of training) reduces eval loss from 0.1974 to 0.1962
 \label{sec:alignment}
 %-----------------------------------------------------------------------------
 
-\begin{figure}[t]
-\centering
-\begin{minipage}[t]{0.48\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/nlu_heatmap.pdf}
-    \captionof{figure}{NLU $\Tswitch$ heatmap (DeBERTa-v3-base). Bold borders: best per task. Later switching consistently dominates, confirming high NLU--manifold alignment.}
-    \label{fig:nlu_heatmap}
-\end{minipage}\hfill
-\begin{minipage}[t]{0.48\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/improvement_bar.pdf}
-    \captionof{figure}{Per-task improvement of \portal{} over the strongest baseline. Green: exceeds all baselines; red: underperformance.}
-    \label{fig:improvement}
-\end{minipage}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.85\linewidth]{figures/alignment_spectrum.pdf}
-\caption{Task-Manifold Alignment Spectrum. High-alignment tasks (RTE, MRPC) improve monotonically with later switching; tasks requiring novel reasoning (MATH) peak at intermediate $\Tswitch$. $\Tswitch$ serves as a geometric indicator of task--manifold alignment.}
-\label{fig:alignment}
-\end{figure}
-
-The optimal $\Tswitch$ varies systematically across tasks, indicating the alignment between each task's subspace and $\Wbase$'s manifold (Figure~\ref{fig:alignment}):
+The optimal $\Tswitch$ varies systematically across tasks, indicating the alignment between each task's subspace and $\Wbase$'s manifold:
 
 \paragraph{High alignment (NLU classification, $\Tswitch \to 1.0$).}
 For tasks like RTE, MRPC, and SST-2, the pretrained features are directly useful for classification.
-The heatmap in Figure~\ref{fig:nlu_heatmap} shows that performance increases monotonically with $\Tswitch$, with pure sequential mode achieving the best scores on 4 out of 5 tasks.
+Performance increases monotonically with $\Tswitch$, with pure sequential mode achieving the best scores on 4 out of 5 NLU tasks (Table~\ref{tab:nlu_ablation}).
 Extended sequential operation preserves the semantic priors in $\Wbase$.
 
 \paragraph{Moderate alignment (code, conversation, $\Tswitch \approx 0.5$).}
