@@ -412,29 +412,6 @@ Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning 
 \label{sec:analysis}
 %=============================================================================
 
-\subsection{PiSSA Initialization Efficiency Comparison}
-\label{sec:init_cost}
-
-\begin{table}[t]
-\caption{Initialization cost per linear layer ($r=8$). \portal{} reduces decomposition from $O(d^3)$ to $O(dr^2)$.}
-\label{tab:init_cost}
-\centering
-\small
-\begin{tabular}{l ccc}
-\toprule
-\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\portal{} (FLOPs)} \\
-\midrule
-DeBERTa-base & 768 & $5.7 \times 10^{8}$ & $4.7 \times 10^{4}$ \\
-LLaMA-2-7B  & 4{,}096  & $8.6 \times 10^{10}$ & $2.6 \times 10^{5}$ \\
-LLaMA-2-70B & 8{,}192  & $6.9 \times 10^{11}$ & $5.2 \times 10^{5}$ \\
-LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ PiSSA across model scales. PiSSA requires a full-weight SVD at $O(d^3)$ per linear layer; \portal{}'s Task-Isomorphic Projection operates on the learned $r \times r$ core at $O(dr^2)$.
-
-%-----------------------------------------------------------------------------
 \subsection{Quantization Experiment (Q-\portal{})}
 \label{sec:quantization}
 %-----------------------------------------------------------------------------
@@ -638,6 +615,28 @@ $\infty$ (seq) & \textbf{95.9} & \textbf{85.2} & \textbf{91.3} & \textbf{67.8} &
 \bottomrule
 \end{tabular}
 \end{table}
+
+\section{Initialization Cost Comparison}
+\label{app:init_cost}
+
+\begin{table}[h]
+\caption{Initialization cost per linear layer ($r=8$). \portal{} reduces decomposition from $O(d^3)$ to $O(dr^2)$.}
+\label{tab:init_cost}
+\centering
+\small
+\begin{tabular}{l ccc}
+\toprule
+\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\portal{} (FLOPs)} \\
+\midrule
+DeBERTa-base & 768 & $5.7 \times 10^{8}$ & $4.7 \times 10^{4}$ \\
+LLaMA-2-7B  & 4{,}096  & $8.6 \times 10^{10}$ & $2.6 \times 10^{5}$ \\
+LLaMA-2-70B & 8{,}192  & $6.9 \times 10^{11}$ & $5.2 \times 10^{5}$ \\
+LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ PiSSA across model scales. PiSSA requires a full-weight SVD at $O(d^3)$ per linear layer; \portal{}'s Task-Isomorphic Projection operates on the learned $r \times r$ core at $O(dr^2)$.
 
 \section{Inference Latency}
 \label{app:latency}
