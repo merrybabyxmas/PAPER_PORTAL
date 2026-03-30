@@ -367,21 +367,31 @@ Full fine-tuning leads on MRPC (92.3) and CoLA (69.6) with 100\% of parameters; 
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
-\caption{NLG evaluation on LLaMA-2-7B. \textbf{Math}: MetaMathQA $\to$ GSM8K, MATH. \textbf{Code}: CodeFeedback $\to$ HumanEval, MBPP (pass@1). \textbf{Conv.}: WizardLM $\to$ MT-Bench (GPT-4 judge, 1--10). Rank $r\!=\!8$. Best in \textbf{bold}, second-best \underline{underlined}.}
-\label{tab:nlg}
+\caption{NLG evaluation across various base models. \textbf{Math}: GSM8K, MATH. \textbf{Code}: HumanEval, MBPP (pass@1). \textbf{Conv.}: MT-Bench. Rank $r\!=\!8$. Best in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:nlg_comprehensive}
 \centering
 \small
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{l cc cc c}
+\begin{tabular}{ll cc cc c}
 \toprule
-& \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
-\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-6}
-\textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
+& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
+\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-LoRA~\citep{hu2022lora}   & \textbf{53.1} & \underline{7.54} & \underline{25.0} & \underline{37.3} & -- \\
-DoRA~\citep{liu2024dora}  & \underline{50.9} & 7.46 & -- & -- & -- \\
+\multirow{4}{*}{LLaMA-2-7B} & Full FT & x & x & x & x & x \\
+& LoRA (Gauss.)~\citep{hu2022lora} & \textbf{53.1} & \underline{7.54} & \underline{25.0} & \underline{37.3} & -- \\
+& LoRA (Kaiming) & x & x & x & x & -- \\
+& \portal{} (Ours) & \underline{51.3} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
 \midrule
-\portal{} & 51.3 & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
+\multirow{4}{*}{Mistral-7B} & Full FT & x & x & x & x & x \\
+& LoRA (Gauss.)~\citep{hu2022lora} & x & x & x & x & -- \\
+& LoRA (Kaiming) & x & x & x & x & -- \\
+& \portal{} (Ours) & x & x & x & x & x \\
+\midrule
+\multirow{4}{*}{Gemma-7B} & Full FT & x & x & x & x & x \\
+& LoRA (Gauss.)~\citep{hu2022lora} & x & x & x & x & -- \\
+& LoRA (Kaiming) & x & x & x & x & -- \\
+& \portal{} (Ours) & x & x & x & x & x \\
 \bottomrule
 \end{tabular}}
 \vspace{-2mm}
