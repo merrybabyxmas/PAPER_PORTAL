@@ -383,15 +383,13 @@ AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 8
 & \portal{} (Ours) & x & x & x & x & x \\
 \bottomrule
 \end{tabular}}
-\vspace{-2mm}
-\end{table}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/training_dynamics.pdf}
-\caption{Training dynamics of LoRA and \portal{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \portal{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \portal{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
-\label{fig:training_dynamics}
-\end{figure*}
+    \vspace{0.5cm}
+
+    \includegraphics[width=0.9\linewidth]{figures/training_dynamics.pdf}
+    \captionof{figure}{Training dynamics of LoRA and \portal{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \portal{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \portal{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
+    \label{fig:training_dynamics}
+\end{table}
 
 \textbf{NLU (Table~\ref{tab:nlu}).} \portal{} achieves the highest average score (87.8) among PEFT methods, outperforming PiSSA (87.1), DoRA (86.7), and LoRA (86.6). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \portal{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
