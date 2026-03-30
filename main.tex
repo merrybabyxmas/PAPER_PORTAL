@@ -401,25 +401,22 @@ AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 8
 \label{sec:subspace}
 %-----------------------------------------------------------------------------
 
-PiSSA's SVD of $\Wbase$ is task-agnostic: it is computed before observing any data.
-\portal{}'s matrix $M = \Bseq \Aseq \Wbase$, constructed at $\Tswitch$ after sequential probing, is task-aware by construction.
-We measure the divergence between these subspaces via the normalized Frobenius inner product of their top-$r$ singular vectors:
+\portal{}'s projection matrix $M = \Bseq \Aseq \Wbase$, constructed at $\Tswitch$ after sequential probing, encodes a task-aware subspace.
+We measure how far $M$ deviates from $\Wbase$'s principal directions via the normalized Frobenius inner product of their top-$r$ singular vectors:
 \begin{equation}
 \mathrm{Sim}(U_W^{(r)}, U_M^{(r)}) = \frac{1}{r} \left\| {U_W^{(r)}}^\top U_M^{(r)} \right\|_F^2 \;\in\; [0, 1]
 \label{eq:subspace_sim}
 \end{equation}
-A value of $1.0$ indicates identical spans (PiSSA by construction); lower values indicate task-specific deviation.
+A value of $1.0$ indicates identical spans; lower values indicate task-specific deviation.
 
 \begin{table}[t]
-\caption{Subspace similarity between $\Wbase$ and \portal{}'s $M$ (layer-averaged). PiSSA $\equiv 1.0$ by construction. Lower values indicate task-specific deviation from $\Wbase$'s principal directions.}
+\caption{Subspace similarity between $\Wbase$ and \portal{}'s task-aware matrix $M$ (layer-averaged). Lower values indicate greater deviation from $\Wbase$'s principal directions.}
 \label{tab:subspace_similarity}
 \centering
 \small
 \begin{tabular}{l ccc}
 \toprule
 \textbf{Task / Dataset} & \textbf{Left SV Sim ($U$)} & \textbf{Right SV Sim ($V$)} & \textbf{$\Delta\Sigma$ (\%)} \\
-\midrule
-\textbf{Task-Agnostic (PiSSA)} & 1.000 & 1.000 & 0.00 \\
 \midrule
 MATH (Reasoning)      & -- & -- & -- \\
 GSM8K (Arithmetic)    & -- & -- & -- \\
@@ -436,14 +433,13 @@ MNLI (NLU)            & -- & -- & -- \\
 \centering
 % Placeholder for subspace overlap heatmaps
 \includegraphics[width=\linewidth]{figures/subspace_heatmap.pdf}
-\caption{Subspace overlap between top-$r$ singular vectors of $\Wbase$ ($x$-axis) and $M$ ($y$-axis). \textbf{Left:} PiSSA produces a perfect diagonal. \textbf{Center:} SST-2 retains near-diagonal structure. \textbf{Right:} MATH shows off-diagonal energy, indicating task-specific redirection.}
+\caption{Subspace overlap between top-$r$ singular vectors of $\Wbase$ ($x$-axis) and $M$ ($y$-axis). \textbf{Left:} Identity baseline (no probing). \textbf{Center:} SST-2 retains near-diagonal structure. \textbf{Right:} MATH shows off-diagonal energy, indicating task-specific redirection.}
 \label{fig:subspace_heatmap}
 \end{figure}
 
 As shown in Table~\ref{tab:subspace_similarity}, NLU tasks (SST-2, RTE) retain high overlap with $\Wbase$, confirming that pretrained features are directly useful---the sequential phase refines rather than redirects.
-Tasks requiring novel capabilities (MATH, HumanEval) show lower similarity, indicating that the sequential warm-up steers $M$ toward a task-intrinsic subspace that static SVD cannot discover.
-Figure~\ref{fig:subspace_heatmap} visualizes this contrast.
-For tasks where the optimal subspace diverges from $\Wbase$'s principal components, PiSSA's task-agnostic initialization provides no structural advantage; \portal{}'s data-driven probing constructs a task-adapted basis before projection.
+Tasks requiring novel capabilities (MATH, HumanEval) show lower similarity, indicating that the sequential warm-up steers $M$ away from $\Wbase$'s principal directions toward a task-intrinsic subspace (Figure~\ref{fig:subspace_heatmap}).
+This confirms that the sequential phase performs data-driven subspace discovery rather than merely preserving $\Wbase$'s static structure.
 
 %-----------------------------------------------------------------------------
 \subsection{The $\Tswitch$ Spectrum: A Geometric Indicator of Task-Manifold Alignment}
