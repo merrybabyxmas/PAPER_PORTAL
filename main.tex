@@ -528,7 +528,7 @@ $\Tswitch$ acts as a dial between knowledge retention (high $\Tswitch$) and know
 
 Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matrix, \portal{} operates directly on 4-bit NF4-quantized weights without dequantizing $\Wbase$.
 
-\begin{table}[t]
+\begin{table}[h!]
 \caption{Quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$).}
 \label{tab:quantization}
 \centering
@@ -552,7 +552,7 @@ Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matri
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[h!]
 \centering
 \includegraphics[width=0.9\linewidth]{figures/training_dynamics_quant.pdf}
 \caption{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
@@ -564,7 +564,7 @@ Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matri
 \label{sec:init_cost}
 %-----------------------------------------------------------------------------
 
-\begin{table}[t]
+\begin{table}[h!]
 \caption{Initialization cost per linear layer ($r=8$).}
 \label{tab:init_cost}
 \centering
