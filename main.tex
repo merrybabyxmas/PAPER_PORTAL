@@ -416,44 +416,37 @@ Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning 
 \label{sec:quantization}
 %-----------------------------------------------------------------------------
 
-\begin{table}[h!]
-\caption{The quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$). \portal{} reduces quantization error by leveraging task-isomorphic projection at the switching point $\Tswitch$.}
-\label{tab:quantization}
-\centering
-\small
-\begin{tabular}{ll c cccc c}
-\toprule
-\textbf{Model} & \textbf{Method} & \textbf{Rank} & \textbf{Q} & \textbf{K} & \textbf{V} & \textbf{O} & \textbf{AVG} \\
-\midrule
-\multirow{4}{*}{LLaMA-2-7B}
-& QLoRA~\citep{dettmers2023qlora} & -- & 0 & 0 & 0 & 0 & 0 \\
-& LoftQ~\citep{li2023loftq}       & 128 & -- & -- & -- & -- & -- \\
-& PiSSA~\citep{meng2024pissa}     & 128 & -- & -- & -- & -- & -- \\
-& \textbf{\portal{} (Ours)}       & 128 & -- & -- & -- & -- & -- \\
-\midrule
-\multirow{4}{*}{LLaMA-3-8B}
-& QLoRA~\citep{dettmers2023qlora} & -- & 0 & 0 & 0 & 0 & 0 \\
-& LoftQ~\citep{li2023loftq}       & 128 & -- & -- & -- & -- & -- \\
-& PiSSA~\citep{meng2024pissa}     & 128 & -- & -- & -- & -- & -- \\
-& \textbf{\portal{} (Ours)}       & 128 & -- & -- & -- & -- & -- \\
-\midrule
-\multirow{4}{*}{LLaMA-3-70B}
-& QLoRA~\citep{dettmers2023qlora} & -- & 0 & 0 & 0 & 0 & 0 \\
-& LoftQ~\citep{li2023loftq}       & 64  & -- & -- & -- & -- & -- \\
-& PiSSA~\citep{meng2024pissa}     & 64  & -- & -- & -- & -- & -- \\
-& \textbf{\portal{} (Ours)}       & 64  & -- & -- & -- & -- & -- \\
-\bottomrule
-\end{tabular}
+\begin{table}[t]
+    \centering
+    \caption{The quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$). \portal{} reduces quantization error by leveraging task-isomorphic projection at the switching point $\Tswitch$.}
+    \label{tab:quantization}
+    \small
+    \begin{tabular}{ll c cccc c}
+    \toprule
+    \textbf{Model} & \textbf{Method} & \textbf{Rank} & \textbf{Q} & \textbf{K} & \textbf{V} & \textbf{O} & \textbf{AVG} \\
+    \midrule
+    \multirow{4}{*}{LLaMA-2-7B}
+    & QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
+    & LoftQ & 128 & -- & -- & -- & -- & -- \\
+    & PiSSA & 128 & -- & -- & -- & -- & -- \\
+    & \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
+    \midrule
+    \multirow{4}{*}{LLaMA-3-8B}
+    & QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
+    & LoftQ & 128 & -- & -- & -- & -- & -- \\
+    & PiSSA & 128 & -- & -- & -- & -- & -- \\
+    & \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
+    \bottomrule
+    \end{tabular}
+
+    \vspace{0.5cm}
+
+    \includegraphics[width=0.9\linewidth]{figures/training_dynamics_quant.pdf}
+    \captionof{figure}{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
+    \label{fig:training_dynamics_quant}
 \end{table}
 
-\begin{figure}[h!]
-\centering
-\includegraphics[width=\linewidth]{figures/training_dynamics_quant.pdf}
-\caption{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
-\label{fig:training_dynamics_quant}
-\end{figure}
-
-Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline operates without dequantizing $\Wbase$, unlike PiSSA which requires full-precision access for its $O(d^3)$ SVD. Figure~\ref{fig:training_dynamics_quant} confirms that Q-\portal{}'s sequential probing remains effective under 4-bit quantization: the loss converges faster (a), gradients are more stable (b), and GSM8K accuracy is consistently higher (c).
+Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline operates without dequantizing $\Wbase$.
 
 %-----------------------------------------------------------------------------
 \subsection{Accuracy vs.\ Training Cost Trade-off}
