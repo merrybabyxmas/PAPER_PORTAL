@@ -433,22 +433,36 @@ Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ P
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
-\caption{4-bit quantized models (NF4) on LLaMA-2-7B. \portal{} integrates with quantization, outperforming QLoRA variants.}
+\caption{Comparison of 4-bit quantized PEFT methods across various base models. All methods use \textbf{4-bit NF4} quantization and rank $r\!=\!8$. \textbf{Q-\portal{}} represents our method applied to quantized weights. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
 \label{tab:quantization}
 \centering
 \small
-\begin{tabular}{l l ccc}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ll cc cc c}
 \toprule
-\textbf{Precision} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{Eval Loss} \\
+& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
+\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-16-bit & LoRA & -- & -- & -- \\
+\multirow{4}{*}{LLaMA-2-7B}
+& QLoRA~\citep{dettmers2023qlora} & -- & -- & -- & -- & -- \\
+& LoftQ~\citep{li2023loftq}       & -- & -- & -- & -- & -- \\
+& PiSSA (Quant.)                 & -- & -- & -- & -- & -- \\
+& \textbf{Q-\portal{} (Ours)}    & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} \\
 \midrule
-\multirow{3}{*}{4-bit (NF4)}
-& QLoRA (Gaussian) & -- & -- & -- \\
-& LoftQ & -- & -- & -- \\
-& \textbf{Q-\portal{} (Ours)} & \textbf{--} & \textbf{--} & \textbf{--} \\
+\multirow{4}{*}{Mistral-7B}
+& QLoRA~\citep{dettmers2023qlora} & -- & -- & -- & -- & -- \\
+& LoftQ~\citep{li2023loftq}       & -- & -- & -- & -- & -- \\
+& PiSSA (Quant.)                 & -- & -- & -- & -- & -- \\
+& \textbf{Q-\portal{} (Ours)}    & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} \\
+\midrule
+\multirow{4}{*}{Gemma-7B}
+& QLoRA~\citep{dettmers2023qlora} & -- & -- & -- & -- & -- \\
+& LoftQ~\citep{li2023loftq}       & -- & -- & -- & -- & -- \\
+& PiSSA (Quant.)                 & -- & -- & -- & -- & -- \\
+& \textbf{Q-\portal{} (Ours)}    & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline---sequential warm-up, projection, and parallel training---operates without dequantizing $\Wbase$, unlike PiSSA which requires full-precision access for its $O(d^3)$ SVD.
