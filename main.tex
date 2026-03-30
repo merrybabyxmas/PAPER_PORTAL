@@ -399,7 +399,14 @@ Full fine-tuning leads on MRPC (92.3) and CoLA (69.6) with 100\% of parameters; 
 
 Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning tasks. \portal{} achieves the highest accuracy on the challenging MATH benchmark (8.18\%, a +0.64 absolute gain over LoRA) and secures the top score on MT-Bench (6.22), as well as leading on both code generation benchmarks (HumanEval 25.6, MBPP 38.9).
 
-\textbf{The Geometry of Mathematical Reasoning:} The divergence between GSM8K and MATH reflects task-manifold alignment. GSM8K requires step-by-step arithmetic, where LoRA's parallel exploration overwrites representations effectively. MATH demands multi-step symbolic logic; \portal{}'s sequential warm-up ($\Tswitch=0.8$) preserves the base model's logical structures, yielding the best MATH accuracy.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/training_dynamics.pdf}
+\caption{Training dynamics of LoRA and \portal{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \portal{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \portal{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
+\label{fig:training_dynamics}
+\end{figure*}
+
+\textbf{The Geometry of Mathematical Reasoning:} The divergence between GSM8K and MATH reflects task-manifold alignment. GSM8K requires step-by-step arithmetic, where LoRA's parallel exploration overwrites representations effectively. MATH demands multi-step symbolic logic; \portal{}'s sequential warm-up ($\Tswitch=0.8$) preserves the base model's logical structures, yielding the best MATH accuracy. Figure~\ref{fig:training_dynamics} visualizes these dynamics: the sequential phase produces faster loss convergence (a), more stable gradient norms (b), and higher intermediate GSM8K accuracy (c).
 %=============================================================================
 \section{Analysis}
 \label{sec:analysis}
@@ -477,20 +484,6 @@ Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-q
 %-----------------------------------------------------------------------------
 
 Table~\ref{tab:init_cost} demonstrates that \portal{} occupies the Pareto frontier of the accuracy--cost trade-off: it achieves accuracy competitive with or exceeding PiSSA (Tables~\ref{tab:nlu}--\ref{tab:nlg}) while reducing initialization cost by orders of magnitude.
-
-%-----------------------------------------------------------------------------
-\subsection{Training Dynamics}
-\label{sec:training_dynamics}
-%-----------------------------------------------------------------------------
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/training_dynamics.pdf}
-\caption{Training dynamics of LoRA and \portal{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B). \textbf{(a)}~Training loss: \portal{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \portal{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps: \portal{} achieves higher intermediate accuracy throughout training.}
-\label{fig:training_dynamics}
-\end{figure*}
-
-Figure~\ref{fig:training_dynamics} shows the training dynamics across methods. The sequential phase provides a manifold-aligned warm-up that produces faster loss convergence (a), more stable gradient norms (b), and higher intermediate GSM8K accuracy (c) compared to LoRA's random initialization.
 
 %-----------------------------------------------------------------------------
 \subsection{Optimization Dynamics at the Switching Boundary}
