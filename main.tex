@@ -91,10 +91,10 @@ We introduce \portal{} (\textbf{P}arameter-efficient \textbf{O}ptimization via \
 \portal{} combines the optimization benefits of sequential probing with the inference efficiency of parallel adaptation. Our contributions:
 
 \begin{itemize}
-    \item[\bf C1.] \textbf{Time-Axis Generalized PEFT Framework:} We formulate a novel paradigm where the adapter topology dynamically transitions from sequential to parallel at a configurable switching point $\Tswitch \in [0, 1]$. Standard LoRA is mathematically unified within this framework as the extreme special case where $\Tswitch = 0$.
-    \item[\bf C2.] \textbf{Task-Aware Manifold Probing:} The initial sequential phase acts as a data-driven probe of the pretrained manifold, identifying the task-intrinsic subspace and achieving faster convergence than random (LoRA) or static (PiSSA) initializations.
-    \item[\bf C3.] \textbf{Fast SVD Initialization:} The \emph{Task-Isomorphic Projection} converts the learned sequential representations into an equivalent parallel adapter via a rank-$r$ double SVD at $O(dr^2)$ cost, eliminating PiSSA's $O(d^3)$ initialization bottleneck without loss of representation power.
-    \item[\bf C4.] \textbf{Zero Inference Latency:} After projection at $\Tswitch$, training continues in a purely parallel state, structurally identical to standard LoRA, preserving zero additional inference latency.
+    \item[\bf C1.] \textbf{Time-Axis Generalization.} We formulate adapter connectivity as a function of training progress, transitioning from sequential to parallel at a switching point $\Tswitch \in [0, 1]$. LoRA is recovered as $\Tswitch = 0$.
+    \item[\bf C2.] \textbf{Task-Aware Probing.} The sequential phase probes the pretrained manifold from data, identifying the task-intrinsic subspace before parallel training begins.
+    \item[\bf C3.] \textbf{$O(dr^2)$ Projection.} A rank-$r$ double SVD converts sequential adapters into equivalent parallel adapters, reducing PiSSA's $O(d^3)$ initialization cost by up to $10^6\times$.
+    \item[\bf C4.] \textbf{Zero Inference Overhead.} After projection, training continues in standard LoRA topology with no additional latency at inference.
 \end{itemize}
 
 \begin{figure*}[t]
@@ -202,8 +202,7 @@ This motivates \portal{}'s approach: combining sequential probing with parallel 
 \subsection{\portal{}: Time-Axis Generalization}
 \label{sec:portal}
 
-\portal{} generalizes adapter connectivity as a function of training progress, combining sequential probing with parallel inference efficiency.
-Let $t \in [0, 1]$ denote the normalized training epoch. The adapter operates in a sequential mode for $t < \Tswitch$ and strictly transitions to a parallel mode for $t \geq \Tswitch$:
+Let $t \in [0, 1]$ denote the normalized training epoch. \portal{} operates in sequential mode for $t < \Tswitch$ and parallel mode for $t \geq \Tswitch$:
 
 \begin{equation}
 h(t) = \Wbase x + B(t) A(t) \cdot
@@ -214,50 +213,48 @@ x & \text{if } t \geq \Tswitch \quad (\text{Parallel Phase})
 \label{eq:portal}
 \end{equation}
 
-Standard LoRA is recovered as $\Tswitch = 0$; $\Tswitch = 1$ yields a pure sequential adapter.
-Intermediate values enable a task-aware sequential warm-up that probes the subspace before switching to parallel mode.
-For brevity, we denote the weights during the sequential phase ($t < \Tswitch$) as $\Bseq, \Aseq$, and the parallel phase ($t \ge \Tswitch$) as $\Bpar, \Apar$.
+Setting $\Tswitch = 0$ recovers standard LoRA; $\Tswitch = 1$ yields a pure sequential adapter.
+We denote weights during the sequential phase as $\Bseq, \Aseq$ and the parallel phase as $\Bpar, \Apar$.
 
 
 \subsection{Task-Isomorphic Projection via Rank-Bounded SVD}
 \label{sec:projection}
 
-At the transition point $t = \Tswitch$, the learned sequential adapter $(\Bseq, \Aseq)$ must be converted into an equivalent parallel adapter $(\Bpar, \Apar)$. To ensure the functional output of the network is perfectly preserved for any input $x$, we require an algebraic equivalence:
+At $t = \Tswitch$, we convert the sequential adapter $(\Bseq, \Aseq)$ into a parallel adapter $(\Bpar, \Apar)$ that preserves the forward output for any input $x$:
 \begin{equation}
 \Bpar \Apar x = \Bseq \Aseq (\Wbase x) \quad \Longrightarrow \quad \Bpar \Apar = \Bseq \Aseq \Wbase \triangleq M
 \label{eq:equivalence}
 \end{equation}
 
-\paragraph{The Rank Bound of $M$.}
-The target projection matrix $M \in \mathbb{R}^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ contains all task-adapted knowledge from the sequential phase. Because $M = \Bseq \Aseq \Wbase$ with $\Bseq \in \mathbb{R}^{d_{\mathrm{out}} \times r}$ and $\Aseq \in \mathbb{R}^{r \times d_{\mathrm{in}}}$, its rank is bounded:
+\paragraph{Rank bound.}
+Since $M = \Bseq \Aseq \Wbase$ with $\Bseq \in \mathbb{R}^{d_{\mathrm{out}} \times r}$, the rank of $M$ is bounded:
 \begin{equation*}
     \mathrm{rank}(M) \leq r
 \end{equation*}
 
-This rank bound lets us bypass the $O(d^3)$ full-weight SVD.
-\paragraph{The Projection Pipeline.} 
-Instead of a full decomposition, we factorize $M$ into $\Bpar$ and $\Apar$ through an $\mathbf{O(dr^2)}$ pipeline:
+This bound enables an $O(dr^2)$ factorization instead of the $O(d^3)$ full-weight SVD:
+
 
 \begin{itemize}
-    \item \textbf{Step 1: Subspace Extraction (Double QR).} We extract the orthogonal bases $Q_B \in \mathbb{R}^{d_{\mathrm{out}} \times r}$ and $Q_X \in \mathbb{R}^{d_{\mathrm{in}} \times r}$ by performing thin QR decompositions directly on the lightweight sequential components:
+    \item \textbf{Step 1 (Double QR).} Extract orthogonal bases via thin QR on the sequential components:
     \begin{equation}
     \Bseq = Q_B R_B, \quad (\Aseq \Wbase)^\top = Q_X R_X
     \end{equation}
     
-    \item \textbf{Step 2: Core Rank-$r$ SVD and Reconstruction.} The problem is now reduced to decomposing the microscopic $r \times r$ core matrix, $R_B R_X^\top$. By performing SVD strictly on this core, we identically reconstruct the full singular vectors ($U$ and $V$) of $M$:
+    \item \textbf{Step 2 (Core SVD).} Decompose the $r \times r$ core matrix $R_B R_X^\top$ and reconstruct the singular vectors of $M$:
     \begin{align}
     R_B R_X^\top &= \widetilde{U} \Sigma \widetilde{V}^\top \quad \text{(Core SVD)} \\
     M &= \underbrace{(Q_B \widetilde{U})}_{U} \Sigma \underbrace{(\widetilde{V}^\top Q_X^\top)}_{V^\top} \quad \text{(Reconstruction)}
     \end{align}
     
-    \item \textbf{Step 3: Symmetric Splitting.} To factorize the reconstructed matrix $M = U \Sigma V^\top$ into the parallel adapters, we enforce a symmetric energy distribution across the singular values:
+    \item \textbf{Step 3 (Symmetric Split).} Distribute singular values equally between the two adapters:
     \begin{equation}
     \Bpar = U \Sigma^{1/2}, \quad \Apar = \Sigma^{1/2} V^\top
     \end{equation}
 \end{itemize}
 
-\paragraph{Optimization Stability via Symmetric Splitting.}
-The energy distribution in Step 3 is a critical design choice for post-switch convergence. A naive or asymmetric factorization (e.g., assigning all singular values to one matrix) creates a scale imbalance between $\Bpar$ and $\Apar$, leading to exploding or vanishing gradients during backpropagation. We mitigate this through the principle of optimal conditioning:
+\paragraph{Why symmetric splitting.}
+An asymmetric factorization (e.g., $B' = U\Sigma$, $A' = V^\top$) creates a scale imbalance that destabilizes gradients after the switch. The symmetric split minimizes this:
 
 \begin{theorem}[Optimal Conditioning]
 \label{thm:condition}
@@ -267,14 +264,13 @@ Given the factorization $M = U \Sigma V^\top$, consider all rank-$r$ decompositi
 \end{equation*}
 \end{theorem}
 
-By enforcing $\alpha=1/2$, \portal{} ensures that both adapter matrices reside in a numerically stable region of the loss landscape, preventing gradient imbalance immediately after the structural transition (proof in Appendix~\ref{app:proofs}).
+Setting $\alpha=1/2$ equalizes the conditioning of both matrices (proof in Appendix~\ref{app:proofs}).
 
-\paragraph{Seamless Optimization Handoff.}
-To ensure the model passes through the structural boundary at $\Tswitch$ without optimization artifacts, we implement two stability mechanisms:
-
+\paragraph{Transition stability.}
+Two mechanisms ensure a smooth switch at $\Tswitch$:
 \begin{itemize}
-    \item \textbf{Loss Invariance:} Our Task-Isomorphic Projection (Eq.~\ref{eq:equivalence}) guarantees that the forward output remains strictly identical ($h_{seq} = h_{par}$). This ensures a zero-gap transition in the loss curve, preventing the "loss spikes" typically observed during architectural shifts.
-    \item \textbf{Curvature Recalibration (Momentum Reset):} The optimizer's momentum ($m$) and variance ($v$) accumulators encode the curvature of the sequential manifold, which is geometrically incompatible with the newly projected parallel space. To prevent stale directional inertia from corrupting the new trajectory, we reset the optimizer states to zero at $\Tswitch$, initiating a clean-slate "warm restart"~\citep{loshchilov2019adamw} in the parallel subspace.
+    \item \textbf{Loss invariance.} Eq.~\ref{eq:equivalence} guarantees $h(\Tswitch^-) = h(\Tswitch^+)$, so the loss passes through the boundary without discontinuity.
+    \item \textbf{Momentum reset.} The optimizer's momentum and variance accumulators encode curvature from the sequential space, which is invalid after projection. We reset both to zero at $\Tswitch$~\citep{loshchilov2019adamw}.
 \end{itemize}
 
 \begin{algorithm}[t]
@@ -405,21 +401,17 @@ AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 8
 \label{sec:subspace}
 %-----------------------------------------------------------------------------
 
-PiSSA initializes parallel adapters from the principal singular components of $\Wbase$, a decomposition that is fixed before observing any training data and therefore \emph{task-agnostic}.
-In contrast, \portal{}'s projection matrix $M = \Bseq \Aseq \Wbase$, constructed at $\Tswitch$ after data-driven sequential probing, encodes a \emph{task-aware} subspace.
-We now provide direct empirical evidence that $M$ captures fundamentally different directional information from $\Wbase$, and that the degree of deviation is governed by the nature of the downstream task.
-
-\paragraph{Measuring subspace divergence.}
-Let $U_W^{(r)} \in \RR^{d_{\mathrm{out}} \times r}$ and $V_W^{(r)} \in \RR^{d_{\mathrm{in}} \times r}$ denote the top-$r$ left and right singular vectors of $\Wbase$, and let $U_M^{(r)}$, $V_M^{(r)}$ denote those of $M$.
-We quantify subspace overlap via the \emph{normalized Frobenius inner product} (principal angle cosine):
+PiSSA's SVD of $\Wbase$ is task-agnostic: it is computed before observing any data.
+\portal{}'s matrix $M = \Bseq \Aseq \Wbase$, constructed at $\Tswitch$ after sequential probing, is task-aware by construction.
+We measure the divergence between these subspaces via the normalized Frobenius inner product of their top-$r$ singular vectors:
 \begin{equation}
 \mathrm{Sim}(U_W^{(r)}, U_M^{(r)}) = \frac{1}{r} \left\| {U_W^{(r)}}^\top U_M^{(r)} \right\|_F^2 \;\in\; [0, 1]
 \label{eq:subspace_sim}
 \end{equation}
-A value of $1.0$ indicates identical column spans (as in PiSSA); values below $1.0$ indicate that the sequential phase has steered the adapter toward a task-specific direction absent from the static SVD.
+A value of $1.0$ indicates identical spans (PiSSA by construction); lower values indicate task-specific deviation.
 
 \begin{table}[t]
-\caption{Subspace similarity between $\Wbase$ and \portal{}'s task-aware matrix $M$ (averaged over all adapter layers). PiSSA is task-agnostic by construction (similarity $\equiv 1.0$). Lower similarity indicates that the sequential phase discovered task-specific directions absent from the principal components of $\Wbase$. $\Delta\Sigma$ denotes the relative shift in the singular value spectrum.}
+\caption{Subspace similarity between $\Wbase$ and \portal{}'s $M$ (layer-averaged). PiSSA $\equiv 1.0$ by construction. Lower values indicate task-specific deviation from $\Wbase$'s principal directions.}
 \label{tab:subspace_similarity}
 \centering
 \small
@@ -444,33 +436,24 @@ MNLI (NLU)            & -- & -- & -- \\
 \centering
 % Placeholder for subspace overlap heatmaps
 \includegraphics[width=\linewidth]{figures/subspace_heatmap.pdf}
-\caption{Subspace overlap heatmaps between the top-$r$ singular vectors of $\Wbase$ ($x$-axis) and $M$ ($y$-axis). \textbf{Left:} PiSSA (task-agnostic) produces a perfect diagonal, confirming that its initialization merely copies $\Wbase$'s structure. \textbf{Center:} SST-2 (high alignment) retains near-diagonal structure, indicating that the pretrained manifold is directly useful. \textbf{Right:} MATH (low alignment) shows substantial off-diagonal energy, demonstrating that the sequential phase discovered novel task-specific directions absent from $\Wbase$'s principal components.}
+\caption{Subspace overlap between top-$r$ singular vectors of $\Wbase$ ($x$-axis) and $M$ ($y$-axis). \textbf{Left:} PiSSA produces a perfect diagonal. \textbf{Center:} SST-2 retains near-diagonal structure. \textbf{Right:} MATH shows off-diagonal energy, indicating task-specific redirection.}
 \label{fig:subspace_heatmap}
 \end{figure}
 
-Table~\ref{tab:subspace_similarity} quantifies this divergence across tasks. Two patterns emerge:
-
-\paragraph{NLU tasks retain high overlap with $\Wbase$.}
-Classification tasks such as SST-2 and RTE exhibit high subspace similarity, confirming that the pretrained features are directly useful for these tasks. The sequential phase acts as a \emph{refinement} rather than a \emph{redirection}, polishing the existing manifold structure.
-
-\paragraph{Reasoning and generation tasks diverge from $\Wbase$.}
-Tasks requiring novel capabilities---multi-step symbolic reasoning (MATH), code synthesis (HumanEval)---show markedly lower similarity. The sequential warm-up steers $M$ away from $\Wbase$'s principal directions toward a task-intrinsic subspace that static SVD (PiSSA) cannot discover.
-
-Figure~\ref{fig:subspace_heatmap} visualizes this contrast: PiSSA produces a perfect diagonal (identical spans), NLU tasks retain near-diagonal structure, while reasoning tasks exhibit substantial off-diagonal energy---direct visual evidence that the sequential phase performs \emph{task-aware subspace discovery}.
-
-\paragraph{Implication for initialization.}
-This analysis reveals a fundamental limitation of task-agnostic SVD initialization: for tasks whose optimal subspace diverges significantly from $\Wbase$'s principal components, PiSSA's initialization provides no advantage over random initialization. \portal{}'s data-driven sequential probing addresses this by constructing a task-adapted basis before projection.
+As shown in Table~\ref{tab:subspace_similarity}, NLU tasks (SST-2, RTE) retain high overlap with $\Wbase$, confirming that pretrained features are directly useful---the sequential phase refines rather than redirects.
+Tasks requiring novel capabilities (MATH, HumanEval) show lower similarity, indicating that the sequential warm-up steers $M$ toward a task-intrinsic subspace that static SVD cannot discover.
+Figure~\ref{fig:subspace_heatmap} visualizes this contrast.
+For tasks where the optimal subspace diverges from $\Wbase$'s principal components, PiSSA's task-agnostic initialization provides no structural advantage; \portal{}'s data-driven probing constructs a task-adapted basis before projection.
 
 %-----------------------------------------------------------------------------
 \subsection{The $\Tswitch$ Spectrum: A Geometric Indicator of Task-Manifold Alignment}
 \label{sec:ablation}
 %-----------------------------------------------------------------------------
 
-The switching step $\Tswitch$ controls how long the adapter remains coupled to the pretrained manifold before transitioning to parallel mode.
-We demonstrate that $\Tswitch$ is not merely a training hyperparameter but a \emph{geometric indicator} of the intrinsic alignment between the target task and $\Wbase$'s representation space.
+We show that $\Tswitch$ is not merely a hyperparameter but a geometric indicator of task-manifold alignment.
 
 \begin{table}[t]
-\caption{Detailed $\Tswitch$ spectrum on MetaMath (LLaMA-2-7B, $r\!=\!8$). $\Tswitch = 0$ reduces to standard LoRA. Eval loss improves monotonically with sequential warm-up duration, while downstream accuracy exhibits task-dependent optima.}
+\caption{$\Tswitch$ spectrum on MetaMath (LLaMA-2-7B, $r\!=\!8$). $\Tswitch = 0$ is standard LoRA.}
 \label{tab:ablation}
 \centering
 \small
@@ -490,7 +473,7 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \end{table}
 
 \begin{table}[t]
-\caption{Cross-task $\Tswitch$ spectrum. NLU tasks benefit from late switching (extended manifold retention), while generation and reasoning tasks exhibit varied optima depending on the degree of task-manifold alignment. Best results per task in \textbf{bold}.}
+\caption{Cross-task $\Tswitch$ spectrum. Best per task in \textbf{bold}.}
 \label{tab:tsw_spectrum}
 \centering
 \small
@@ -522,35 +505,35 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \centering
 % Placeholder for task-manifold alignment curves
 \includegraphics[width=0.85\linewidth]{figures/tsw_alignment_curves.pdf}
-\caption{Normalized performance trajectories across the $\Tswitch$ spectrum. Each curve represents a task category, with performance scaled to $[0, 1]$ relative to the per-task optimum. \textcolor{red}{NLU tasks (red)} improve monotonically with $\Tswitch$, peaking at pure sequential mode---indicating high alignment with $\Wbase$. \textcolor{blue}{Reasoning tasks (blue)} peak at intermediate $\Tswitch$ values, requiring a balance of manifold probing and parallel exploration. The crossing point reveals the geometric boundary between knowledge-retention and knowledge-acquisition regimes.}
+\caption{Normalized performance vs.\ $\Tswitch$. \textcolor{red}{NLU tasks (red)} peak at $\Tswitch \to 1.0$; \textcolor{blue}{reasoning tasks (blue)} peak at intermediate values. The crossing point marks the boundary between knowledge-retention and knowledge-acquisition regimes.}
 \label{fig:tsw_curves}
 \end{figure}
 
-Tables~\ref{tab:ablation} and \ref{tab:tsw_spectrum} reveal three structural patterns:
+Tables~\ref{tab:ablation} and \ref{tab:tsw_spectrum} reveal three patterns:
 
 \paragraph{Monotonic loss improvement.}
-Eval loss decreases monotonically from 0.1974 ($\Tswitch = 0$) to 0.1948 ($\Tswitch = 0.8$), a 1.3\% relative improvement (Table~\ref{tab:ablation}). Any amount of sequential warm-up improves the optimization landscape by anchoring the adapter in the pretrained manifold before parallel exploration.
+Eval loss decreases from 0.1974 ($\Tswitch = 0$) to 0.1948 ($\Tswitch = 0.8$), a 1.3\% relative gain. Any sequential warm-up improves the optimization landscape.
 
-\paragraph{Task-dependent performance optima.}
-The optimal $\Tswitch$ varies systematically across task categories (Table~\ref{tab:tsw_spectrum}, Figure~\ref{fig:tsw_curves}):
+\paragraph{Task-dependent optima.}
+The optimal $\Tswitch$ varies by task category (Figure~\ref{fig:tsw_curves}):
 \begin{itemize}
-    \item \textbf{High alignment} (NLU: SST-2, RTE, MRPC, CoLA): Performance increases monotonically with $\Tswitch$, with pure sequential mode ($\Tswitch = 1.0$) achieving the best scores on NLU tasks (Table~\ref{tab:nlu_ablation}). The pretrained features are directly useful for classification; extended sequential operation preserves these semantic priors.
-    \item \textbf{Moderate alignment} (Code, Conversation): Code generation and conversational ability build on pretrained knowledge but require new representational capacity. An intermediate $\Tswitch$ balances manifold probing with parallel exploration of novel directions.
-    \item \textbf{Low alignment} (Novel Reasoning): For tasks far from the pretrained distribution, over-constraining the adapter to $\Wbase$'s manifold impedes learning. A short sequential phase extracts an initial directional signal before releasing the adapter to parallel mode.
+    \item \textbf{High alignment} (NLU): performance increases monotonically with $\Tswitch$; pure sequential mode ($\Tswitch = 1.0$) is optimal on 4/5 tasks (Table~\ref{tab:nlu_ablation}).
+    \item \textbf{Moderate alignment} (Code, Conversation): intermediate $\Tswitch$ balances manifold probing with parallel exploration.
+    \item \textbf{Low alignment} (Reasoning): a short probe suffices; prolonged sequential coupling impedes learning.
 \end{itemize}
 
-\paragraph{The micro-probe effect.}
-Even $\Tswitch = 0.01$ (1\% of training) reduces eval loss from 0.1974 to 0.1962 (Table~\ref{tab:ablation}). The sequential phase extracts directional information from $\Wbase$ within an extremely short window, acting as a rapid directional calibration before entering parallel mode. This demonstrates that the benefit of manifold probing is not proportional to its duration---a brief interaction suffices to extract the dominant task-relevant directions.
+\paragraph{Micro-probe effect.}
+Even $\Tswitch = 0.01$ (1\% of training) reduces eval loss by 0.6\%. A brief sequential interaction extracts the dominant task-relevant directions from $\Wbase$.
 
-\paragraph{$\Tswitch$ as a geometric indicator.}
-$\Tswitch$ functions as a principled dial between \emph{knowledge retention} (high $\Tswitch$, preserving $\Wbase$'s priors) and \emph{knowledge acquisition} (low $\Tswitch$, enabling free exploration). The optimal value reflects the intrinsic alignment between the target task's subspace and the pretrained manifold. Combined with the subspace analysis in Section~\ref{sec:subspace}, this provides a unified geometric interpretation: tasks with high subspace similarity to $\Wbase$ benefit from prolonged sequential coupling, while tasks requiring novel representations benefit from early decoupling.
+\paragraph{Geometric interpretation.}
+$\Tswitch$ acts as a dial between knowledge retention (high $\Tswitch$) and knowledge acquisition (low $\Tswitch$), with the optimal value reflecting task-manifold alignment (Section~\ref{sec:subspace}).
 
 %-----------------------------------------------------------------------------
 \subsection{Quantization Experiment (Q-\portal{})}
 \label{sec:quantization}
 %-----------------------------------------------------------------------------
 
-Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline operates without dequantizing $\Wbase$.
+Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matrix, \portal{} operates directly on 4-bit NF4-quantized weights without dequantizing $\Wbase$.
 
 \begin{table}[t]
 \caption{Quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$).}
@@ -589,7 +572,7 @@ Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-q
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
-\caption{Initialization cost per linear layer ($r=8$). \portal{} reduces decomposition from $O(d^3)$ to $O(dr^2)$, achieving orders-of-magnitude savings that grow with model scale.}
+\caption{Initialization cost per linear layer ($r=8$).}
 \label{tab:init_cost}
 \centering
 \small
@@ -605,7 +588,7 @@ LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ PiSSA across model scales. PiSSA requires a full-weight SVD of $\Wbase \in \RR^{d \times d}$ at $O(d^3)$ per linear layer; \portal{}'s Task-Isomorphic Projection operates on the learned $r \times r$ core at $O(dr^2)$. At the scale of LLaMA-2-7B, this represents a $3.3 \times 10^5$-fold reduction. \portal{} thus occupies the Pareto frontier of the accuracy--cost trade-off: it achieves accuracy competitive with or exceeding PiSSA (Tables~\ref{tab:nlu}--\ref{tab:nlg_comprehensive}) while reducing initialization cost by orders of magnitude.
+As shown in Table~\ref{tab:init_cost}, PiSSA requires $O(d^3)$ FLOPs per layer for full-weight SVD; \portal{} requires $O(dr^2)$. At $d = 4096$ (LLaMA-2-7B), this is a $3.3 \times 10^5$-fold reduction.
 
 %=============================================================================
 \section{Conclusion}
@@ -622,7 +605,7 @@ The optimal $\Tswitch$ requires validation-based selection; an adaptive mechanis
 Our experiments cover models up to 7B parameters; scaling behavior on larger models warrants investigation.
 
 \paragraph{Broader impact.}
-\portal{} reduces the computational barrier to high-quality LLM fine-tuning while maintaining the same parameter and inference budget as LoRA, making model adaptation more accessible.
+\portal{} lowers the barrier to high-quality fine-tuning while maintaining LoRA's parameter and inference budget.
 
 %=============================================================================
 \bibliographystyle{plainnat}
