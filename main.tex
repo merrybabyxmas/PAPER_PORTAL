@@ -469,8 +469,6 @@ Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ P
 \end{tabular}
 \end{table}
 
-Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline---sequential warm-up, projection, and parallel training---operates without dequantizing $\Wbase$, unlike PiSSA which requires full-precision access for its $O(d^3)$ SVD.
-
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/training_dynamics_quant.pdf}
@@ -478,7 +476,7 @@ Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-q
 \label{fig:training_dynamics_quant}
 \end{figure*}
 
-Figure~\ref{fig:training_dynamics_quant} confirms that Q-\portal{}'s sequential probing remains effective under 4-bit quantization: the loss converges faster (a), gradients are more stable (b), and GSM8K accuracy is consistently higher (c) compared to QLoRA and LoftQ baselines.
+Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline operates without dequantizing $\Wbase$, unlike PiSSA which requires full-precision access for its $O(d^3)$ SVD. Figure~\ref{fig:training_dynamics_quant} confirms that Q-\portal{}'s sequential probing remains effective under 4-bit quantization: the loss converges faster (a), gradients are more stable (b), and GSM8K accuracy is consistently higher (c).
 
 %-----------------------------------------------------------------------------
 \subsection{Accuracy vs.\ Training Cost Trade-off}
