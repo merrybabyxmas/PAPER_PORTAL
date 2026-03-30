@@ -165,13 +165,14 @@ BitFit~\citep{zaken2022bitfit} optimizes only bias terms, Delta-LoRA~\citep{zi20
 \label{sec:method}
 %=============================================================================
 
-\subsection{Preliminaries: Parallel vs. Sequential Adapters}
+\subsection{Preliminaries}
 
-Consider a pretrained linear layer $\Wbase \in \mathbb{R}^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ and a low-rank adapter pair parameterized by $B \in \mathbb{R}^{d_{\mathrm{out}} \times r}$ and $A \in \mathbb{R}^{r \times d_{\mathrm{in}}}$, where the rank $r \ll \min(d_{\mathrm{out}}, d_{\mathrm{in}})$. 
-PEFT architectures split into two topologies based on the adapter's input injection point:
+Consider a pretrained linear layer $\Wbase \in \mathbb{R}^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ and a low-rank adapter $(B \in \mathbb{R}^{d_{\mathrm{out}} \times r},\; A \in \mathbb{R}^{r \times d_{\mathrm{in}}})$ with $r \ll \min(d_{\mathrm{out}}, d_{\mathrm{in}})$.
+PEFT methods differ in how the adapter receives its input.
+\textbf{Parallel} adapters (LoRA) compute $h = \Wbase x + BAx$; \textbf{sequential} adapters (Houlsby) compute $h = \Wbase x + BA(\Wbase x)$.
 
 \begin{table}[h]
-\caption{Comparison of PEFT adapter topologies, initialization, and gradient dynamics. \portal{} starts sequential and transitions to parallel via Task-Isomorphic Projection at $O(dr^2)$ cost.}
+\caption{PEFT adapter topologies, initialization, and gradient dynamics.}
 \label{tab:topology}
 \centering
 \small
@@ -193,11 +194,10 @@ Infer.\ Overhead     & None           & $O(dr)$/layer  & None & None \\
 \end{tabular}}
 \end{table}
 
-Let $\delta \triangleq \partial \mathcal{L}/\partial h$ denote the upstream gradient.
-As shown in Table~\ref{tab:topology}, the sequential gradient $\nabla_A \mathcal{L} = B^\top \delta\, (\Wbase x)^\top$ operates on the pretrained feature space $\Wbase x$, biasing early optimization toward the principal directions of $\Wbase$.
-In contrast, both LoRA and PiSSA compute $\nabla_A \mathcal{L} = B^\top \delta\, x^\top$, treating all input directions uniformly regardless of pretrained structure.
-PiSSA partially addresses this via SVD-based initialization but incurs $O(d^3)$ cost per layer and remains task-agnostic.
-This motivates \portal{}'s approach: combining sequential probing with parallel inference, detailed in the following sections.
+Let $\delta \triangleq \partial \mathcal{L}/\partial h$.
+The key difference is in gradient structure: the sequential gradient $\nabla_A \mathcal{L} = B^\top \delta\, (\Wbase x)^\top$ biases early updates toward the principal directions of $\Wbase$, while the parallel gradient $\nabla_A \mathcal{L} = B^\top \delta\, x^\top$ treats all input directions uniformly (Table~\ref{tab:topology}).
+PiSSA compensates via SVD-based initialization but at $O(d^3)$ cost per layer and without task awareness.
+\portal{} combines the gradient advantage of sequential probing with the inference efficiency of parallel adapters, using only an $O(dr^2)$ projection at the switching point.
 
 \subsection{\portal{}: Time-Axis Generalization}
 \label{sec:portal}
@@ -301,9 +301,6 @@ Two mechanisms ensure a smooth switch at $\Tswitch$:
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Computational Complexity Analysis}
-
-Table~\ref{tab:topology} summarizes the projection cost. PiSSA requires full-weight SVD of $\Wbase \in \mathbb{R}^{d \times d}$ at $O(d^3)$ per layer; \portal{} operates on the learned core matrix $\in \mathbb{R}^{r \times r}$, reducing the cost to $O(dr^2)$.
 %=============================================================================
 \section{Experiments}
 \label{sec:experiments}
