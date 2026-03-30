@@ -218,9 +218,6 @@ Standard LoRA is recovered as $\Tswitch = 0$; $\Tswitch = 1$ yields a pure seque
 Intermediate values enable a task-aware sequential warm-up that probes the subspace before switching to parallel mode.
 For brevity, we denote the weights during the sequential phase ($t < \Tswitch$) as $\Bseq, \Aseq$, and the parallel phase ($t \ge \Tswitch$) as $\Bpar, \Apar$.
 
-\paragraph{Initialization Dynamics.}
-During the initial sequential phase ($t < \Tswitch$), we initialize $A$ with Kaiming uniform and $B \sim \mathcal{N}(0, 10^{-4})$. 
-The near-zero initialization of $B$ ensures that $BA(\Wbase x) \approx 0$, preserving the pretrained output at the start of training. Simultaneously, the variance in $A$ ensures it immediately receives rich, meaningful gradient signals projected through the $\Wbase$ manifold.
 
 \subsection{Task-Isomorphic Projection via Rank-Bounded SVD}
 \label{sec:projection}
@@ -237,7 +234,7 @@ The target projection matrix $M \in \mathbb{R}^{d_{\mathrm{out}} \times d_{\math
     \mathrm{rank}(M) \leq r
 \end{equation*}
 
-This rank bound lets us bypass the $O(d^3)$ full-weight SVD required by PiSSA.
+This rank bound lets us bypass the $O(d^3)$ full-weight SVD.
 \paragraph{The Projection Pipeline.} 
 Instead of a full decomposition, we factorize $M$ into $\Bpar$ and $\Apar$ through an $\mathbf{O(dr^2)}$ pipeline:
 
@@ -258,22 +255,27 @@ Instead of a full decomposition, we factorize $M$ into $\Bpar$ and $\Apar$ throu
     \Bpar = U \Sigma^{1/2}, \quad \Apar = \Sigma^{1/2} V^\top
     \end{equation}
 \end{itemize}
-The necessity of the symmetric splitting in Step 3 is governed by the following optimization principle:
+
+\paragraph{Optimization Stability via Symmetric Splitting.}
+The energy distribution in Step 3 is a critical design choice for post-switch convergence. A naive or asymmetric factorization (e.g., assigning all singular values to one matrix) creates a scale imbalance between $\Bpar$ and $\Apar$, leading to exploding or vanishing gradients during backpropagation. We mitigate this through the principle of optimal conditioning:
 
 \begin{theorem}[Optimal Conditioning]
 \label{thm:condition}
-Among all possible factorizations $M = B'A'$ of the form $B' = U\Sigma^\alpha$ and $A' = \Sigma^{1-\alpha} V^\top$ for $\alpha \in [0,1]$, the symmetric split ($\alpha = 1/2$) strictly minimizes the maximum condition number: $\max(\kappa(\Bpar), \kappa(\Apar)) = \sqrt{\kappa(M)}$.
+Given the factorization $M = U \Sigma V^\top$, consider all rank-$r$ decompositions $M = B'A'$ where $B' = U\Sigma^\alpha$ and $A' = \Sigma^{1-\alpha} V^\top$ for $\alpha \in [0,1]$. The symmetric split ($\alpha = 1/2$) is the unique solution that minimizes the maximum condition number:
+\begin{equation*}
+    \min_{\alpha \in [0,1]} \max \left( \kappa(B'), \kappa(A') \right) = \sqrt{\kappa(M)}
+\end{equation*}
 \end{theorem}
 
-This prevents gradient vanishing or exploding under asymmetric configurations (proof in Appendix~\ref{app:proofs}).
+By enforcing $\alpha=1/2$, \portal{} ensures that both adapter matrices reside in a numerically stable region of the loss landscape, preventing gradient imbalance immediately after the structural transition (proof in Appendix~\ref{app:proofs}).
 
-\paragraph{Continuous Transition Dynamics.}
-To ensure stable optimization after the structural shift at $\Tswitch$, we address two transition dynamics:
+\paragraph{Seamless Optimization Handoff.}
+To ensure the model passes through the structural boundary at $\Tswitch$ without optimization artifacts, we implement two stability mechanisms:
 
-\begin{enumerate}
-    \item \textbf{Output continuity:} By Eq.~\ref{eq:equivalence}, $h(t = \Tswitch^-) = h(t = \Tswitch^+)$, so the loss remains continuous ($\mathcal{L}(\Tswitch^-) = \mathcal{L}(\Tswitch^+)$) with no loss spike at the switch.
-    \item \textbf{Momentum reset:} The optimizer's momentum and variance accumulators encode curvature from the sequential parameter space, which is invalid in the parallel space. We reset these states to zero at $\Tswitch$, analogous to a warm restart~\citep{loshchilov2019adamw}.
-\end{enumerate}
+\begin{itemize}
+    \item \textbf{Loss Invariance:} Our Task-Isomorphic Projection (Eq.~\ref{eq:equivalence}) guarantees that the forward output remains strictly identical ($h_{seq} = h_{par}$). This ensures a zero-gap transition in the loss curve, preventing the "loss spikes" typically observed during architectural shifts.
+    \item \textbf{Curvature Recalibration (Momentum Reset):} The optimizer's momentum ($m$) and variance ($v$) accumulators encode the curvature of the sequential manifold, which is geometrically incompatible with the newly projected parallel space. To prevent stale directional inertia from corrupting the new trajectory, we reset the optimizer states to zero at $\Tswitch$, initiating a clean-slate "warm restart"~\citep{loshchilov2019adamw} in the parallel subspace.
+\end{itemize}
 
 \begin{algorithm}[t]
 \caption{\portal{}: Time-Axis Generalized Training via Task-Isomorphic Projection}
