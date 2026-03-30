@@ -431,36 +431,24 @@ Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ P
 \subsection{Quantization Experiment (Q-\portal{})}
 \label{sec:quantization}
 %-----------------------------------------------------------------------------
-
 \begin{table}[t]
-\caption{Comparison of 4-bit quantized PEFT methods across various base models. All methods use \textbf{4-bit NF4} quantization and rank $r\!=\!8$. \textbf{Q-\portal{}} represents our method applied to quantized weights. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
-\label{tab:quantization}
+\caption{Ablation study on target modules using LLaMA-2-7B. Performance is evaluated on the \textbf{MATH} dataset (accuracy \%). We compare the impact of sequential-to-parallel transition across different module sets. All methods use rank $r=8$. Best results for each column are in \textbf{bold}.}
+\label{tab:ablation_modules}
 \centering
 \small
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{ll cc cc c}
+\begin{tabular}{l c ccc}
 \toprule
-& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
-\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
-\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
+& & \multicolumn{3}{c}{\textbf{Target Modules}} \\
+\cmidrule(lr){3-5}
+\textbf{Method} & \textbf{Params (\%)} & $\{W_q, W_v\}$ & $\{W_q, W_k, W_v, W_o\}$ & \textbf{All Linear} \\
 \midrule
-\multirow{4}{*}{LLaMA-2-7B}
-& QLoRA~\citep{dettmers2023qlora} & -- & -- & -- & -- & -- \\
-& LoftQ~\citep{li2023loftq}       & -- & -- & -- & -- & -- \\
-& PiSSA (Quant.)                 & -- & -- & -- & -- & -- \\
-& \textbf{Q-\portal{} (Ours)}    & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} \\
+Full FT & 100\% & \multicolumn{3}{c}{x (Fixed Baseline)} \\
 \midrule
-\multirow{4}{*}{Mistral-7B}
-& QLoRA~\citep{dettmers2023qlora} & -- & -- & -- & -- & -- \\
-& LoftQ~\citep{li2023loftq}       & -- & -- & -- & -- & -- \\
-& PiSSA (Quant.)                 & -- & -- & -- & -- & -- \\
-& \textbf{Q-\portal{} (Ours)}    & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} \\
+LoRA (Gauss.) & 0.08\% / 0.16\% / 0.30\% & x & x & \underline{7.54} \\
+LoRA (Kaiming) & 0.08\% / 0.16\% / 0.30\% & x & x & x \\
 \midrule
-\multirow{4}{*}{Gemma-7B}
-& QLoRA~\citep{dettmers2023qlora} & -- & -- & -- & -- & -- \\
-& LoftQ~\citep{li2023loftq}       & -- & -- & -- & -- & -- \\
-& PiSSA (Quant.)                 & -- & -- & -- & -- & -- \\
-& \textbf{Q-\portal{} (Ours)}    & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} & \textbf{--} \\
+\textbf{\portal{} (Ours)} & 0.08\% / 0.16\% / 0.30\% & \textbf{x} & \textbf{x} & \textbf{8.18} \\
 \bottomrule
 \end{tabular}}
 \end{table}
