@@ -383,63 +383,22 @@ AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 8
 & \portal{} (Ours) & x & x & x & x & x \\
 \bottomrule
 \end{tabular}}
-
-    \vspace{0.5cm}
-
-    \includegraphics[width=0.9\linewidth]{figures/training_dynamics.pdf}
-    \captionof{figure}{Training dynamics of LoRA and \portal{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \portal{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \portal{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
-    \label{fig:training_dynamics}
 \end{table}
 
-\textbf{NLU (Table~\ref{tab:nlu}).} \portal{} achieves the highest average score (87.8) among PEFT methods, outperforming PiSSA (87.1), DoRA (86.7), and LoRA (86.6). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \portal{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
+\textbf{NLU (Table~\ref{tab:nlu}).} \portal{} achieves the highest average score (87.8) among PEFT methods, outperforming PiSSA (87.1), DoRA (86.8), and LoRA (86.6). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \portal{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
-\textbf{NLG (Table~\ref{tab:nlg}).} \portal{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA), MT-Bench (6.22), and leads on both code generation benchmarks. The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \portal{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
+\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \portal{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA), MT-Bench (6.22), and leads on both code generation benchmarks. The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \portal{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{figures/training_dynamics.pdf}
+\caption{Training dynamics of LoRA and \portal{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \portal{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \portal{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
+\label{fig:training_dynamics}
+\end{figure}
+
 %=============================================================================
-% Analysis subsections integrated into Experiments
+% Analysis
 %=============================================================================
-
-\subsection{Quantization Experiment (Q-\portal{})}
-\label{sec:quantization}
-%-----------------------------------------------------------------------------
-
-Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline operates without dequantizing $\Wbase$.
-
-\begin{table}[h!]
-    \centering
-    \caption{The quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$). \portal{} reduces quantization error by leveraging task-isomorphic projection at the switching point $\Tswitch$.}
-    \label{tab:quantization}
-    \small
-    \begin{tabular}{ll c cccc c}
-    \toprule
-    \textbf{Model} & \textbf{Method} & \textbf{Rank} & \textbf{Q} & \textbf{K} & \textbf{V} & \textbf{O} & \textbf{AVG} \\
-    \midrule
-    \multirow{4}{*}{LLaMA-2-7B}
-    & QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
-    & LoftQ & 128 & -- & -- & -- & -- & -- \\
-    & PiSSA & 128 & -- & -- & -- & -- & -- \\
-    & \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
-    \midrule
-    \multirow{4}{*}{LLaMA-3-8B}
-    & QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
-    & LoftQ & 128 & -- & -- & -- & -- & -- \\
-    & PiSSA & 128 & -- & -- & -- & -- & -- \\
-    & \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
-    \bottomrule
-    \end{tabular}
-
-    \vspace{0.5cm}
-
-    \includegraphics[width=0.9\linewidth]{figures/training_dynamics_quant.pdf}
-    \captionof{figure}{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
-    \label{fig:training_dynamics_quant}
-\end{table}
-
-%-----------------------------------------------------------------------------
-\subsection{Accuracy vs.\ Training Cost Trade-off}
-\label{sec:tradeoff}
-%-----------------------------------------------------------------------------
-
-Table~\ref{tab:init_cost} demonstrates that \portal{} occupies the Pareto frontier of the accuracy--cost trade-off: it achieves accuracy competitive with or exceeding PiSSA (Tables~\ref{tab:nlu}--\ref{tab:nlg}) while reducing initialization cost by orders of magnitude.
 
 %-----------------------------------------------------------------------------
 \subsection{Task-Aware Subspace Analysis: $M$ vs.\ $\Wbase$ SVD}
@@ -586,6 +545,68 @@ Even $\Tswitch = 0.01$ (1\% of training) reduces eval loss from 0.1974 to 0.1962
 \paragraph{$\Tswitch$ as a geometric indicator.}
 $\Tswitch$ functions as a principled dial between \emph{knowledge retention} (high $\Tswitch$, preserving $\Wbase$'s priors) and \emph{knowledge acquisition} (low $\Tswitch$, enabling free exploration). The optimal value reflects the intrinsic alignment between the target task's subspace and the pretrained manifold. Combined with the subspace analysis in Section~\ref{sec:subspace}, this provides a unified geometric interpretation: tasks with high subspace similarity to $\Wbase$ benefit from prolonged sequential coupling, while tasks requiring novel representations benefit from early decoupling.
 
+%-----------------------------------------------------------------------------
+\subsection{Quantization Experiment (Q-\portal{})}
+\label{sec:quantization}
+%-----------------------------------------------------------------------------
+
+Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-quantized base weights, requiring no full-weight SVD. Because the Task-Isomorphic Projection decomposes only the learned $r \times r$ core matrix, the entire pipeline operates without dequantizing $\Wbase$.
+
+\begin{table}[t]
+\caption{Quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$).}
+\label{tab:quantization}
+\centering
+\small
+\begin{tabular}{ll c cccc c}
+\toprule
+\textbf{Model} & \textbf{Method} & \textbf{Rank} & \textbf{Q} & \textbf{K} & \textbf{V} & \textbf{O} & \textbf{AVG} \\
+\midrule
+\multirow{4}{*}{LLaMA-2-7B}
+& QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
+& LoftQ & 128 & -- & -- & -- & -- & -- \\
+& PiSSA & 128 & -- & -- & -- & -- & -- \\
+& \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{LLaMA-3-8B}
+& QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
+& LoftQ & 128 & -- & -- & -- & -- & -- \\
+& PiSSA & 128 & -- & -- & -- & -- & -- \\
+& \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{figures/training_dynamics_quant.pdf}
+\caption{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
+\label{fig:training_dynamics_quant}
+\end{figure}
+
+%-----------------------------------------------------------------------------
+\subsection{Initialization Cost}
+\label{sec:init_cost}
+%-----------------------------------------------------------------------------
+
+\begin{table}[t]
+\caption{Initialization cost per linear layer ($r=8$). \portal{} reduces decomposition from $O(d^3)$ to $O(dr^2)$, achieving orders-of-magnitude savings that grow with model scale.}
+\label{tab:init_cost}
+\centering
+\small
+\begin{tabular}{l ccc}
+\toprule
+\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\portal{} (FLOPs)} \\
+\midrule
+DeBERTa-base & 768 & $5.7 \times 10^{8}$ & $4.7 \times 10^{4}$ \\
+LLaMA-2-7B  & 4{,}096  & $8.6 \times 10^{10}$ & $2.6 \times 10^{5}$ \\
+LLaMA-2-70B & 8{,}192  & $6.9 \times 10^{11}$ & $5.2 \times 10^{5}$ \\
+LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ PiSSA across model scales. PiSSA requires a full-weight SVD of $\Wbase \in \RR^{d \times d}$ at $O(d^3)$ per linear layer; \portal{}'s Task-Isomorphic Projection operates on the learned $r \times r$ core at $O(dr^2)$. At the scale of LLaMA-2-7B, this represents a $3.3 \times 10^5$-fold reduction. \portal{} thus occupies the Pareto frontier of the accuracy--cost trade-off: it achieves accuracy competitive with or exceeding PiSSA (Tables~\ref{tab:nlu}--\ref{tab:nlg_comprehensive}) while reducing initialization cost by orders of magnitude.
+
 %=============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
@@ -664,27 +685,7 @@ $\infty$ (seq) & \textbf{95.9} & \textbf{85.2} & \textbf{91.3} & \textbf{67.8} &
 \end{tabular}
 \end{table}
 
-\section{Initialization Cost Comparison}
-\label{app:init_cost}
-
-\begin{table}[h]
-\caption{Initialization cost per linear layer ($r=8$). \portal{} reduces decomposition from $O(d^3)$ to $O(dr^2)$.}
-\label{tab:init_cost}
-\centering
-\small
-\begin{tabular}{l ccc}
-\toprule
-\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\portal{} (FLOPs)} \\
-\midrule
-DeBERTa-base & 768 & $5.7 \times 10^{8}$ & $4.7 \times 10^{4}$ \\
-LLaMA-2-7B  & 4{,}096  & $8.6 \times 10^{10}$ & $2.6 \times 10^{5}$ \\
-LLaMA-2-70B & 8{,}192  & $6.9 \times 10^{11}$ & $5.2 \times 10^{5}$ \\
-LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ PiSSA across model scales. PiSSA requires a full-weight SVD at $O(d^3)$ per linear layer; \portal{}'s Task-Isomorphic Projection operates on the learned $r \times r$ core at $O(dr^2)$.
+% Initialization cost table moved to Section~\ref{sec:init_cost} in the main text.
 
 \section{Inference Latency}
 \label{app:latency}
