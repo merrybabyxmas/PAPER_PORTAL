@@ -550,14 +550,14 @@ Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matri
 & \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
-\end{table}
 
-\begin{figure}[h!]
+\vspace{0.5em}
+
 \centering
 \includegraphics[width=0.9\linewidth]{figures/training_dynamics_quant.pdf}
-\caption{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
+\captionof{figure}{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
 \label{fig:training_dynamics_quant}
-\end{figure}
+\end{table}
 
 %-----------------------------------------------------------------------------
 \subsection{Initialization Cost}
