@@ -406,7 +406,7 @@ We measure how far $M$ deviates from $\Wbase$'s principal directions via the nor
 \end{equation}
 A value of $1.0$ indicates identical spans; lower values indicate task-specific deviation.
 
-\begin{table}[t]
+\begin{table}[h!]
 \caption{Subspace similarity between $\Wbase$ and \portal{}'s task-aware matrix $M$ (layer-averaged). Lower values indicate greater deviation from $\Wbase$'s principal directions.}
 \label{tab:subspace_similarity}
 \centering
@@ -426,7 +426,7 @@ MNLI (NLU)            & -- & -- & -- \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[h!]
 \centering
 % Placeholder for subspace overlap heatmaps
 \includegraphics[width=\linewidth]{figures/subspace_heatmap.pdf}
@@ -445,7 +445,7 @@ This confirms that the sequential phase performs data-driven subspace discovery 
 
 We show that $\Tswitch$ is not merely a hyperparameter but a geometric indicator of task-manifold alignment.
 
-\begin{table}[t]
+\begin{table}[h!]
 \caption{$\Tswitch$ spectrum on MetaMath (LLaMA-2-7B, $r\!=\!8$). $\Tswitch = 0$ is standard LoRA.}
 \label{tab:ablation}
 \centering
@@ -465,7 +465,7 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
+\begin{table}[h!]
 \caption{Cross-task $\Tswitch$ spectrum. Best per task in \textbf{bold}.}
 \label{tab:tsw_spectrum}
 \centering
@@ -494,7 +494,7 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \end{tabular}}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure}[h!]
 \centering
 % Placeholder for task-manifold alignment curves
 \includegraphics[width=0.85\linewidth]{figures/tsw_alignment_curves.pdf}
