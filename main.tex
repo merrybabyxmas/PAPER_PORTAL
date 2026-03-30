@@ -413,26 +413,19 @@ Table~\ref{tab:nlg} presents the evaluation results on generative and reasoning 
 \label{tab:init_cost}
 \centering
 \small
-\begin{tabular}{l ccc r}
+\begin{tabular}{l ccc}
 \toprule
-\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\portal{} (FLOPs)} & \textbf{Speedup} \\
+\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\portal{} (FLOPs)} \\
 \midrule
-DeBERTa-base & 768 & $5.7 \times 10^{8}$ & $4.7 \times 10^{4}$ & ${\sim}12{,}000\times$ \\
-LLaMA-2-7B  & 4{,}096  & $8.6 \times 10^{10}$ & $2.6 \times 10^{5}$ & ${\sim}262{,}000\times$ \\
-LLaMA-2-70B & 8{,}192  & $6.9 \times 10^{11}$ & $5.2 \times 10^{5}$ & ${\sim}1{,}000{,}000\times$ \\
-LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ & ${\sim}4{,}000{,}000\times$ \\
+DeBERTa-base & 768 & $5.7 \times 10^{8}$ & $4.7 \times 10^{4}$ \\
+LLaMA-2-7B  & 4{,}096  & $8.6 \times 10^{10}$ & $2.6 \times 10^{5}$ \\
+LLaMA-2-70B & 8{,}192  & $6.9 \times 10^{11}$ & $5.2 \times 10^{5}$ \\
+LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:init_cost} quantifies the initialization speedup of \portal{} over PiSSA across model scales. PiSSA requires a full-weight SVD at $O(d^3)$ per linear layer; \portal{}'s Task-Isomorphic Projection operates on the learned $r \times r$ core at $O(dr^2)$, yielding speedups from $12{,}000\times$ (DeBERTa-base) to over $4{,}000{,}000\times$ (LLaMA-3-405B). Figure~\ref{fig:efficiency_scaling} visualizes this gap on a log scale.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.85\linewidth]{figures/init_cost_scaling.pdf}
-\caption{Initialization FLOPs across model scales (log scale, $r\!=\!8$). PiSSA's $O(d^3)$ grows cubically; \portal{}'s $O(dr^2)$ scales linearly. Gap: ${\sim}262{,}000\times$ at 7B, exceeding $4{,}000{,}000\times$ at 405B.}
-\label{fig:efficiency_scaling}
-\end{figure}
+Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ PiSSA across model scales. PiSSA requires a full-weight SVD at $O(d^3)$ per linear layer; \portal{}'s Task-Isomorphic Projection operates on the learned $r \times r$ core at $O(dr^2)$.
 
 %-----------------------------------------------------------------------------
 \subsection{Quantization Experiment (Q-\portal{})}
@@ -465,7 +458,7 @@ Q-\portal{} applies \portal{}'s sequential probing phase directly on 4-bit NF4-q
 \label{sec:tradeoff}
 %-----------------------------------------------------------------------------
 
-The initialization cost table (Table~\ref{tab:init_cost}) and the scaling figure (Figure~\ref{fig:efficiency_scaling}) together demonstrate that \portal{} occupies the Pareto frontier of the accuracy--cost trade-off: it achieves accuracy competitive with or exceeding PiSSA (Tables~\ref{tab:nlu}--\ref{tab:nlg}) while reducing initialization cost by orders of magnitude. At 7B scale, \portal{} matches PiSSA's convergence benefit at $262{,}000\times$ lower initialization cost; at 405B, this gap exceeds $4{,}000{,}000\times$.
+Table~\ref{tab:init_cost} demonstrates that \portal{} occupies the Pareto frontier of the accuracy--cost trade-off: it achieves accuracy competitive with or exceeding PiSSA (Tables~\ref{tab:nlu}--\ref{tab:nlg}) while reducing initialization cost by orders of magnitude.
 
 %-----------------------------------------------------------------------------
 \subsection{Optimization Dynamics at the Switching Boundary}
