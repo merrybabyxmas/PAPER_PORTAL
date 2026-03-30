@@ -439,7 +439,7 @@ Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ P
 \label{sec:quantization}
 %-----------------------------------------------------------------------------
 
-\begin{table}[t]
+\begin{table}[h!]
 \caption{The quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$). \portal{} reduces quantization error by leveraging task-isomorphic projection at the switching point $\Tswitch$.}
 \label{tab:quantization}
 \centering
@@ -468,8 +468,7 @@ Table~\ref{tab:init_cost} quantifies the initialization cost of \portal{} vs.\ P
 \bottomrule
 \end{tabular}
 \end{table}
-
-\begin{figure*}[t]
+\begin{figure*}[h!]
 \centering
 \includegraphics[width=\textwidth]{figures/training_dynamics_quant.pdf}
 \caption{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals: Q-\portal{} maintains an accuracy advantage throughout training.}
