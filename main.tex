@@ -328,7 +328,7 @@ All low-rank methods use rank $r = 8$ on identical target modules. For DeBERTa, 
 Models are fine-tuned for 1 epoch on 100K subsampled training examples. We report \portal{} with the optimal $\Tswitch$ per task category ($\Tswitch$ ablations in Section~\ref{sec:ablation}).
 
 %-----------------------------------------------------------------------------
-\subsection{Natural Language Understanding (NLU)}
+\subsection{Natural Language Understanding}
 \label{sec:nlu}
 %-----------------------------------------------------------------------------
 
@@ -362,7 +362,7 @@ Full fine-tuning leads on MRPC (92.3) and CoLA (69.6) with 100\% of parameters; 
 \textbf{Manifold Retention in NLU:} The optimal $\Tswitch$ for NLU tasks skews high (late switch or pure sequential; see Table~\ref{tab:nlu_ablation}). This confirms that NLU tasks rely on the semantic priors in $\Wbase$: operating on $\Wbase x$ during the sequential phase retains this manifold, while parallel-only methods spend optimization on unaligned subspaces.
 
 %-----------------------------------------------------------------------------
-\subsection{Natural Language Generation and Complex Reasoning}
+\subsection{Natural Language Generation}
 \label{sec:nlg}
 %-----------------------------------------------------------------------------
 
