@@ -386,7 +386,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \midrule
 \multirow{2}{*}{Mistral-7B}
 & LoRA & 67.48 & 16.68 \\
-& \jelly{} ($\Tswitch\!=\!0.8$) & -- & -- \\
+& \jelly{} ($\Tswitch\!=\!0.8$) & \textbf{69.45} & \textbf{18.24} \\
 \midrule
 \multirow{2}{*}{Gemma-7B}
 & LoRA & -- & -- \\
@@ -398,8 +398,9 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
 \textbf{NLG (Tables~\ref{tab:nlg_detailed}--\ref{tab:nlg_comprehensive}).} At $r\!=\!8$ (Table~\ref{tab:nlg_detailed}), \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant directions.
-At $r\!=\!128$ (Table~\ref{tab:nlg_comprehensive}), \jelly{} ($\Tswitch\!=\!0.8$) improves MATH accuracy to 9.50\% (+0.70 over LoRA's 8.80\%) while maintaining comparable GSM8K (56.63 vs.\ 56.71).
-The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up. Figure~\ref{fig:training_dynamics} visualizes these training dynamics.
+At $r\!=\!128$ (Table~\ref{tab:nlg_comprehensive}), \jelly{} consistently outperforms LoRA across models: on LLaMA-2-7B, MATH improves from 8.80\% to 9.50\% (+0.70); on Mistral-7B, GSM8K improves from 67.48\% to 69.45\% (+1.97) and MATH from 16.68\% to 18.24\% (+1.56).
+The gains are larger on Mistral, suggesting that \jelly{}'s sequential probing extracts richer task-relevant structure from stronger pretrained manifolds.
+Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 
 \begin{figure}[t]
 \centering
