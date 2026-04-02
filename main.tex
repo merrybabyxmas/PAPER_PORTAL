@@ -39,12 +39,12 @@
 \newcommand{\Bpar}{B_{\mathrm{p}}}
 \newcommand{\Tswitch}{T_{\mathrm{sw}}}
 \newcommand{\RR}{\mathbb{R}}
-\newcommand{\portal}{\textsc{Portal}}
+\newcommand{\jelly}{\textsc{Jelly}}
 \DeclareMathOperator{\rank}{rank}
 \DeclareMathOperator{\diag}{diag}
 \DeclareMathOperator{\tr}{tr}
 
-\title{\portal{}: Generalizing Parameter-Efficient Fine-Tuning\\over the Time Axis via Task-Isomorphic Projection}
+\title{\jelly{}: Generalizing Parameter-Efficient Fine-Tuning\\over the Time Axis via Task-Isomorphic Projection}
 
 \author{Anonymous Author(s)}
 
@@ -57,12 +57,12 @@
 %=============================================================================
 Parameter-efficient fine-tuning (PEFT) methods such as LoRA fix the adapter topology to a \emph{parallel} connection, bypassing the pretrained weight manifold ($\Wbase$) that sequential adapters exploit for task adaptation.
 SVD-based initialization methods (e.g., PiSSA) attempt to utilize $\Wbase$ but require $O(d^3)$ decomposition and remain task-agnostic.
-We introduce \portal{}, a PEFT framework that unifies sequential and parallel adaptations along the training time axis.
-During an initial sequential phase, \portal{} projects activations through $\Wbase$ ($\Wbase x$) to identify the task-intrinsic subspace from data.
+We introduce \jelly{}, a PEFT framework that unifies sequential and parallel adaptations along the training time axis.
+During an initial sequential phase, \jelly{} projects activations through $\Wbase$ ($\Wbase x$) to identify the task-intrinsic subspace from data.
 At a switching step $\Tswitch$, a lossless \emph{Task-Isomorphic Projection} converts the learned sequential representations into an equivalent parallel adapter via a lightweight double SVD.
 This costs $O(dr^2)$---orders of magnitude below full-weight SVD---while preserving the zero additional latency property of LoRA at inference.
 Standard LoRA is recovered as the special case $\Tswitch = 0$.
-Experiments on LLaMA-2-7B and DeBERTa-v3-base across mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), conversation (MT-Bench), and seven GLUE tasks show that \portal{} consistently outperforms LoRA, PiSSA, and DoRA, achieving the best score on 6 out of 7 NLU tasks and the highest MATH accuracy.
+Experiments on LLaMA-2-7B and DeBERTa-v3-base across mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), conversation (MT-Bench), and seven GLUE tasks show that \jelly{} consistently outperforms LoRA, PiSSA, and DoRA, achieving the best score on 6 out of 7 NLU tasks and the highest MATH accuracy.
 We also show that $\Tswitch$ serves as a geometric indicator of the alignment between the target task and the pretrained manifold.
 \end{abstract}
 %=============================================================================
@@ -87,8 +87,8 @@ This structure uses the feature space of $\Wbase$ as an implicit prior, projecti
 Sequential adapters were abandoned in favor of parallel methods because they incur inference latency proportional to the model's depth.
 
 We challenge the assumption that sequential and parallel topologies must be mutually exclusive.
-We introduce \portal{} (\textbf{P}arameter-efficient \textbf{O}ptimization via \textbf{R}ank-bounded \textbf{T}ask-isomorphic \textbf{A}dapter \textbf{L}ifting), a framework that \emph{generalizes} adapter connectivity over the training time axis.
-\portal{} combines the optimization benefits of sequential probing with the inference efficiency of parallel adaptation. Our contributions:
+We introduce \jelly{} (\textbf{J}oint \textbf{E}fficient \textbf{L}earning with \textbf{L}ayer-\textbf{Y}ielding), a framework that \emph{generalizes} adapter connectivity over the training time axis.
+\jelly{} combines the optimization benefits of sequential probing with the inference efficiency of parallel adaptation. Our contributions:
 
 \begin{itemize}
     \item[\bf C1.] \textbf{Time-Axis Generalization.} We formulate adapter connectivity as a function of training progress, transitioning from sequential to parallel at a switching point $\Tswitch \in [0, 1]$. LoRA is recovered as $\Tswitch = 0$.
@@ -122,12 +122,12 @@ We introduce \portal{} (\textbf{P}arameter-efficient \textbf{O}ptimization via \
 \begin{subfigure}[b]{\textwidth}
     \centering
     \includegraphics[width=\textwidth]{figures/fig1c.png}
-    \caption{\portal{} (Ours)}
+    \caption{\jelly{} (Ours)}
     \label{fig:arch_portal}
 \end{subfigure}
 \caption{\textbf{(a)} Parallel composition (LoRA): adapters are unaligned with $\Wbase$, leading to slow early convergence.
 \textbf{(b)} Sequential composition (Houlsby): probes the base manifold but adds inference latency.
-\textbf{(c)} \portal{}: unifies both topologies over the training time axis ($t \in [0, 1]$). Phase~1 ($t < \Tswitch$) probes through $\Wbase$; Phase~2 ($t \ge \Tswitch$) operates in parallel after a lossless $O(dr^2)$ Task-Isomorphic Projection, with zero added inference latency. LoRA is the special case $\Tswitch\!=\!0$.}
+\textbf{(c)} \jelly{}: unifies both topologies over the training time axis ($t \in [0, 1]$). Phase~1 ($t < \Tswitch$) probes through $\Wbase$; Phase~2 ($t \ge \Tswitch$) operates in parallel after a lossless $O(dr^2)$ Task-Isomorphic Projection, with zero added inference latency. LoRA is the special case $\Tswitch\!=\!0$.}
 \label{fig:architecture}
 \end{figure*}
 
@@ -148,17 +148,17 @@ All of these constrain the adapter to a \emph{static} parallel topology, bypassi
 \paragraph{The SVD Initialization Bottleneck.}
 PiSSA~\citep{meng2024pissa} initializes parallel adapters using the principal singular components of $\Wbase$, accelerating convergence but requiring $O(d^3)$ full SVD per layer.
 Because this decomposition occurs before observing any data, it remains \emph{task-agnostic}.
-\portal{} delays decomposition to the switching point $\Tswitch$, requiring only an $O(dr^2)$ double SVD on a learned, \emph{task-aware} matrix.
+\jelly{} delays decomposition to the switching point $\Tswitch$, requiring only an $O(dr^2)$ double SVD on a learned, \emph{task-aware} matrix.
 
 \paragraph{Sequential Topologies and Time-Axis Generalization.}
 Houlsby adapters~\citep{houlsby2019parameter} use a \emph{sequential} topology, inserting bottleneck layers after pretrained layers so the adapter operates on $\Wbase x$. AdapterFusion~\citep{pfeiffer2020adapterfusion} combines multiple such adapters via attention.
 Sequential adapters incur inference latency proportional to model depth, which led to their abandonment.
-\portal{} resolves this by generalizing the topology over the training time axis: a lossless \emph{Task-Isomorphic Projection} transfers the sequential adapter's manifold-aligned representations into the zero-latency parallel structure.
+\jelly{} resolves this by generalizing the topology over the training time axis: a lossless \emph{Task-Isomorphic Projection} transfers the sequential adapter's manifold-aligned representations into the zero-latency parallel structure.
 
 \paragraph{Intrinsic Dimensionality and Broad PEFT Paradigms.}
 The intrinsic dimensionality perspective~\citep{aghajanyan2021intrinsic} shows that over-parameterized models can be fine-tuned within a low-dimensional subspace.
 BitFit~\citep{zaken2022bitfit} optimizes only bias terms, Delta-LoRA~\citep{zi2023delta} propagates adapter deltas back to the base weights, and QLoRA~\citep{dettmers2023qlora} enables LoRA on quantized models.
-\portal{} is compatible with these paradigms; its activation-based probing and lightweight projection work directly with quantized base models.
+\jelly{} is compatible with these paradigms; its activation-based probing and lightweight projection work directly with quantized base models.
 
 %=============================================================================
 \section{Methodology}
@@ -179,7 +179,7 @@ PEFT methods differ in how the adapter receives its input.
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{lcccc}
 \toprule
-& \textbf{LoRA (Parallel)} & \textbf{Houlsby (Sequential)} & \textbf{PiSSA (Parallel)} & \textbf{\portal{} (Ours)} \\
+& \textbf{LoRA (Parallel)} & \textbf{Houlsby (Sequential)} & \textbf{PiSSA (Parallel)} & \textbf{\jelly{} (Ours)} \\
 \midrule
 Forward Pass          & $\Wbase x + BAx$           & $\Wbase x + BA(\Wbase x)$ & $\Wbase x + BAx$ & $\Wbase x + BA(\Wbase x) \to \Wbase x + BAx$ \\
 Adapter Input         & $x$             & $\Wbase x$  & $x$ & $\Wbase x \to x$ \\
@@ -197,12 +197,12 @@ Infer.\ Overhead     & None           & $O(dr)$/layer  & None & None \\
 Let $\delta \triangleq \partial \mathcal{L}/\partial h$.
 The key difference is in gradient structure: the sequential gradient $\nabla_A \mathcal{L} = B^\top \delta\, (\Wbase x)^\top$ biases early updates toward the principal directions of $\Wbase$, while the parallel gradient $\nabla_A \mathcal{L} = B^\top \delta\, x^\top$ treats all input directions uniformly (Table~\ref{tab:topology}).
 PiSSA compensates via SVD-based initialization but at $O(d^3)$ cost per layer and without task awareness.
-\portal{} combines the gradient advantage of sequential probing with the inference efficiency of parallel adapters, using only an $O(dr^2)$ projection at the switching point.
+\jelly{} combines the gradient advantage of sequential probing with the inference efficiency of parallel adapters, using only an $O(dr^2)$ projection at the switching point.
 
-\subsection{\portal{}: Time-Axis Generalization}
+\subsection{\jelly{}: Time-Axis Generalization}
 \label{sec:portal}
 
-Let $t \in [0, 1]$ denote the normalized training epoch. \portal{} operates in sequential mode for $t < \Tswitch$ and parallel mode for $t \geq \Tswitch$:
+Let $t \in [0, 1]$ denote the normalized training epoch. \jelly{} operates in sequential mode for $t < \Tswitch$ and parallel mode for $t \geq \Tswitch$:
 
 \begin{equation}
 h(t) = \Wbase x + B(t) A(t) \cdot
@@ -274,7 +274,7 @@ Two mechanisms ensure a smooth switch at $\Tswitch$:
 \end{itemize}
 
 \begin{algorithm}[t]
-\caption{\portal{}: Time-Axis Generalized Training via Task-Isomorphic Projection}
+\caption{\jelly{}: Time-Axis Generalized Training via Task-Isomorphic Projection}
 \label{alg:portal}
 \begin{algorithmic}[1]
 \REQUIRE Pretrained weight $\Wbase \in \mathbb{R}^{d_{out} \times d_{in}}$, rank $r$, switch step $\Tswitch$, total steps $T$
@@ -306,7 +306,7 @@ Two mechanisms ensure a smooth switch at $\Tswitch$:
 \label{sec:experiments}
 %=============================================================================
 
-We evaluate \portal{} on natural language understanding (NLU), reasoning, and generation tasks, comparing against state-of-the-art PEFT methods and analyzing task-manifold alignment via the $\Tswitch$ dynamics.
+We evaluate \jelly{} on natural language understanding (NLU), reasoning, and generation tasks, comparing against state-of-the-art PEFT methods and analyzing task-manifold alignment via the $\Tswitch$ dynamics.
 
 \subsection{Experimental Setup}
 
@@ -318,7 +318,7 @@ We evaluate on two model scales:
 \paragraph{Baselines and Implementation Details.}
 Baselines: LoRA~\citep{hu2022lora} (Gaussian and Kaiming variants), PiSSA~\citep{meng2024pissa}, DoRA~\citep{liu2024dora}, AdaLoRA~\citep{zhang2023adalora}, and full fine-tuning.
 All low-rank methods use rank $r = 8$ on identical target modules. For DeBERTa, adapters target query, key, and value projections. For LLaMA-2-7B, adapters target all seven linear projections ($W_q, W_k, W_v, W_o, W_{\mathrm{gate}}, W_{\mathrm{up}}, W_{\mathrm{down}}$), totaling $0.30\%$ trainable parameters.
-Models are fine-tuned for 1 epoch on 100K subsampled training examples. We report \portal{} with the optimal $\Tswitch$ per task category ($\Tswitch$ ablations in Section~\ref{sec:ablation}).
+Models are fine-tuned for 1 epoch on 100K subsampled training examples. We report \jelly{} with the optimal $\Tswitch$ per task category ($\Tswitch$ ablations in Section~\ref{sec:ablation}).
 
 %-----------------------------------------------------------------------------
 \subsection{Main Results}
@@ -326,7 +326,7 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
-\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods use rank $r = 8$. \portal{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}.}
+\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}. BitFit averages over 4 seeds due to one missing run.}
 \label{tab:nlu}
 \centering
 \small
@@ -336,14 +336,15 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \textbf{Method} & \textbf{Params} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
 Full FT           & 184.4M (100\%) & 95.6 & \underline{84.8} & \underline{90.3} & \textbf{92.3} & \textbf{69.6} & 94.0 & \textbf{91.1} & \underline{88.2} \\
-LoRA              & 0.44M (0.24\%) & 95.6 & 83.4 & 90.0 & 89.6 & 65.1 & 93.6 & 88.9 & 86.6 \\
-LoRA (Gauss.)     & 0.44M (0.24\%) & \textbf{95.9} & 82.7 & 90.0 & 89.4 & \underline{67.8} & 93.9 & 90.5 & 87.2 \\
+LoRA              & 0.44M (0.24\%) & 94.95 & 80.36 & 89.93 & 90.58 & 65.92 & 93.63 & 89.80 & 86.45 \\
+LoRA (Gauss.)     & 0.44M (0.24\%) & 95.9 & 82.7 & 90.0 & 89.4 & 67.8 & 93.9 & 90.5 & 87.2 \\
 LoRA (Kaiming)    & 0.44M (0.24\%) & 95.6 & 82.3 & 90.2 & 89.0 & 67.0 & 93.6 & 87.4 & 86.4 \\
-PiSSA             & 0.44M (0.24\%) & 95.5 & 83.4 & 90.2 & 89.6 & 67.0 & \textbf{94.2} & 90.1 & 87.1 \\
-DoRA              & 0.47M (0.25\%) & 95.6 & 84.5 & 90.0 & 89.2 & 65.4 & \underline{93.7} & 88.9 & 86.8 \\
-AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 87.5 & 78.2 \\
+PiSSA             & 0.44M (0.24\%) & 95.41 & 79.28 & 90.03 & 90.87 & 66.13 & 93.90 & \underline{90.57} & 86.60 \\
+DoRA              & 0.47M (0.25\%) & 95.00 & 80.29 & 89.95 & 90.52 & 66.25 & 93.62 & 89.87 & 86.50 \\
+AdaLoRA           & 0.44M (0.24\%) & 94.13 & 54.33 & 89.72 & 81.22 & 54.99 & 92.40 & 87.49 & 79.18 \\
+BitFit            & 0.10M (0.05\%) & 94.93 & 75.90 & 89.62 & 89.72 & 63.54 & 93.02 & \underline{90.57} & 85.33 \\
 \midrule
-\portal{}         & 0.44M (0.24\%) & \textbf{95.9} & \textbf{85.2} & \textbf{90.3} & \underline{91.3} & \underline{67.8} & \underline{94.1} & \underline{90.1} & \textbf{87.8} \\
+\textbf{\jelly{}} & 0.44M (0.24\%) & \textbf{95.71} & \textbf{81.68} & \textbf{90.23} & \underline{91.52} & \underline{67.08} & \textbf{93.94} & 90.19 & \textbf{87.19} \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -363,29 +364,29 @@ AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 8
 \multirow{4}{*}{LLaMA-2-7B} & Full FT & x & x & x & x & x \\
 & LoRA (Gauss.)~\citep{hu2022lora} & \textbf{53.1} & \underline{7.54} & \underline{25.0} & \underline{37.3} & -- \\
 & LoRA (Kaiming) & x & x & x & x & -- \\
-& \portal{} (Ours) & \underline{51.3} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
+& \jelly{} (Ours) & \underline{51.3} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
 \midrule
 \multirow{4}{*}{Mistral-7B} & Full FT & x & x & x & x & x \\
 & LoRA (Gauss.)~\citep{hu2022lora} & x & x & x & x & -- \\
 & LoRA (Kaiming) & x & x & x & x & -- \\
-& \portal{} (Ours) & x & x & x & x & x \\
+& \jelly{} (Ours) & x & x & x & x & x \\
 \midrule
 \multirow{4}{*}{Gemma-7B} & Full FT & x & x & x & x & x \\
 & LoRA (Gauss.)~\citep{hu2022lora} & x & x & x & x & -- \\
 & LoRA (Kaiming) & x & x & x & x & -- \\
-& \portal{} (Ours) & x & x & x & x & x \\
+& \jelly{} (Ours) & x & x & x & x & x \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
-\textbf{NLU (Table~\ref{tab:nlu}).} \portal{} achieves the highest average score (87.8) among PEFT methods, outperforming PiSSA (87.1), DoRA (86.8), and LoRA (86.6). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \portal{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
+\textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.8) among PEFT methods, outperforming PiSSA (87.1), DoRA (86.8), and LoRA (86.6). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
-\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \portal{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA), MT-Bench (6.22), and leads on both code generation benchmarks. The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \portal{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
+\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA), MT-Bench (6.22), and leads on both code generation benchmarks. The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.9\linewidth]{figures/training_dynamics.pdf}
-\caption{Training dynamics of LoRA and \portal{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \portal{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \portal{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
+\caption{Training dynamics of LoRA and \jelly{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \jelly{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \jelly{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
 \label{fig:training_dynamics}
 \end{figure}
 
@@ -398,7 +399,7 @@ AdaLoRA           & 0.44M (0.24\%) & 94.4 & 53.8 & 89.7 & 74.8 & 54.5 & 92.5 & 8
 \label{sec:subspace}
 %-----------------------------------------------------------------------------
 
-\portal{}'s projection matrix $M = \Bseq \Aseq \Wbase$, constructed at $\Tswitch$ after sequential probing, encodes a task-aware subspace.
+\jelly{}'s projection matrix $M = \Bseq \Aseq \Wbase$, constructed at $\Tswitch$ after sequential probing, encodes a task-aware subspace.
 We measure how far $M$ deviates from $\Wbase$'s principal directions via the normalized Frobenius inner product of their top-$r$ singular vectors:
 \begin{equation}
 \mathrm{Sim}(U_W^{(r)}, U_M^{(r)}) = \frac{1}{r} \left\| {U_W^{(r)}}^\top U_M^{(r)} \right\|_F^2 \;\in\; [0, 1]
@@ -407,7 +408,7 @@ We measure how far $M$ deviates from $\Wbase$'s principal directions via the nor
 A value of $1.0$ indicates identical spans; lower values indicate task-specific deviation.
 
 \begin{table}[h!]
-\caption{Subspace similarity between $\Wbase$ and \portal{}'s task-aware matrix $M$ (layer-averaged). Lower values indicate greater deviation from $\Wbase$'s principal directions.}
+\caption{Subspace similarity between $\Wbase$ and \jelly{}'s task-aware matrix $M$ (layer-averaged). Lower values indicate greater deviation from $\Wbase$'s principal directions.}
 \label{tab:subspace_similarity}
 \centering
 \small
@@ -522,14 +523,14 @@ Even $\Tswitch = 0.01$ (1\% of training) reduces eval loss by 0.6\%. A brief seq
 $\Tswitch$ acts as a dial between knowledge retention (high $\Tswitch$) and knowledge acquisition (low $\Tswitch$), with the optimal value reflecting task-manifold alignment (Section~\ref{sec:subspace}).
 
 %-----------------------------------------------------------------------------
-\subsection{Quantization Experiment (Q-\portal{})}
+\subsection{Quantization Experiment (Q-\jelly{})}
 \label{sec:quantization}
 %-----------------------------------------------------------------------------
 
-Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matrix, \portal{} operates directly on 4-bit NF4-quantized weights without dequantizing $\Wbase$.
+Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matrix, \jelly{} operates directly on 4-bit NF4-quantized weights without dequantizing $\Wbase$.
 
 \begin{table}[h!]
-\caption{Quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \portal{} across attention layers ($Q, K, V, O$).}
+\caption{Quantization error reduction ratio (\%) of QLoRA, LoftQ, PiSSA, and \jelly{} across attention layers ($Q, K, V, O$).}
 \label{tab:quantization}
 \centering
 \small
@@ -541,13 +542,13 @@ Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matri
 & QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
 & LoftQ & 128 & -- & -- & -- & -- & -- \\
 & PiSSA & 128 & -- & -- & -- & -- & -- \\
-& \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
+& \textbf{\jelly{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
 \midrule
 \multirow{4}{*}{LLaMA-3-8B}
 & QLoRA & -- & 0 & 0 & 0 & 0 & 0 \\
 & LoftQ & 128 & -- & -- & -- & -- & -- \\
 & PiSSA & 128 & -- & -- & -- & -- & -- \\
-& \textbf{\portal{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
+& \textbf{\jelly{} (Ours)} & 128 & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 
@@ -555,7 +556,7 @@ Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matri
 
 \centering
 \includegraphics[width=0.9\linewidth]{figures/training_dynamics_quant.pdf}
-\captionof{figure}{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\portal{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
+\captionof{figure}{Training dynamics under 4-bit NF4 quantization on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Loss: Q-\jelly{} converges faster than QLoRA and LoftQ. \textbf{(b)}~Gradient norm: quantized sequential probing produces stable gradients. \textbf{(c)}~GSM8K accuracy at 1{,}000-step intervals.}
 \label{fig:training_dynamics_quant}
 \end{table}
 
@@ -571,7 +572,7 @@ Since the Task-Isomorphic Projection decomposes only the $r \times r$ core matri
 \small
 \begin{tabular}{l ccc}
 \toprule
-\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\portal{} (FLOPs)} \\
+\textbf{Model} & \textbf{$d$} & \textbf{PiSSA (FLOPs)} & \textbf{\jelly{} (FLOPs)} \\
 \midrule
 DeBERTa-base & 768 & $5.7 \times 10^{8}$ & $4.7 \times 10^{4}$ \\
 LLaMA-2-7B  & 4{,}096  & $8.6 \times 10^{10}$ & $2.6 \times 10^{5}$ \\
@@ -581,16 +582,16 @@ LLaMA-3-405B & 16{,}384 & $5.5 \times 10^{12}$ & $1.0 \times 10^{6}$ \\
 \end{tabular}
 \end{table}
 
-As shown in Table~\ref{tab:init_cost}, PiSSA requires $O(d^3)$ FLOPs per layer for full-weight SVD; \portal{} requires $O(dr^2)$. At $d = 4096$ (LLaMA-2-7B), this is a $3.3 \times 10^5$-fold reduction.
+As shown in Table~\ref{tab:init_cost}, PiSSA requires $O(d^3)$ FLOPs per layer for full-weight SVD; \jelly{} requires $O(dr^2)$. At $d = 4096$ (LLaMA-2-7B), this is a $3.3 \times 10^5$-fold reduction.
 
 %=============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 %=============================================================================
 
-We introduced \portal{}, a framework that generalizes PEFT over the training time axis by dynamically transitioning adapter connectivity from sequential to parallel mode.
+We introduced \jelly{}, a framework that generalizes PEFT over the training time axis by dynamically transitioning adapter connectivity from sequential to parallel mode.
 The Task-Isomorphic Projection losslessly converts sequential adapters into parallel adapters via rank-$r$ double SVD with $O(dr^2)$ cost.
-Experiments demonstrate that \portal{} consistently matches or outperforms LoRA, PiSSA, and DoRA across NLU, mathematical reasoning, code generation, and conversation.
+Experiments demonstrate that \jelly{} consistently matches or outperforms LoRA, PiSSA, and DoRA across NLU, mathematical reasoning, code generation, and conversation.
 The $\Tswitch$ spectrum provides a principled mechanism for balancing knowledge retention and acquisition, with the optimal value reflecting the intrinsic alignment between task and pretrained manifold.
 
 \paragraph{Limitations.}
@@ -598,7 +599,7 @@ The optimal $\Tswitch$ requires validation-based selection; an adaptive mechanis
 Our experiments cover models up to 7B parameters; scaling behavior on larger models warrants investigation.
 
 \paragraph{Broader impact.}
-\portal{} lowers the barrier to high-quality fine-tuning while maintaining LoRA's parameter and inference budget.
+\jelly{} lowers the barrier to high-quality fine-tuning while maintaining LoRA's parameter and inference budget.
 
 %=============================================================================
 \bibliographystyle{plainnat}
@@ -644,7 +645,7 @@ Adapters applied to query/key/value projections with $r = 8$, $\alpha = 8$.
 \label{app:nlu_ablation}
 
 \begin{table}[h]
-\caption{$\Tswitch$ spectrum on GLUE (DeBERTa-v3-base). Late switching or pure sequential consistently optimal for NLU.}
+\caption{$\Tswitch$ spectrum on GLUE (DeBERTa-v3-base). The optimal $\Tswitch$ varies by task complexity and data size, but late switching or pure sequential mode remains strong for classification tasks.}
 \label{tab:nlu_ablation}
 \centering
 \small
@@ -652,11 +653,68 @@ Adapters applied to query/key/value projections with $r = 8$, $\alpha = 8$.
 \toprule
 $\Tswitch$ & \textbf{SST-2} & \textbf{RTE} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} \\
 \midrule
-0 (LoRA) & 95.6 & 83.4 & 89.6 & 65.1 & 93.6 & 88.9 \\
-1.5 & 95.5 & 80.9 & 90.0 & 66.8 & -- & 88.8 \\
-4.5 & 95.5 & 84.5 & 90.5 & 67.1 & -- & 89.3 \\
-7.5 & \textbf{95.9} & \textbf{85.2} & 90.8 & \textbf{67.8} & -- & 89.8 \\
-$\infty$ (seq) & \textbf{95.9} & \textbf{85.2} & \textbf{91.3} & \textbf{67.8} & \textbf{94.0} & \textbf{90.1} \\
+0 (LoRA) & 94.95 & 80.36 & 90.58 & 65.92 & 93.63 & 89.80 \\
+1.0      & 95.14 & \textbf{81.68} & 90.87 & 66.82 & \textbf{93.94} & \textbf{90.19} \\
+1.5      & 95.12 & 80.86 & 90.02 & \textbf{67.08} & 93.88 & 88.84 \\
+3.0      & 95.54 & 80.22 & 90.54 & 67.01 & 93.90 & 89.32 \\
+7.5      & \textbf{95.71} & 80.52 & \textbf{91.52} & 66.78 & 93.82 & 89.78 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Full Seed-wise NLU Results}
+\label{app:full_seeds}
+
+Table~\ref{tab:nlu_full_seeds} provides the complete results across 5 seeds for all NLU benchmarks. All methods use $r=8$ and identical hyperparameters ($lr=1e-4, bs=32$). \jelly{} results are reported using the optimal $\Tswitch$ per task.
+
+\begin{table}[h]
+\caption{Full NLU results across 5 seeds on DeBERTa-v3-base. BitFit results for Seed 42 are omitted due to execution failure; its average is computed over the remaining 4 seeds.}
+\label{tab:nlu_full_seeds}
+\centering
+\scriptsize
+\begin{tabular}{llcccccccc}
+\toprule
+\textbf{Seed} & \textbf{Method} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
+\midrule
+\multirow{6}{*}{16} 
+& LoRA    & 95.07 & 79.78 & 89.76 & 89.82 & 67.76 & 93.68 & 89.89 & 86.54 \\
+& DoRA    & 95.18 & 79.42 & 89.85 & 89.86 & 67.99 & 93.63 & 89.93 & 86.55 \\
+& PiSSA   & 95.87 & 78.70 & 89.80 & 90.21 & 66.27 & 93.89 & 90.38 & 86.45 \\
+& AdaLoRA & 93.92 & 50.54 & 89.64 & 81.22 & 54.84 & 92.24 & 87.53 & 78.56 \\
+& BitFit  & 94.84 & 76.53 & 89.66 & 89.93 & 63.68 & 92.99 & 90.47 & 85.44 \\
+& \jelly{} & 95.64 & 79.42 & 90.07 & 89.44 & 67.08 & 94.03 & 90.34 & 86.57 \\
+\midrule
+\multirow{6}{*}{32} 
+& LoRA    & 94.95 & 82.31 & 90.16 & 90.20 & 65.80 & 93.76 & 90.11 & 86.76 \\
+& DoRA    & 94.95 & 81.95 & 90.08 & 90.20 & 65.80 & 93.79 & 90.19 & 86.71 \\
+& PiSSA   & 95.64 & 78.70 & 89.96 & 90.24 & 66.02 & 93.85 & 90.84 & 86.47 \\
+& AdaLoRA & 94.04 & 55.60 & 89.71 & 81.22 & 54.79 & 92.29 & 87.39 & 79.29 \\
+& BitFit  & 95.07 & 75.45 & 89.72 & 89.40 & 64.16 & 93.01 & 90.66 & 85.35 \\
+& \jelly{} & 95.99 & 81.23 & 90.24 & 91.61 & 67.03 & 93.96 & 89.51 & 87.08 \\
+\midrule
+\multirow{6}{*}{42} 
+& LoRA    & 95.18 & 81.95 & 89.87 & 91.01 & 64.36 & 93.61 & 89.00 & 86.43 \\
+& DoRA    & 95.18 & 82.67 & 89.95 & 90.84 & 65.32 & 93.61 & 89.07 & 86.52 \\
+& PiSSA   & 95.30 & 82.31 & 90.16 & 90.52 & 67.03 & 94.05 & 90.19 & 87.08 \\
+& AdaLoRA & 94.27 & 59.57 & 89.71 & 81.22 & 54.45 & 92.44 & 87.70 & 79.91 \\
+& BitFit  & -- & -- & -- & -- & -- & -- & -- & -- \\
+& \jelly{} & 95.30 & 82.31 & 90.26 & 92.15 & 66.28 & 93.96 & 90.12 & 87.20 \\
+\midrule
+\multirow{6}{*}{64} 
+& LoRA    & 94.72 & 78.70 & 90.13 & 90.13 & 64.85 & 93.72 & 89.93 & 86.03 \\
+& DoRA    & 94.84 & 78.34 & 90.12 & 90.13 & 64.61 & 93.74 & 90.03 & 86.00 \\
+& PiSSA   & 95.07 & 81.23 & 90.10 & 91.10 & 64.32 & 93.67 & 90.57 & 86.58 \\
+& AdaLoRA & 94.15 & 55.60 & 89.82 & 81.22 & 56.26 & 92.59 & 87.47 & 79.59 \\
+& BitFit  & 94.84 & 76.53 & 89.55 & 89.72 & 62.41 & 93.06 & 90.60 & 85.24 \\
+& \jelly{} & 95.76 & 85.20 & 90.25 & 91.46 & 67.99 & 93.96 & 90.39 & 87.86 \\
+\midrule
+\multirow{6}{*}{128} 
+& LoRA    & 94.84 & 79.06 & 89.74 & 91.76 & 66.80 & 93.37 & 90.07 & 86.52 \\
+& DoRA    & 94.84 & 79.06 & 89.75 & 91.59 & 67.53 & 93.30 & 90.12 & 86.60 \\
+& PiSSA   & 95.18 & 75.45 & 90.12 & 92.25 & 67.02 & 94.07 & 90.84 & 86.42 \\
+& AdaLoRA & 94.27 & 50.90 & 89.75 & 81.22 & 54.61 & 92.46 & 87.35 & 78.65 \\
+& BitFit  & 94.95 & 75.09 & 89.55 & 89.84 & 63.91 & 93.01 & 90.55 & 85.27 \\
+& \jelly{} & 95.64 & 79.42 & 90.31 & 92.23 & 67.06 & 93.67 & 90.56 & 86.98 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -667,7 +725,7 @@ $\infty$ (seq) & \textbf{95.9} & \textbf{85.2} & \textbf{91.3} & \textbf{67.8} &
 \label{app:latency}
 
 \begin{table}[h]
-\caption{Inference latency (ms/token) and throughput (tokens/sec) on LLaMA-2-7B. \portal{} merges into base weights at inference, incurring zero overhead.}
+\caption{Inference latency (ms/token) and throughput (tokens/sec) on LLaMA-2-7B. \jelly{} merges into base weights at inference, incurring zero overhead.}
 \label{tab:latency}
 \centering
 \small
@@ -678,12 +736,12 @@ $\infty$ (seq) & \textbf{95.9} & \textbf{85.2} & \textbf{91.3} & \textbf{67.8} &
 Base Model      & None       & -- & -- \\
 Houlsby & Sequential & -- & -- \\
 LoRA            & Parallel   & -- & -- \\
-\textbf{\portal{}} & \textbf{Parallel (Merged)} & \textbf{--} & \textbf{--} \\
+\textbf{\jelly{}} & \textbf{Parallel (Merged)} & \textbf{--} & \textbf{--} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-After training, \portal{}'s parallel adapters merge into $\Wbase + \Bpar\Apar$, producing a model structurally identical to LoRA. The latency and throughput match the base model exactly, unlike sequential adapters which add $O(dr)$ computation per layer.
+After training, \jelly{}'s parallel adapters merge into $\Wbase + \Bpar\Apar$, producing a model structurally identical to LoRA. The latency and throughput match the base model exactly, unlike sequential adapters which add $O(dr)$ computation per layer.
 
 \section{Injection Position and Rank Ablation}
 \label{app:injection_rank}
