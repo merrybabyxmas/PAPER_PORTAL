@@ -326,7 +326,7 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 %-----------------------------------------------------------------------------
 
 \begin{table}[t]
-\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}. BitFit averages over 4 seeds due to one missing run.}
+\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}. BitFit averages over 4 seeds due to one missing run.}
 \label{tab:nlu}
 \centering
 \small
@@ -336,15 +336,15 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \textbf{Method} & \textbf{Params} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
 Full FT           & 184.4M (100\%) & 95.6 & \underline{84.8} & \underline{90.3} & \textbf{92.3} & \textbf{69.6} & 94.0 & \textbf{91.1} & \underline{88.2} \\
-LoRA              & 0.44M (0.24\%) & 94.95 & 80.36 & 89.93 & 90.58 & 65.92 & 93.63 & 89.80 & 86.45 \\
+LoRA              & 0.44M (0.24\%) & 94.95 \scriptsize{$\pm$ 0.18} & 80.36 \scriptsize{$\pm$ 1.67} & 89.93 \scriptsize{$\pm$ 0.20} & 90.58 \scriptsize{$\pm$ 0.79} & 65.92 \scriptsize{$\pm$ 1.39} & 93.63 \scriptsize{$\pm$ 0.15} & 89.80 \scriptsize{$\pm$ 0.46} & 86.45 \\
 LoRA (Gauss.)     & 0.44M (0.24\%) & 95.9 & 82.7 & 90.0 & 89.4 & 67.8 & 93.9 & 90.5 & 87.2 \\
 LoRA (Kaiming)    & 0.44M (0.24\%) & 95.6 & 82.3 & 90.2 & 89.0 & 67.0 & 93.6 & 87.4 & 86.4 \\
-PiSSA             & 0.44M (0.24\%) & 95.41 & 79.28 & 90.03 & 90.87 & 66.13 & 93.90 & \underline{90.57} & 86.60 \\
-DoRA              & 0.47M (0.25\%) & 95.00 & 80.29 & 89.95 & 90.52 & 66.25 & 93.62 & 89.87 & 86.50 \\
-AdaLoRA           & 0.44M (0.24\%) & 94.13 & 54.33 & 89.72 & 81.22 & 54.99 & 92.40 & 87.49 & 79.18 \\
-BitFit            & 0.10M (0.05\%) & 94.93 & 75.90 & 89.62 & 89.72 & 63.54 & 93.02 & \underline{90.57} & 85.33 \\
+PiSSA             & 0.44M (0.24\%) & 95.41 \scriptsize{$\pm$ 0.33} & 79.28 \scriptsize{$\pm$ 2.66} & 90.03 \scriptsize{$\pm$ 0.15} & 90.87 \scriptsize{$\pm$ 0.85} & 66.13 \scriptsize{$\pm$ 1.11} & 93.90 \scriptsize{$\pm$ 0.16} & \underline{90.57} \scriptsize{$\pm$ 0.28} & 86.60 \\
+DoRA              & 0.47M (0.25\%) & 95.00 \scriptsize{$\pm$ 0.17} & 80.29 \scriptsize{$\pm$ 1.90} & 89.95 \scriptsize{$\pm$ 0.16} & 90.52 \scriptsize{$\pm$ 0.70} & 66.25 \scriptsize{$\pm$ 1.45} & 93.62 \scriptsize{$\pm$ 0.19} & 89.87 \scriptsize{$\pm$ 0.46} & 86.50 \\
+AdaLoRA           & 0.44M (0.24\%) & 94.13 \scriptsize{$\pm$ 0.15} & 54.33 \scriptsize{$\pm$ 3.38} & 89.72 \scriptsize{$\pm$ 0.07} & 81.22 \scriptsize{$\pm$ 0.00} & 54.99 \scriptsize{$\pm$ 0.72} & 92.40 \scriptsize{$\pm$ 0.14} & 87.49 \scriptsize{$\pm$ 0.14} & 79.18 \\
+BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scriptsize{$\pm$ 0.74} & 89.62 \scriptsize{$\pm$ 0.08} & 89.72 \scriptsize{$\pm$ 0.23} & 63.54 \scriptsize{$\pm$ 0.78} & 93.02 \scriptsize{$\pm$ 0.03} & \underline{90.57} \scriptsize{$\pm$ 0.08} & 85.33 \\
 \midrule
-\textbf{\jelly{}} & 0.44M (0.24\%) & \textbf{95.71} & \textbf{81.68} & \textbf{90.23} & \underline{91.52} & \underline{67.08} & \textbf{93.94} & 90.19 & \textbf{87.19} \\
+\textbf{\jelly{}} & 0.44M (0.24\%) & \textbf{95.71} \scriptsize{$\pm$ 0.22} & \textbf{81.68} \scriptsize{$\pm$ 2.42} & \textbf{90.23} \scriptsize{$\pm$ 0.07} & \underline{91.52} \scriptsize{$\pm$ 1.07} & \underline{67.08} \scriptsize{$\pm$ 0.54} & \textbf{93.94} \scriptsize{$\pm$ 0.14} & 90.19 \scriptsize{$\pm$ 0.40} & \textbf{87.19} \\
 \bottomrule
 \end{tabular}}
 \end{table}
