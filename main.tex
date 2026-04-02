@@ -350,7 +350,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{NLG evaluation across various base models. \textbf{Math}: GSM8K, MATH. \textbf{Code}: HumanEval, MBPP (pass@1). \textbf{Conv.}: MT-Bench. All methods use rank $r\!=\!8$ except where specified (some analysis experiments use $r=128$). Best in \textbf{bold}, second-best \underline{underlined}.}
+\caption{NLG evaluation across base models. \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. LLaMA-2-7B uses $r\!=\!8$ on all 7 linear projections (0.30\%); Mistral-7B and Gemma-7B use $r\!=\!128$ on $W_q, W_k, W_v, W_o$ (1.48\%). Best per model in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:nlg_comprehensive}
 \centering
 \small
@@ -361,18 +361,31 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
 \textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-\multirow{6}{*}{LLaMA-2-7B} & Full FT & -- & -- & -- & -- & -- \\
-& LoRA (Gauss.) & 53.10 & 7.54 & \underline{25.0} & \underline{37.3} & -- \\
-& PiSSA & \textbf{53.53} & \underline{7.76} & -- & -- & -- \\
+\multirow{5}{*}{LLaMA-2-7B}
+& Full FT & -- & -- & -- & -- & -- \\
+& LoRA & \underline{53.10} & 7.54 & 25.0 & 37.3 & -- \\
+& PiSSA & \textbf{53.53} & \underline{7.76} & \textbf{26.8} & \textbf{39.9} & \underline{6.07} \\
 & DoRA & 50.87 & 7.46 & -- & -- & -- \\
-& \jelly{} (Ours) & \underline{51.30} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
+& \jelly{} (Ours) & 51.30 & \textbf{8.18} & \underline{25.6} & \underline{38.9} & \textbf{6.22} \\
+\midrule
+\multirow{3}{*}{Mistral-7B}
+& Full FT & -- & -- & -- & -- & -- \\
+& LoRA & -- & -- & -- & -- & -- \\
+& \jelly{} (Ours) & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{3}{*}{Gemma-7B}
+& Full FT & -- & -- & -- & -- & -- \\
+& LoRA & -- & -- & -- & -- & -- \\
+& \jelly{} (Ours) & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
 \textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
-\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA), MT-Bench (6.22), and leads on both code generation benchmarks. The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
+\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant structure.
+The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
+Cross-model generalization experiments on Mistral-7B and Gemma-7B are ongoing at $r=128$.
 
 \begin{figure}[t]
 \centering
