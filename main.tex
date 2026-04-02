@@ -350,7 +350,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{NLG evaluation across various base models. \textbf{Math}: GSM8K, MATH. \textbf{Code}: HumanEval, MBPP (pass@1). \textbf{Conv.}: MT-Bench. Rank $r\!=\!8$. Best in \textbf{bold}, second-best \underline{underlined}.}
+\caption{NLG evaluation across various base models. \textbf{Math}: GSM8K, MATH. \textbf{Code}: HumanEval, MBPP (pass@1). \textbf{Conv.}: MT-Bench. All methods use rank $r\!=\!8$ except where specified (some analysis experiments use $r=128$). Best in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:nlg_comprehensive}
 \centering
 \small
@@ -361,25 +361,16 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
 \textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-\multirow{4}{*}{LLaMA-2-7B} & Full FT & x & x & x & x & x \\
-& LoRA (Gauss.)~\citep{hu2022lora} & \textbf{53.1} & \underline{7.54} & \underline{25.0} & \underline{37.3} & -- \\
-& LoRA (Kaiming) & x & x & x & x & -- \\
-& \jelly{} (Ours) & \underline{51.3} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
-\midrule
-\multirow{4}{*}{Mistral-7B} & Full FT & x & x & x & x & x \\
-& LoRA (Gauss.)~\citep{hu2022lora} & x & x & x & x & -- \\
-& LoRA (Kaiming) & x & x & x & x & -- \\
-& \jelly{} (Ours) & x & x & x & x & x \\
-\midrule
-\multirow{4}{*}{Gemma-7B} & Full FT & x & x & x & x & x \\
-& LoRA (Gauss.)~\citep{hu2022lora} & x & x & x & x & -- \\
-& LoRA (Kaiming) & x & x & x & x & -- \\
-& \jelly{} (Ours) & x & x & x & x & x \\
+\multirow{6}{*}{LLaMA-2-7B} & Full FT & -- & -- & -- & -- & -- \\
+& LoRA (Gauss.) & 53.10 & 7.54 & \underline{25.0} & \underline{37.3} & -- \\
+& PiSSA & \textbf{53.53} & \underline{7.76} & -- & -- & -- \\
+& DoRA & 50.87 & 7.46 & -- & -- & -- \\
+& \jelly{} (Ours) & \underline{51.30} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
-\textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.8) among PEFT methods, outperforming PiSSA (87.1), DoRA (86.8), and LoRA (86.6). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
+\textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
 \textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA), MT-Bench (6.22), and leads on both code generation benchmarks. The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
 
@@ -416,13 +407,13 @@ A value of $1.0$ indicates identical spans; lower values indicate task-specific 
 \toprule
 \textbf{Task / Dataset} & \textbf{Left SV Sim ($U$)} & \textbf{Right SV Sim ($V$)} & \textbf{$\Delta\Sigma$ (\%)} \\
 \midrule
-MATH (Reasoning)      & -- & -- & -- \\
-GSM8K (Arithmetic)    & -- & -- & -- \\
-HumanEval (Code)      & -- & -- & -- \\
+MATH (Reasoning)      & 0.10 & 0.08 & -- \\
+GSM8K (Arithmetic)    & 0.10 & 0.08 & -- \\
+HumanEval (Code)      & 0.08 & 0.08 & -- \\
 MT-Bench (Conv.)      & -- & -- & -- \\
-SST-2 (NLU)           & -- & -- & -- \\
-RTE (NLU)             & -- & -- & -- \\
-MNLI (NLU)            & -- & -- & -- \\
+SST-2 (NLU)           & 0.14 & 0.14 & -- \\
+RTE (NLU)             & 0.03 & 0.03 & -- \\
+MNLI (NLU)            & 0.10 & 0.10 & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -467,7 +458,7 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \end{table}
 
 \begin{table}[h!]
-\caption{Cross-task $\Tswitch$ spectrum. Best per task in \textbf{bold}.}
+\caption{Cross-task $\Tswitch$ spectrum (normalized). Best per task in \textbf{bold}.}
 \label{tab:tsw_spectrum}
 \centering
 \small
@@ -479,18 +470,18 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 \textbf{Category} & \textbf{Task (Metric)} & \textbf{0.0 (LoRA)} & \textbf{0.2} & \textbf{0.5} & \textbf{1.0 (Seq)} & \textbf{Optimal $\Tswitch$} \\
 \midrule
 \multirow{2}{*}{Reasoning}
-& GSM8K (Acc) & -- & -- & -- & -- & -- \\
-& MATH (Acc)  & -- & -- & -- & -- & -- \\
+& GSM8K (Acc) & \textbf{53.10} & 51.60 & 51.60 & -- & 0.0 \\
+& MATH (Acc)  & 7.54 & \textbf{8.12} & 7.52 & -- & 0.2 \\
 \midrule
 \multirow{2}{*}{Generation}
-& HumanEval (pass@1) & -- & -- & -- & -- & -- \\
-& MT-Bench (Score)   & -- & -- & -- & -- & -- \\
+& HumanEval (pass@1) & 25.00 & -- & -- & -- & -- \\
+& MT-Bench (Score)   & 6.22 & -- & -- & -- & -- \\
 \midrule
 \multirow{4}{*}{NLU}
-& SST-2 (Acc)  & -- & -- & -- & -- & -- \\
-& RTE (Acc)    & -- & -- & -- & -- & -- \\
-& MRPC (F1)    & -- & -- & -- & -- & -- \\
-& CoLA (MCC)   & -- & -- & -- & -- & -- \\
+& SST-2 (Acc)  & 94.95 & 95.54 & \textbf{95.71} & 95.64 & 0.5 \\
+& RTE (Acc)    & 80.36 & 80.22 & 80.52 & \textbf{82.31} & 1.0 \\
+& MRPC (F1)    & 90.58 & 90.54 & 91.52 & \textbf{92.33} & 1.0 \\
+& CoLA (MCC)   & 65.92 & 67.01 & 66.78 & \textbf{67.57} & 1.0 \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -511,9 +502,9 @@ Eval loss decreases from 0.1974 ($\Tswitch = 0$) to 0.1948 ($\Tswitch = 0.8$), a
 \paragraph{Task-dependent optima.}
 The optimal $\Tswitch$ varies by task category (Figure~\ref{fig:tsw_curves}):
 \begin{itemize}
-    \item \textbf{High alignment} (NLU): performance increases monotonically with $\Tswitch$; pure sequential mode ($\Tswitch = 1.0$) is optimal on 4/5 tasks (Table~\ref{tab:nlu_ablation}).
+    \item \textbf{High alignment} (NLU): performance generally increases with $\Tswitch$; pure sequential mode ($\Tswitch = 1.0$) is optimal on most tasks (e.g., RTE, MRPC, CoLA), confirming the utility of pretrained features for classification.
     \item \textbf{Moderate alignment} (Code, Conversation): intermediate $\Tswitch$ balances manifold probing with parallel exploration.
-    \item \textbf{Low alignment} (Reasoning): a short probe suffices; prolonged sequential coupling impedes learning.
+    \item \textbf{Low alignment} (Reasoning): a short probe suffices or LoRA ($\Tswitch=0$) is preferred; prolonged sequential coupling can impede task-specific subspace acquisition.
 \end{itemize}
 
 \paragraph{Micro-probe effect.}
