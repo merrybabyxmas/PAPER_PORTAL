@@ -350,8 +350,8 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{NLG evaluation across base models. \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. LLaMA-2-7B uses $r\!=\!8$ on all 7 linear projections (0.30\%); Mistral-7B and Gemma-7B use $r\!=\!128$ on $W_q, W_k, W_v, W_o$ (1.48\%). Best per model in \textbf{bold}, second-best \underline{underlined}.}
-\label{tab:nlg_comprehensive}
+\caption{NLG evaluation on LLaMA-2-7B ($r\!=\!8$, all 7 linear projections, 0.30\% params). \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. Best in \textbf{bold}, second-best \underline{underlined}.}
+\label{tab:nlg_detailed}
 \centering
 \small
 \resizebox{\linewidth}{!}{%
@@ -367,25 +367,39 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 & PiSSA & \textbf{53.53} & \underline{7.76} & \textbf{26.8} & \textbf{39.9} & \underline{6.07} \\
 & DoRA & 50.87 & 7.46 & -- & -- & -- \\
 & \jelly{} (Ours) & 51.30 & \textbf{8.18} & \underline{25.6} & \underline{38.9} & \textbf{6.22} \\
-\midrule
-\multirow{3}{*}{Mistral-7B}
-& Full FT & -- & -- & -- & -- & -- \\
-& LoRA & -- & -- & -- & -- & -- \\
-& \jelly{} (Ours) & -- & -- & -- & -- & -- \\
-\midrule
-\multirow{3}{*}{Gemma-7B}
-& Full FT & -- & -- & -- & -- & -- \\
-& LoRA & -- & -- & -- & -- & -- \\
-& \jelly{} (Ours) & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}}
 \end{table}
 
+\begin{table}[t]
+\caption{Cross-model NLG evaluation on MetaMath ($r\!=\!128$, targeting $W_q, W_k, W_v, W_o$, 1.48\% params). GSM8K and MATH accuracy (\%). Best per model in \textbf{bold}.}
+\label{tab:nlg_comprehensive}
+\centering
+\small
+\begin{tabular}{ll cc}
+\toprule
+\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} \\
+\midrule
+\multirow{2}{*}{LLaMA-2-7B}
+& LoRA & \textbf{56.71} & 8.80 \\
+& \jelly{} ($\Tswitch\!=\!0.8$) & 56.63 & \textbf{9.50} \\
+\midrule
+\multirow{2}{*}{Mistral-7B}
+& LoRA & -- & -- \\
+& \jelly{} ($\Tswitch\!=\!0.8$) & -- & -- \\
+\midrule
+\multirow{2}{*}{Gemma-7B}
+& LoRA & -- & -- \\
+& \jelly{} ($\Tswitch\!=\!0.8$) & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
-\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant structure.
-The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch=0.8$). Figure~\ref{fig:training_dynamics} visualizes these dynamics.
-Cross-model generalization experiments on Mistral-7B and Gemma-7B are ongoing at $r=128$.
+\textbf{NLG (Tables~\ref{tab:nlg_detailed}--\ref{tab:nlg_comprehensive}).} At $r\!=\!8$ (Table~\ref{tab:nlg_detailed}), \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant directions.
+At $r\!=\!128$ (Table~\ref{tab:nlg_comprehensive}), \jelly{} ($\Tswitch\!=\!0.8$) improves MATH accuracy to 9.50\% (+0.70 over LoRA's 8.80\%) while maintaining comparable GSM8K (56.63 vs.\ 56.71).
+The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up. Figure~\ref{fig:training_dynamics} visualizes these training dynamics.
 
 \begin{figure}[t]
 \centering
