@@ -372,27 +372,30 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{Cross-model NLG evaluation on MetaMath ($r\!=\!128$, targeting $W_q, W_k, W_v, W_o$, 1.48\% params). GSM8K and MATH accuracy (\%). Best per model in \textbf{bold}.}
+\caption{Cross-model NLG evaluation ($r\!=\!128$, targeting $W_q, W_k, W_v, W_o$, 1.48\% params). \textbf{Math}: MetaMath $\to$ GSM8K, MATH (\%). \textbf{Code}: CodeFeedback $\to$ HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: WizardLM $\to$ MT-Bench. Best per model in \textbf{bold}.}
 \label{tab:nlg_comprehensive}
 \centering
 \small
-\begin{tabular}{ll cc}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ll cc cc c}
 \toprule
-\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} \\
+& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
+\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
 \multirow{2}{*}{LLaMA-2-7B}
-& LoRA & \textbf{56.71} & 8.80 \\
-& \jelly{} ($\Tswitch\!=\!0.8$) & 56.63 & \textbf{9.50} \\
+& LoRA & \textbf{56.71} & 8.80 & 30.5 & 40.7 & -- \\
+& \jelly{} ($\Tswitch\!=\!0.8$) & 56.63 & \textbf{9.50} & \textbf{31.7} & \textbf{43.4} & -- \\
 \midrule
 \multirow{2}{*}{Mistral-7B}
-& LoRA & 67.48 & 16.68 \\
-& \jelly{} ($\Tswitch\!=\!0.8$) & \textbf{69.45} & \textbf{18.24} \\
+& LoRA & 67.48 & 16.68 & -- & -- & -- \\
+& \jelly{} ($\Tswitch\!=\!0.8$) & \textbf{69.45} & \textbf{18.24} & -- & -- & -- \\
 \midrule
 \multirow{2}{*}{Gemma-7B}
-& LoRA & -- & -- \\
-& \jelly{} ($\Tswitch\!=\!0.8$) & -- & -- \\
+& LoRA & -- & -- & -- & -- & -- \\
+& \jelly{} ($\Tswitch\!=\!0.8$) & -- & -- & -- & -- & -- \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
