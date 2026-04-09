@@ -484,8 +484,8 @@ $\Tswitch$ & \textbf{Loss} $\downarrow$ & \textbf{GSM8K} $\uparrow$ & \textbf{MA
 & MATH (Acc)  & 7.54 & \textbf{8.12} & 7.52 & -- & 0.2 \\
 \midrule
 \multirow{2}{*}{Generation}
-& HumanEval (pass@1) & 25.00 & -- & -- & -- & -- \\
-& MT-Bench (Score)   & 6.22 & -- & -- & -- & -- \\
+& HumanEval (pass@1) & 25.0 & 25.0 & \textbf{25.6} & 15.2 & 0.5 \\
+& MT-Bench (Score)   & \textbf{6.22} & -- & \textbf{6.22} & 5.99 & 0.0 \\
 \midrule
 \multirow{4}{*}{NLU}
 & SST-2 (Acc)  & 94.95 & 95.54 & \textbf{95.71} & 95.64 & 0.5 \\
@@ -513,7 +513,7 @@ Eval loss decreases from 0.1974 ($\Tswitch = 0$) to 0.1948 ($\Tswitch = 0.8$), a
 The optimal $\Tswitch$ varies by task category (Figure~\ref{fig:tsw_curves}):
 \begin{itemize}
     \item \textbf{High alignment} (NLU): performance generally increases with $\Tswitch$; pure sequential mode ($\Tswitch = 1.0$) is optimal on most tasks (e.g., RTE, MRPC, CoLA), confirming the utility of pretrained features for classification.
-    \item \textbf{Moderate alignment} (Code, Conversation): intermediate $\Tswitch$ balances manifold probing with parallel exploration.
+    \item \textbf{Moderate alignment} (Code, Conversation): intermediate $\Tswitch$ balances manifold probing with parallel exploration. HumanEval peaks at $\Tswitch=0.5$ (25.6\%) and collapses to 15.2\% at $\Tswitch=1.0$, showing that pure sequential mode over-constrains the code subspace; MT-Bench is flat from $\Tswitch=0$ to $0.5$ (6.22) before declining at $\Tswitch=1.0$ (5.99), reflecting the lower structural novelty of conversational adaptation.
     \item \textbf{Low alignment} (Reasoning): a short probe suffices or LoRA ($\Tswitch=0$) is preferred; prolonged sequential coupling can impede task-specific subspace acquisition.
 \end{itemize}
 
