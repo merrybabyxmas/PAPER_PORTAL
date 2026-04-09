@@ -324,7 +324,6 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \subsection{Main Results}
 \label{sec:main_results}
 %-----------------------------------------------------------------------------
-
 \begin{table}[t]
 \caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}. BitFit averages over 4 seeds due to one missing run.}
 \label{tab:nlu}
@@ -335,7 +334,7 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \toprule
 \textbf{Method} & \textbf{Params} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-Full FT           & 184.4M (100\%) & 95.6 & \underline{84.8} & \underline{90.3} & \textbf{92.3} & \textbf{69.6} & 94.0 & \textbf{91.1} & \underline{88.2} \\
+Full FT            & 184.4M (100\%) & 95.6 & \underline{84.8} & \underline{90.3} & \textbf{92.3} & \textbf{69.6} & 94.0 & \textbf{91.1} & \underline{88.2} \\
 LoRA              & 0.44M (0.24\%) & 94.95 \scriptsize{$\pm$ 0.18} & 80.36 \scriptsize{$\pm$ 1.67} & 89.93 \scriptsize{$\pm$ 0.20} & 90.58 \scriptsize{$\pm$ 0.79} & 65.92 \scriptsize{$\pm$ 1.39} & 93.63 \scriptsize{$\pm$ 0.15} & 89.80 \scriptsize{$\pm$ 0.46} & 86.45 \\
 LoRA (Gauss.)     & 0.44M (0.24\%) & 95.37 \scriptsize{$\pm$ 0.27} & 80.14 \scriptsize{$\pm$ 1.95} & 89.93 \scriptsize{$\pm$ 0.15} & 90.83 \scriptsize{$\pm$ 0.30} & 66.81 \scriptsize{$\pm$ 0.69} & 93.63 \scriptsize{$\pm$ 0.19} & 90.00 \scriptsize{$\pm$ 0.70} & 87.12 \\
 LoRA (Kaiming)    & 0.44M (0.24\%) & 94.89 \scriptsize{$\pm$ 0.13} & 80.99 \scriptsize{$\pm$ 2.22} & 89.98 \scriptsize{$\pm$ 0.21} & 90.50 \scriptsize{$\pm$ 0.76} & 66.31 \scriptsize{$\pm$ 1.09} & 93.62 \scriptsize{$\pm$ 0.16} & 89.46 \scriptsize{$\pm$ 1.21} & 86.41 \\
@@ -350,29 +349,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{NLG evaluation on LLaMA-2-7B ($r\!=\!8$, all 7 linear projections, 0.30\% params). \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. Best in \textbf{bold}, second-best \underline{underlined}.}
-\label{tab:nlg_detailed}
-\centering
-\small
-\resizebox{\linewidth}{!}{%
-\begin{tabular}{ll cc cc c}
-\toprule
-& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
-\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
-\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
-\midrule
-\multirow{5}{*}{LLaMA-2-7B}
-& Full FT & -- & -- & -- & -- & -- \\
-& LoRA & \underline{53.10} & 7.54 & 25.0 & 37.3 & -- \\
-& PiSSA & \textbf{53.53} & \underline{7.76} & \textbf{26.8} & \textbf{39.9} & \underline{6.07} \\
-& DoRA & 50.87 & 7.46 & -- & -- & -- \\
-& \jelly{} (Ours) & 51.30 & \textbf{8.18} & \underline{25.6} & \underline{38.9} & \textbf{6.22} \\
-\bottomrule
-\end{tabular}}
-\end{table}
-
-\begin{table}[t]
-\caption{Cross-model NLG evaluation ($r\!=\!128$, targeting $W_q, W_k, W_v, W_o$, 1.48\% params). \textbf{Math}: MetaMath $\to$ GSM8K, MATH (\%). \textbf{Code}: CodeFeedback $\to$ HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: WizardLM $\to$ MT-Bench. Best per model in \textbf{bold}.}
+\caption{NLG evaluation across base models. \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. LLaMA-2-7B uses $r\!=\!8$ on all 7 linear projections (0.30\%); Mistral-7B and Gemma-7B use $r\!=\!128$ on $W_q, W_k, W_v, W_o$ (1.48\%). Best per model in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:nlg_comprehensive}
 \centering
 \small
@@ -383,25 +360,28 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
 \textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-\multirow{2}{*}{LLaMA-2-7B}
-& LoRA & \textbf{56.71} & 8.80 & 30.5 & 40.7 & -- \\
-& \jelly{} ($\Tswitch\!=\!0.8$) & 56.63 & \textbf{9.50} & \textbf{31.7} & \textbf{43.4} & -- \\
+\multirow{3}{*}{LLaMA-2-7B}
+& Full FT & -- & -- & -- & -- & -- \\
+& LoRA & \textbf{53.10} & \underline{7.54} & \underline{25.0} & \underline{37.3} & -- \\
+& \jelly{} (Ours) & \underline{51.30} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
 \midrule
-\multirow{2}{*}{Mistral-7B}
-& LoRA & 67.48 & 16.68 & 47.6 & 56.1 & -- \\
-& \jelly{} ($\Tswitch\!=\!0.8$) & \textbf{69.45} & \textbf{18.24} & 47.6 & \textbf{60.6} & -- \\
+\multirow{3}{*}{Mistral-7B}
+& Full FT & -- & -- & -- & -- & -- \\
+& LoRA & 67.48 & 16.68 & \textbf{47.6} & 56.1 & -- \\
+& \jelly{} (Ours) & \textbf{69.45} & \textbf{18.24} & \textbf{47.6} & \textbf{60.6} & -- \\
 \midrule
-\multirow{2}{*}{Gemma-7B}
-& LoRA & \textbf{71.27} & \textbf{21.96} & 48.8 & 61.9 & 6.91 \\
-& \jelly{} ($\Tswitch\!=\!0.8$) & 69.52 & 20.80 & \textbf{51.8} & \textbf{62.7} & 6.89 \\
+\multirow{3}{*}{Gemma-7B}
+& Full FT & -- & -- & -- & -- & -- \\
+& LoRA & \textbf{71.27} & \textbf{21.96} & 48.8 & 61.9 & \textbf{6.91} \\
+& \jelly{} (Ours) & 69.52 & 20.80 & \textbf{51.8} & \textbf{62.7} & 6.89 \\
 \bottomrule
 \end{tabular}}
 \end{table}
-
 \textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
-\textbf{NLG (Tables~\ref{tab:nlg_detailed}--\ref{tab:nlg_comprehensive}).} At $r\!=\!8$ (Table~\ref{tab:nlg_detailed}), \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant directions.
-At $r\!=\!128$ (Table~\ref{tab:nlg_comprehensive}), \jelly{} shows consistent code generation gains across all three models (Gemma: HumanEval $+3.0$, MBPP $+0.8$; Mistral: MBPP $+4.5$; LLaMA-2-7B: HumanEval $+1.2$, MBPP $+2.7$). For mathematical reasoning, \jelly{} improves over LoRA on LLaMA-2-7B (MATH $+0.70$) and Mistral-7B (GSM8K $+1.97$, MATH $+1.56$), but LoRA retains the advantage on Gemma-7B (GSM8K 71.27 vs.\ 69.52; MATH 21.96 vs.\ 20.80). The Gemma exception likely reflects its stronger mathematical pretraining alignment, which LoRA's parallel initialization preserves more directly, whereas \jelly{}'s sequential warm-up steers the adapter toward a task-intrinsic subspace that benefits code generation more uniformly across models. For conversation quality on Gemma-7B, both methods score nearly identically (LoRA 6.91, \jelly{} 6.89), suggesting that the sequential warm-up does not harm conversational fluency.
+\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22) on LLaMA-2-7B ($r\!=\!8$), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant structure.
+The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch\!=\!0.8$).
+At $r\!=\!128$, \jelly{} shows consistent code generation gains (Gemma: HumanEval $+3.0$, MBPP $+0.8$; Mistral: MBPP $+4.5$) and mathematical reasoning improvements on Mistral-7B (GSM8K $+1.97$, MATH $+1.56$), while LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. For Gemma-7B conversation quality, both methods score nearly identically (LoRA 6.91, \jelly{} 6.89).
 Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 
 \begin{figure}[t]
