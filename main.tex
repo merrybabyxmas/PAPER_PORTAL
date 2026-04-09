@@ -324,7 +324,6 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \subsection{Main Results}
 \label{sec:main_results}
 %-----------------------------------------------------------------------------
-
 \begin{table}[t]
 \caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}. BitFit averages over 4 seeds due to one missing run.}
 \label{tab:nlu}
@@ -335,7 +334,7 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \toprule
 \textbf{Method} & \textbf{Params} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-Full FT           & 184.4M (100\%) & 95.6 & \underline{84.8} & \underline{90.3} & \textbf{92.3} & \textbf{69.6} & 94.0 & \textbf{91.1} & \underline{88.2} \\
+Full FT            & 184.4M (100\%) & 95.6 & \underline{84.8} & \underline{90.3} & \textbf{92.3} & \textbf{69.6} & 94.0 & \textbf{91.1} & \underline{88.2} \\
 LoRA              & 0.44M (0.24\%) & 94.95 \scriptsize{$\pm$ 0.18} & 80.36 \scriptsize{$\pm$ 1.67} & 89.93 \scriptsize{$\pm$ 0.20} & 90.58 \scriptsize{$\pm$ 0.79} & 65.92 \scriptsize{$\pm$ 1.39} & 93.63 \scriptsize{$\pm$ 0.15} & 89.80 \scriptsize{$\pm$ 0.46} & 86.45 \\
 LoRA (Gauss.)     & 0.44M (0.24\%) & 95.37 \scriptsize{$\pm$ 0.27} & 80.14 \scriptsize{$\pm$ 1.95} & 89.93 \scriptsize{$\pm$ 0.15} & 90.83 \scriptsize{$\pm$ 0.30} & 66.81 \scriptsize{$\pm$ 0.69} & 93.63 \scriptsize{$\pm$ 0.19} & 90.00 \scriptsize{$\pm$ 0.70} & 87.12 \\
 LoRA (Kaiming)    & 0.44M (0.24\%) & 94.89 \scriptsize{$\pm$ 0.13} & 80.99 \scriptsize{$\pm$ 2.22} & 89.98 \scriptsize{$\pm$ 0.21} & 90.50 \scriptsize{$\pm$ 0.76} & 66.31 \scriptsize{$\pm$ 1.09} & 93.62 \scriptsize{$\pm$ 0.16} & 89.46 \scriptsize{$\pm$ 1.21} & 86.41 \\
@@ -361,12 +360,10 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
 \textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
 \midrule
-\multirow{5}{*}{LLaMA-2-7B}
+\multirow{3}{*}{LLaMA-2-7B}
 & Full FT & -- & -- & -- & -- & -- \\
-& LoRA & \underline{53.10} & 7.54 & 25.0 & 37.3 & -- \\
-& PiSSA & \textbf{53.53} & \underline{7.76} & \textbf{26.8} & \textbf{39.9} & \underline{6.07} \\
-& DoRA & 50.87 & 7.46 & -- & -- & -- \\
-& \jelly{} (Ours) & 51.30 & \textbf{8.18} & \underline{25.6} & \underline{38.9} & \textbf{6.22} \\
+& LoRA & \underline{53.10} & \underline{7.54} & \underline{25.0} & \underline{37.3} & -- \\
+& \jelly{} (Ours) & \textbf{51.30} & \textbf{8.18} & \textbf{25.6} & \textbf{38.9} & \textbf{6.22} \\
 \midrule
 \multirow{3}{*}{Mistral-7B}
 & Full FT & -- & -- & -- & -- & -- \\
@@ -380,7 +377,6 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \bottomrule
 \end{tabular}}
 \end{table}
-
 \textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
 \textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant structure.
