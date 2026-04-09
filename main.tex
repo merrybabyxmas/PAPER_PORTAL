@@ -367,8 +367,8 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \midrule
 \multirow{3}{*}{Mistral-7B}
 & Full FT & -- & -- & -- & -- & -- \\
-& LoRA & 67.48 & 16.68 & \textbf{47.6} & 56.1 & 6.74 \\
-& \jelly{} (Ours) & \textbf{69.45} & \textbf{18.24} & \textbf{47.6} & \textbf{60.6} & -- \\
+& LoRA & 67.48 & 16.68 & \textbf{47.6} & 56.1 & \underline{6.74} \\
+& \jelly{} (Ours) & \textbf{69.45} & \textbf{18.24} & \textbf{47.6} & \textbf{60.6} & \textbf{6.94} \\
 \midrule
 \multirow{3}{*}{Gemma-7B}
 & Full FT & -- & -- & -- & -- & -- \\
@@ -381,7 +381,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 
 \textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy (8.18\%, +0.64 over LoRA) and MT-Bench score (6.22) on LLaMA-2-7B ($r\!=\!8$), while PiSSA leads on code generation (HumanEval 26.8, MBPP 39.9) via its SVD-based initialization that captures $\Wbase$'s code-relevant structure.
 The divergence between GSM8K and MATH reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch\!=\!0.8$).
-At $r\!=\!128$, \jelly{} shows consistent code generation gains (Gemma: HumanEval $+3.0$, MBPP $+0.8$; Mistral: MBPP $+4.5$) and mathematical reasoning improvements on Mistral-7B (GSM8K $+1.97$, MATH $+1.56$), while LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. For Gemma-7B conversation quality, both methods score nearly identically (LoRA 6.91, \jelly{} 6.89).
+At $r\!=\!128$, \jelly{} shows consistent code generation gains (Gemma: HumanEval $+3.0$, MBPP $+0.8$; Mistral: MBPP $+4.5$) and mathematical reasoning improvements on Mistral-7B (GSM8K $+1.97$, MATH $+1.56$), while LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. For conversation quality, \jelly{} outperforms LoRA on Mistral-7B (MT-Bench 6.94 vs.\ 6.74, $+0.20$), while both methods score nearly identically on Gemma-7B (LoRA 6.91, \jelly{} 6.89).
 Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 
 \begin{figure}[t]
