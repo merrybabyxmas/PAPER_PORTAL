@@ -317,8 +317,7 @@ We evaluate on two model scales:
 
 \paragraph{Baselines and Implementation Details.}
 Baselines: LoRA~\citep{hu2022lora} (Gaussian and Kaiming variants), PiSSA~\citep{meng2024pissa}, DoRA~\citep{liu2024dora}, AdaLoRA~\citep{zhang2023adalora}, and full fine-tuning.
-All low-rank methods use rank $r = 8$ on identical target modules. For DeBERTa, adapters target query, key, and value projections. For LLaMA-2-7B, adapters target all seven linear projections ($W_q, W_k, W_v, W_o, W_{\mathrm{gate}}, W_{\mathrm{up}}, W_{\mathrm{down}}$), totaling $0.30\%$ trainable parameters.
-Models are fine-tuned for 1 epoch on 100K subsampled training examples. We report \jelly{} with the optimal $\Tswitch$ per task category ($\Tswitch$ ablations in Section~\ref{sec:ablation}).
+All low-rank methods use rank $r = 8$ on identical target modules. For DeBERTa, adapters target query, key, and value projections. Models are fine-tuned for 1 epoch on 100K subsampled training examples. We report \jelly{} with the optimal $\Tswitch$ per task category ($\Tswitch$ ablations in Section~\ref{sec:ablation}).
 
 %-----------------------------------------------------------------------------
 \subsection{Main Results}
@@ -349,7 +348,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{NLG evaluation across base models. \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. LLaMA-2-7B uses $r\!=\!8$ on all 7 linear projections (0.30\%); Mistral-7B and Gemma-7B use $r\!=\!128$ on $W_q, W_k, W_v, W_o$ (1.48\%). Best per model in \textbf{bold}, second-best \underline{underlined}.}
+\caption{NLG evaluation across base models. \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). Best per model in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:nlg_comprehensive}
 \centering
 \small
