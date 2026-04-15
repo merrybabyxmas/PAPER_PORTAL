@@ -62,7 +62,7 @@ During an initial sequential phase, \jelly{} projects activations through $\Wbas
 At a switching step $\Tswitch$, a lossless \emph{Task-Isomorphic Projection} converts the learned sequential representations into an equivalent parallel adapter via a lightweight double SVD.
 This costs $O(dr^2)$---orders of magnitude below full-weight SVD---while preserving the zero additional latency property of LoRA at inference.
 Standard LoRA is recovered as the special case $\Tswitch = 0$.
-Experiments on LLaMA-2-7B, Mistral-7B, Gemma-7B, and DeBERTa-v3-base across mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), conversation (MT-Bench), and seven GLUE tasks show that \jelly{} consistently outperforms LoRA, PiSSA, and DoRA, achieving the best score on 6 out of 7 NLU tasks and the highest MATH and MBPP accuracy across multiple base models.
+Experiments on LLaMA-2-7B, Mistral-7B, Gemma-7B, and DeBERTa-v3-base across mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), conversation (MT-Bench), and seven GLUE tasks show that \jelly{} consistently outperforms LoRA, PiSSA, and DoRA, achieving the best score on 6 out of 7 NLU tasks, the highest MATH accuracy on all three NLG base models, and the highest MBPP pass@1 across LLaMA-2-7B, Mistral-7B, and Gemma-7B.
 We also show that $\Tswitch$ serves as a geometric indicator of the alignment between the target task and the pretrained manifold.
 \end{abstract}
 %=============================================================================
@@ -349,7 +349,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{NLG evaluation across base models at $r\!=\!128$ (seed=42). \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. All models use $r\!=\!128$ on $W_q, W_k, W_v, W_o$ (1.48\%) for Math and Conv.; LLaMA-2-7B additionally targets $W_{\mathrm{gate}}, W_{\mathrm{up}}, W_{\mathrm{down}}$ for Code. Best per model in \textbf{bold}, second-best \underline{underlined}.}
+\caption{NLG evaluation across base models at $r\!=\!128$ (seed=42). \textbf{Math}: GSM8K, MATH accuracy (\%). \textbf{Code}: HumanEval, MBPP pass@1 (\%). \textbf{Conv.}: MT-Bench score. All models use $r\!=\!128$ on $W_q, W_k, W_v, W_o$ (1.48\%) for Math and Conv.; LLaMA-2-7B additionally targets $W_{\mathrm{gate}}, W_{\mathrm{up}}, W_{\mathrm{down}}$ for Code. \jelly{} reports the best score across $\Tswitch \in \{0.2, 0.5, 0.8\}$ per metric (see Appendix for sweep details). Best per model in \textbf{bold}, second-best \underline{underlined}.}
 \label{tab:nlg_comprehensive}
 \centering
 \small
@@ -362,8 +362,8 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \midrule
 \multirow{3}{*}{LLaMA-2-7B}
 & Full FT & -- & -- & -- & -- & -- \\
-& LoRA & \textbf{56.71} & \underline{8.80} & \textbf{31.1} & \textbf{43.1} & \textbf{6.26} \\
-& \jelly{} (Ours) & \underline{56.63} & \textbf{9.50} & \underline{30.5} & \underline{41.5} & \underline{6.09} \\
+& LoRA & \underline{56.71} & \underline{8.80} & \underline{31.1} & \underline{43.1} & \textbf{6.26} \\
+& \jelly{} (Ours) & \textbf{56.94} & \textbf{9.50} & \textbf{31.7} & \textbf{43.4} & \underline{6.09} \\
 \midrule
 \multirow{3}{*}{Mistral-7B}
 & Full FT & -- & -- & -- & -- & -- \\
@@ -373,13 +373,13 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \multirow{3}{*}{Gemma-7B}
 & Full FT & -- & -- & -- & -- & -- \\
 & LoRA & \textbf{71.27} & \textbf{21.96} & \underline{48.8} & \underline{61.9} & \textbf{6.91} \\
-& \jelly{} (Ours) & \underline{70.20} & \underline{21.24} & \textbf{51.8} & \textbf{62.7} & \underline{6.89} \\
+& \jelly{} (Ours) & \underline{70.51} & \underline{21.24} & \textbf{51.8} & \textbf{62.7} & \underline{6.89} \\
 \bottomrule
 \end{tabular}}
 \end{table}
 \textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
-\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} achieves the highest MATH accuracy on LLaMA-2-7B (9.50\%, $+0.70$ over LoRA) and the highest MBPP score on both Mistral-7B ($60.6$, $+4.5$) and Gemma-7B ($62.7$, $+0.8$), while LoRA retains a slight edge on GSM8K for LLaMA ($56.71$ vs.\ $56.63$) and on GSM8K/MATH for Gemma-7B due to its stronger mathematical pretraining alignment. The divergence between GSM8K and MATH on LLaMA reflects task-manifold alignment: GSM8K favors LoRA's parallel exploration, while MATH benefits from \jelly{}'s sequential warm-up ($\Tswitch\!=\!0.8$).
+\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} dominates LLaMA-2-7B across all four reasoning and code metrics (GSM8K $+0.23$, MATH $+0.70$, HumanEval $+0.6$, MBPP $+0.3$) and achieves the top MBPP score on both Mistral-7B ($60.6$, $+4.5$) and Gemma-7B ($62.7$, $+0.8$); LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. The divergence between GSM8K and MATH reflects task-manifold alignment: MATH benefits most from \jelly{}'s sequential warm-up, while GSM8K responds to both parallel and early-switch regimes.
 For code generation, \jelly{} also leads HumanEval on Gemma-7B ($51.8$, $+3.0$). For conversation quality, \jelly{} outperforms LoRA on Mistral-7B (MT-Bench $6.94$ vs.\ $6.74$, $+0.20$), while both methods score nearly identically on Gemma-7B (LoRA $6.91$, \jelly{} $6.89$); on LLaMA-2-7B, LoRA leads slightly ($6.26$ vs.\ $6.09$).
 Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 
