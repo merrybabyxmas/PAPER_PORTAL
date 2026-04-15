@@ -531,6 +531,47 @@ Table~\ref{tab:nlu_full_seeds} provides the complete results across 5 seeds for 
 
 % Initialization cost table moved to Section~\ref{sec:init_cost} in the main text.
 
+\section{Full NLG Results across $\Tswitch$ Sweep}
+\label{app:nlg_full_tsw}
+
+Table~\ref{tab:nlg_full_tsw} provides the full $\Tswitch$ sweep results for all three NLG backbone models at $r\!=\!128$ and seed $42$. All methods use identical hyperparameters ($lr\!=\!2\mathrm{e}{-4}$, batch size $4$, gradient accumulation $4$, $1$ epoch, $100\mathrm{K}$ training samples). \textbf{Sequential} rows correspond to pure sequential mode without the Task-Isomorphic Projection switch (i.e.\ no conversion to parallel adapters); these experiments are currently running and reported as ``--''. \textbf{\jelly{}} rows cover $\Tswitch \in \{0.2, 0.5, 0.8\}$ under \texttt{seq2par} mode. For each metric, values reported in the main Table~\ref{tab:nlg_comprehensive} are in \textbf{bold}, indicating the $\Tswitch$ configuration selected per metric.
+
+\begin{table}[h]
+\caption{Full NLG results across backbone models and $\Tswitch$ values at $r\!=\!128$ (seed $42$). All adapters target $W_q, W_k, W_v, W_o$ for Math and Conv.; LLaMA-2-7B Python additionally targets $W_{\mathrm{gate}}, W_{\mathrm{up}}, W_{\mathrm{down}}$. Values used in the main NLG table are in \textbf{bold}. ``Sequential'' entries are placeholders for experiments currently in progress.}
+\label{tab:nlg_full_tsw}
+\centering
+\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ll ccccc}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
+\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
+\midrule
+\multirow{5}{*}{LLaMA-2-7B}
+& LoRA                    & \textbf{56.71} & \textbf{8.80}  & \textbf{31.1} & \textbf{43.1} & \textbf{6.26} \\
+& Sequential              & --             & --             & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.2$ & \textbf{56.94} & 9.26           & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.5$ & 55.65          & 8.96           & 30.5          & 41.5          & --            \\
+& \jelly{} $\Tswitch=0.8$ & 56.63          & \textbf{9.50}  & \textbf{31.7} & \textbf{43.4} & \textbf{6.09} \\
+\midrule
+\multirow{5}{*}{Mistral-7B}
+& LoRA                    & \textbf{67.48} & \textbf{16.68} & \textbf{47.6} & \textbf{56.1} & \textbf{6.74} \\
+& Sequential              & --             & --             & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.2$ & 68.76          & 18.04          & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.5$ & 68.01          & 17.52          & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.8$ & \textbf{69.45} & \textbf{18.24} & \textbf{47.6} & \textbf{60.6} & \textbf{6.94} \\
+\midrule
+\multirow{5}{*}{Gemma-7B}
+& LoRA                    & \textbf{71.27} & \textbf{21.96} & \textbf{48.8} & \textbf{61.9} & \textbf{6.91} \\
+& Sequential              & --             & --             & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.2$ & \textbf{70.51} & 21.04          & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.5$ & 70.20          & \textbf{21.24} & --            & --            & --            \\
+& \jelly{} $\Tswitch=0.8$ & 69.52          & 20.80          & \textbf{51.8} & \textbf{62.7} & \textbf{6.89} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
 \section{Inference Latency}
 \label{app:latency}
 
