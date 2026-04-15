@@ -383,13 +383,6 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 For code generation, \jelly{} also leads HumanEval on Gemma-7B ($51.8$, $+3.0$). For conversation quality, \jelly{} outperforms LoRA on Mistral-7B (MT-Bench $6.94$ vs.\ $6.74$, $+0.20$), while both methods score nearly identically on Gemma-7B (LoRA $6.91$, \jelly{} $6.89$); on LLaMA-2-7B, LoRA leads slightly ($6.26$ vs.\ $6.09$).
 Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.9\linewidth]{figures/training_dynamics.pdf}
-\caption{Training dynamics of LoRA and \jelly{} ($\Tswitch\!=\!0.2, 0.5, 0.8$) on MetaMath (LLaMA-2-7B, $r\!=\!128$). \textbf{(a)}~Training loss: \jelly{} converges faster during the sequential phase (inset: first 100 steps). \textbf{(b)}~Gradient norm: \jelly{}'s sequential warm-up produces more stable gradients. \textbf{(c)}~GSM8K accuracy evaluated every 1{,}000 steps.}
-\label{fig:training_dynamics}
-\end{figure}
-
 %=============================================================================
 % Analysis
 %=============================================================================
@@ -407,9 +400,6 @@ The $\Tswitch$ spectrum provides a principled mechanism for balancing knowledge 
 \paragraph{Limitations.}
 The optimal $\Tswitch$ requires validation-based selection; an adaptive mechanism based on gradient coherence remains future work.
 Our experiments cover models up to 7B parameters; scaling behavior on larger models warrants investigation.
-
-\paragraph{Broader impact.}
-\jelly{} lowers the barrier to high-quality fine-tuning while maintaining LoRA's parameter and inference budget.
 
 %=============================================================================
 \bibliographystyle{plainnat}
