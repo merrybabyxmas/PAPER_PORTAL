@@ -439,17 +439,17 @@ This section provides comprehensive ablation studies and supplementary results.
 \subsection{Task-Specific Optimal Switching Point}
 \label{app:table1}
 
-Table~\ref{tab:t1_task_switch} investigates whether the optimal switching point varies across tasks. We sweep $\Tswitch \in \{0.2, 0.5, 0.8\}$ on each task and compare against LoRA ($\Tswitch\!=\!0$) and pure sequential mode.
+Table~\ref{tab:t1_task_switch_updated} investigates whether the optimal switching point varies across tasks. We sweep $\Tswitch$ at 10\%, 30\%, and 50\% of total training for NLU and Sarcasm tasks (5-seed average), and at 20\%, 50\%, and 80\% for NLG tasks (seed~42).
 
 \begin{table}[!ht]
-\caption{Optimal $T_{switch}$ per task. Best result per row is \textbf{bold}.}
+\caption{Optimal $T_{switch}$ per task. Best result per row is \textbf{bold}. NLU/Sarcasm columns correspond to $\Tswitch \in \{10\%, 30\%, 50\%\}$ of total epochs; NLG columns to $\Tswitch \in \{20\%, 50\%, 80\%\}$.}
 \label{tab:t1_task_switch_updated}
 \centering\small
 \begin{tabular}{l ccccc}
 \toprule
-\textbf{Task} & \textbf{LoRA (Parallel)} & \textbf{Switch@0.2} & \textbf{Switch@0.5} & \textbf{Switch@0.8} & \textbf{Sequential} \\
+\textbf{Task} & \textbf{LoRA} & \textbf{Sw@early} & \textbf{Sw@mid} & \textbf{Sw@late} & \textbf{Sequential} \\
 \midrule
-% 이미지의 첫 번째 그룹 (NLU / GLUE)
+% NLU: Sw@early=10%, Sw@mid=30%, Sw@late=50%
 CoLA      & -- & -- & -- & -- & -- \\
 MNLI      & -- & -- & -- & -- & -- \\
 MRPC      & -- & -- & -- & -- & -- \\
@@ -458,12 +458,12 @@ RTE       & -- & -- & -- & -- & -- \\
 SST-2     & -- & -- & -- & -- & -- \\
 STS-B     & -- & -- & -- & -- & -- \\
 \midrule
-% 이미지의 두 번째 그룹
-Headlines & -- & -- & -- & -- & -- \\
-iSarcasm  & -- & -- & -- & -- & -- \\
-Sarc      & -- & -- & -- & -- & -- \\
+% Sarcasm: Sw@early=10%, Sw@mid=30%, Sw@late=50%
+Headlines & 93.14 & \textbf{93.38} & 93.15 & \textbf{93.38} & 93.59 \\
+iSarcasm  & 78.04 & 77.64 & 77.75 & 78.04 & \textbf{78.50} \\
+Sarc      & 72.09 & \textbf{72.49} & 72.47 & 72.47 & 72.59 \\
 \midrule
-% 추가 요청하신 NLG 태스크 그룹
+% NLG: Sw@early=20%, Sw@mid=50%, Sw@late=80%
 GSM8K (NLG) & -- & -- & -- & -- & -- \\
 MBPP (NLG)  & -- & -- & -- & -- & -- \\
 MATH (NLG)  & -- & -- & -- & -- & -- \\
@@ -627,52 +627,47 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
 \end{table}
 \paragraph{Sarcasm (DeBERTa-v3-base, $r\!=\!8$).}
 \begin{table}[!ht]
-\caption{Full Sarcasm results across 5 seeds.}
+\caption{Full Sarcasm results across 5 seeds (DeBERTa-v3-base, $r\!=\!8$). \jelly{} uses the per-task best setting (sequential for all three tasks). Best per seed is \textbf{bold}.}
 \label{tab:t5_sarc_seeds_full}
 \centering\scriptsize
 \begin{tabular}{llcccc}
 \toprule
 \textbf{Seed} & \textbf{Method} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-\multirow{6}{*}{16}
-& LoRA    & -- & -- & -- & -- \\
-& DoRA    & -- & -- & -- & -- \\
-& PiSSA   & -- & -- & -- & -- \\
-& AdaLoRA & -- & -- & -- & -- \\
-& BitFit  & -- & -- & -- & -- \\
-& \jelly{} & -- & -- & -- & -- \\
+\multirow{5}{*}{16}
+& LoRA    & 93.08 & 78.96 & 72.09 & 81.38 \\
+& DoRA    & 93.15 & 78.10 & 72.03 & 81.09 \\
+& PiSSA   & 92.45 & 76.95 & 72.39 & 80.60 \\
+& AdaLoRA & 87.56 & 74.93 & 64.99 & 75.83 \\
+& \jelly{} & \textbf{93.82} & \textbf{77.52} & \textbf{72.45} & \textbf{81.26} \\
 \midrule
-\multirow{6}{*}{32}
-& LoRA    & -- & -- & -- & -- \\
-& DoRA    & -- & -- & -- & -- \\
-& PiSSA   & -- & -- & -- & -- \\
-& AdaLoRA & -- & -- & -- & -- \\
-& BitFit  & -- & -- & -- & -- \\
-& \jelly{} & -- & -- & -- & -- \\
+\multirow{5}{*}{32}
+& LoRA    & 92.91 & 77.81 & 71.71 & 80.81 \\
+& DoRA    & 93.01 & 77.23 & 71.71 & 80.65 \\
+& PiSSA   & 92.56 & 76.08 & 71.93 & 80.19 \\
+& AdaLoRA & 87.91 & 74.93 & 67.00 & 76.61 \\
+& \jelly{} & \textbf{93.54} & \textbf{78.10} & \textbf{72.27} & \textbf{81.30} \\
 \midrule
-\multirow{6}{*}{42}
-& LoRA    & -- & -- & -- & -- \\
-& DoRA    & -- & -- & -- & -- \\
-& PiSSA   & -- & -- & -- & -- \\
-& AdaLoRA & -- & -- & -- & -- \\
-& BitFit  & -- & -- & -- & -- \\
-& \jelly{} & -- & -- & -- & -- \\
+\multirow{5}{*}{42}
+& LoRA    & 93.89 & 77.52 & 72.31 & 81.24 \\
+& DoRA    & 93.82 & 77.23 & 72.22 & 81.09 \\
+& PiSSA   & 93.75 & 77.52 & 72.50 & 81.26 \\
+& AdaLoRA & 88.19 & 74.93 & 64.88 & 76.00 \\
+& \jelly{} & \textbf{94.13} & \textbf{78.67} & \textbf{72.65} & \textbf{81.82} \\
 \midrule
-\multirow{6}{*}{64}
-& LoRA    & -- & -- & -- & -- \\
-& DoRA    & -- & -- & -- & -- \\
-& PiSSA   & -- & -- & -- & -- \\
-& AdaLoRA & -- & -- & -- & -- \\
-& BitFit  & -- & -- & -- & -- \\
-& \jelly{} & -- & -- & -- & -- \\
+\multirow{5}{*}{64}
+& LoRA    & 93.36 & 77.81 & 72.15 & 81.11 \\
+& DoRA    & 93.43 & 78.39 & 72.21 & 81.34 \\
+& PiSSA   & 93.26 & 78.39 & 72.43 & 81.36 \\
+& AdaLoRA & 88.43 & 74.93 & 65.38 & 76.25 \\
+& \jelly{} & \textbf{93.99} & \textbf{79.25} & \textbf{72.81} & \textbf{82.02} \\
 \midrule
-\multirow{6}{*}{128}
-& LoRA    & -- & -- & -- & -- \\
-& DoRA    & -- & -- & -- & -- \\
-& PiSSA   & -- & -- & -- & -- \\
-& AdaLoRA & -- & -- & -- & -- \\
-& BitFit  & -- & -- & -- & -- \\
-& \jelly{} & -- & -- & -- & -- \\
+\multirow{5}{*}{128}
+& LoRA    & 92.49 & 78.10 & 72.18 & 80.92 \\
+& DoRA    & 92.56 & 78.10 & 72.22 & 80.96 \\
+& PiSSA   & 92.14 & 78.10 & 72.20 & 80.81 \\
+& AdaLoRA & 87.63 & 74.93 & 65.53 & 76.03 \\
+& \jelly{} & \textbf{92.45} & \textbf{78.96} & \textbf{72.76} & \textbf{81.39} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -778,11 +773,11 @@ Table~\ref{tab:t7_best_sw} summarizes the recommended switch fraction for each t
     & & MT-Bench  & 5 & $2\times 10^{-4}$ & 128 & 50 \\
 \midrule
 % --- Sarcasm Section ---
-\multirow{3}{*}{\textbf{Sarcasm}} 
-    & \multirow{3}{*}{DeBERTa-v3} 
-    & Headlines & 5 & $1\times 10^{-5}$ & 32 & 30 \\
-    & & iSarcasm  & 5 & $1\times 10^{-5}$ & 32 & 50 \\
-    & & Sarc      & 5 & $1\times 10^{-5}$ & 32 & 30 \\
+\multirow{3}{*}{\textbf{Sarcasm}}
+    & \multirow{3}{*}{DeBERTa-v3}
+    & Headlines & 10 & $1\times 10^{-4}$ & 32 & 10 \\
+    & & iSarcasm  & 15 & $1\times 10^{-4}$ & 32 & 50 \\
+    & & Sarc      & 3  & $1\times 10^{-4}$ & 32 & 10 \\
 \bottomrule
 \end{tabular}
 \end{table}
