@@ -691,6 +691,24 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[!ht]
+\caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} on Sarcasm detection tasks (DeBERTa-v3-base, $r=8$). We evaluate the performance across three representative switching points against the LoRA baseline ($T_{sw}=0\%$). Results are averaged over 5 random seeds.}
+\label{tab:jelly_sw_ablation_sarcasm}
+\centering\small
+\begin{tabular}{l cccc}
+\toprule
+\textbf{$T_{sw}$ (\%)} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
+\midrule
+0\% (LoRA)  & 93.15 & 78.10 & 72.09 & 81.11 \\
+\midrule
+10\%        & -- & -- & -- & -- \\
+30\%        & -- & -- & -- & -- \\
+50\%        & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{NLG (Multi-backbone, $r\!=\!128$).}
 \begin{table}[!ht]
 \caption{Full NLG results across 3 seeds and 3 backbones. Method ``Sequential'' refers to the task-isomorphic sequential projection.}
@@ -738,6 +756,38 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
     & \multirow{3}{*}{Gemma}   & LoRA       & -- & -- & -- & -- & -- \\
     &                          & Sequential & -- & -- & -- & -- & -- \\
     &                          & \jelly{}    & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[!ht]
+\caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} across NLG tasks and multiple backbones. All results are averaged over 3 random seeds. $T_{sw}=0\%$ serves as the parallel-only LoRA baseline.}
+\label{tab:jelly_sw_ablation_nlg}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt} % 열 간격 최적화
+\begin{tabular}{ll cccccc}
+\toprule
+\textbf{Backbone} & \textbf{$T_{sw}$ (\%)} & \textbf{MBPP} & \textbf{MATH} & \textbf{GSM8K} & \textbf{HumanEval} & \textbf{MT-Bench} & \textbf{Avg.} \\
+\midrule
+\multirow{4}{*}{LLaMA-2-7B} 
+    & 0\% (LoRA) & -- & -- & -- & -- & -- & -- \\
+    & 10\%       & -- & -- & -- & -- & -- & -- \\
+    & 30\%       & -- & -- & -- & -- & -- & -- \\
+    & 50\%       & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Mistral-7B} 
+    & 0\% (LoRA) & -- & -- & -- & -- & -- & -- \\
+    & 10\%       & -- & -- & -- & -- & -- & -- \\
+    & 30\%       & -- & -- & -- & -- & -- & -- \\
+    & 50\%       & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Gemma-7B} 
+    & 0\% (LoRA) & -- & -- & -- & -- & -- & -- \\
+    & 10\%       & -- & -- & -- & -- & -- & -- \\
+    & 30\%       & -- & -- & -- & -- & -- & -- \\
+    & 50\%       & -- & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
