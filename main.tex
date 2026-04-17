@@ -492,12 +492,12 @@ $\Tswitch$ & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Av
 \end{table}
 
 %-----------------------------------------------------------------------------
-\subsection{Switching Point Analysis}
-\label{sec:analysis}
+\subsection{Does the Optimal Switching Point Vary by Task?}
+\label{sec:task_analysis}
 %-----------------------------------------------------------------------------
 
-The ablation reveals that the optimal $\Tswitch$ varies substantially across tasks and backbones: NLU tasks favor early switching ($\Tswitch \leq 10\%$), while MATH requires extended sequential probing ($\Tswitch = 80\%$).
-We introduce two diagnostic quantities to explain this variation.
+The ablation tables above reveal that the optimal $\Tswitch$ varies substantially across tasks: NLU tasks favor early switching ($\Tswitch \leq 10\%$), while MATH requires extended sequential probing ($\Tswitch = 80\%$).
+To explain this variation, we introduce two diagnostic quantities.
 
 \paragraph{SB--SG Decomposition.}
 Let $\Delta_{\text{\textsc{Jelly}}}(\Tswitch) = \text{score}(\Tswitch) - \text{score}(\text{LoRA})$ denote the gain of \jelly{} over LoRA at switching point $\Tswitch$.
@@ -519,18 +519,22 @@ Panel~(b) decomposes each task's gain into SB and SG, revealing two clear regime
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\textwidth]{figures/figA_task_analysis.pdf}
+\includegraphics[width=\textwidth]{figures/figA_task_analysis.png}
 \caption{\textbf{Task-specific switching point analysis.} \textbf{(a)} EGR vs.\ optimal switch fraction $\Tswitch^*/T$: tasks with high EGR (fast sequential saturation) benefit from early switching, while low-EGR tasks require extended sequential probing ($r = -0.64$). \textbf{(b)} SB--SG decomposition reveals two regimes: Regime~B (SG $> 0$, blue) where TIP adds value beyond sequential training, and Regime~A (SG $\leq 0$, red) where sequential training alone suffices.}
 \label{fig:task_analysis}
 \end{figure}
 
-\paragraph{Backbone-specific switching dynamics.}
+%-----------------------------------------------------------------------------
+\subsection{Does the Optimal Switching Point Vary by Backbone?}
+\label{sec:model_analysis}
+%-----------------------------------------------------------------------------
+
 Figure~\ref{fig:model_analysis} extends the analysis to backbone models.
 Across MetaMath, Python, and Conversation tasks, the three backbones exhibit distinct switching profiles: Mistral-7B consistently benefits from later switching (\emph{switch-friendly}), LLaMA-2-7B peaks at intermediate $\Tswitch$ (\emph{peaked}), and Gemma-7B is sensitive to excessive sequential probing (\emph{switch-fragile}), reflecting differences in how each model's pretrained manifold aligns with downstream tasks.
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\textwidth]{figures/figB_model_analysis.pdf}
+\includegraphics[width=\textwidth]{figures/figB_model_analysis.png}
 \caption{\textbf{Backbone-specific switching dynamics.} \textbf{(a)--(c)} Performance gain ($\Delta$ vs.\ LoRA) as a function of $\Tswitch/T$ for three NLG tasks across LLaMA-2-7B, Mistral-7B, and Gemma-7B. Mistral consistently improves with later switching; Gemma degrades with extended sequential probing. \textbf{(d)} Model$\times$Task gain heatmap summarizing the best $\Delta$ vs.\ LoRA for each combination.}
 \label{fig:model_analysis}
 \end{figure}
@@ -543,7 +547,7 @@ Across MetaMath, Python, and Conversation tasks, the three backbones exhibit dis
 We introduced \jelly{}, a framework that generalizes PEFT over the training time axis by dynamically transitioning adapter connectivity from sequential to parallel mode.
 The Task-Isomorphic Projection losslessly converts sequential adapters into parallel adapters via rank-$r$ double SVD with $O(dr^2)$ cost.
 Experiments demonstrate that \jelly{} consistently matches or outperforms LoRA, PiSSA, and DoRA across NLU, mathematical reasoning, code generation, and conversation.
-The SB--SG decomposition and Early Gain Ratio (Section~\ref{sec:analysis}) show that $\Tswitch$ serves as a geometric indicator of task--manifold alignment, providing a principled mechanism for balancing knowledge retention and acquisition.
+The SB--SG decomposition and Early Gain Ratio (Sections~\ref{sec:task_analysis}--\ref{sec:model_analysis}) show that $\Tswitch$ serves as a geometric indicator of task--manifold alignment, providing a principled mechanism for balancing knowledge retention and acquisition.
 
 \paragraph{Limitations.}
 The optimal $\Tswitch$ requires validation-based selection; an adaptive mechanism based on gradient coherence remains future work.
