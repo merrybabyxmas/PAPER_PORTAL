@@ -1,0 +1,23 @@
+# Reference PDFs
+references/
+*.pdf
+!figures/*.pdf
+
+# Misc
+story.md
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.toc
+*.lof
+*.lot
+*.nav
+*.snm
+*.vrb
