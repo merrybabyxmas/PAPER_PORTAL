@@ -324,7 +324,11 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \subsection{Main Results}
 \label{sec:main_results}
 %-----------------------------------------------------------------------------
-\begin{table}[t]
+
+\paragraph{NLU (Table~\ref{tab:nlu}).}
+\jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
+
+\begin{table}[!ht]
 \caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}. BitFit averages over 4 seeds due to one missing run.}
 \label{tab:nlu}
 \centering
@@ -348,7 +352,11 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{tabular}}
 \end{table}
 
-\begin{table}[t]
+\paragraph{NLG (Table~\ref{tab:nlg_comprehensive}).}
+\jelly{} dominates LLaMA-2-7B across all four reasoning and code metrics (GSM8K $+0.23$, MATH $+0.70$, HumanEval $+0.6$, MBPP $+0.3$) and achieves the top MBPP score on both Mistral-7B ($60.6$, $+4.5$) and Gemma-7B ($62.7$, $+0.8$); LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. The divergence between GSM8K and MATH reflects task-manifold alignment: MATH benefits most from \jelly{}'s sequential warm-up, while GSM8K responds to both parallel and early-switch regimes.
+For code generation, \jelly{} also leads HumanEval on Gemma-7B ($51.8$, $+3.0$). For conversation quality, \jelly{} outperforms LoRA on Mistral-7B (MT-Bench $6.94$ vs.\ $6.74$, $+0.20$), while both methods score nearly identically on Gemma-7B (LoRA $6.91$, \jelly{} $6.89$); on LLaMA-2-7B, LoRA leads slightly ($6.26$ vs.\ $6.09$).
+
+\begin{table}[!ht]
 \caption{NLG evaluation across three 7B-parameter backbones on mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), and conversation (MT-Bench). Rank $r\!=\!128$, seed 42. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
 \label{tab:nlg_comprehensive}
 \centering
@@ -378,14 +386,16 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{tabular}}
 \end{table}
 
-\begin{table}[t]
+\paragraph{Sarcasm (Table~\ref{tab:sarcasm}).}
+\jelly{} achieves the highest average (81.56) among PEFT methods, with the best Headlines F1 (93.50) and Sarc accuracy (72.55). Full fine-tuning retains the advantage on iSarcasm and Sarc due to the limited training data, but \jelly{} closes the gap to within 1 point on average.
+
+\begin{table}[!ht]
 \caption{Sarcasm detection evaluation on DeBERTa-v3-base. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
 \label{tab:sarcasm}
 \centering
 \footnotesize
 \renewcommand{\arraystretch}{1.3}
 \setlength{\tabcolsep}{8pt}
-
 \begin{tabular}{llcccc}
 \toprule
 \textbf{Method} & \textbf{Params} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
@@ -404,23 +414,12 @@ BitFit            & 0.10M (0.05\%) & -- \scriptsize{$\pm$ --} & -- \scriptsize{$
 \end{tabular}
 \end{table}
 
-
-\textbf{NLU (Table~\ref{tab:nlu}).} \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
-
-\textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} dominates LLaMA-2-7B across all four reasoning and code metrics (GSM8K $+0.23$, MATH $+0.70$, HumanEval $+0.6$, MBPP $+0.3$) and achieves the top MBPP score on both Mistral-7B ($60.6$, $+4.5$) and Gemma-7B ($62.7$, $+0.8$); LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. The divergence between GSM8K and MATH reflects task-manifold alignment: MATH benefits most from \jelly{}'s sequential warm-up, while GSM8K responds to both parallel and early-switch regimes.
-For code generation, \jelly{} also leads HumanEval on Gemma-7B ($51.8$, $+3.0$). For conversation quality, \jelly{} outperforms LoRA on Mistral-7B (MT-Bench $6.94$ vs.\ $6.74$, $+0.20$), while both methods score nearly identically on Gemma-7B (LoRA $6.91$, \jelly{} $6.89$); on LLaMA-2-7B, LoRA leads slightly ($6.26$ vs.\ $6.09$).
-
-\textbf{Sarcasm (Table~\ref{tab:sarcasm}).} \jelly{} achieves the highest average (81.56) among PEFT methods, with the best Headlines F1 (93.50) and Sarc accuracy (72.55). Full fine-tuning retains the advantage on iSarcasm and Sarc due to the limited training data, but \jelly{} closes the gap to within 1 point on average.
-
 Training dynamics are visualized in Appendix~\ref{app:training_dynamics} (Figures~\ref{fig:method_comparison} and~\ref{fig:switch_comparison}).
 
 %-----------------------------------------------------------------------------
 \subsection{Switching Point Ablation}
 \label{sec:ablation}
 %-----------------------------------------------------------------------------
-
-The optimal $\Tswitch$ is task-dependent.
-Tables~\ref{tab:nlu_ablation}--\ref{tab:sarc_ablation} sweep $\Tswitch$ across NLU, NLG, and Sarcasm tasks to quantify this sensitivity.
 
 \begin{table}[!ht]
 \caption{$\Tswitch$ ablation on NLU (GLUE) tasks (DeBERTa-v3-base, $r\!=\!8$, 5-seed average). $\Tswitch\!=\!0\%$ corresponds to standard LoRA. Best per task is \textbf{bold}.}
@@ -490,6 +489,9 @@ $\Tswitch$ & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Av
 \bottomrule
 \end{tabular}
 \end{table}
+
+The optimal $\Tswitch$ is task-dependent.
+Tables~\ref{tab:nlu_ablation}--\ref{tab:sarc_ablation} sweep $\Tswitch$ across NLU, NLG, and Sarcasm tasks to quantify this sensitivity.
 
 %-----------------------------------------------------------------------------
 \subsection{Does the Optimal Switching Point Vary by Task?}
