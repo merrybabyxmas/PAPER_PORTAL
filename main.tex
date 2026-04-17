@@ -624,6 +624,27 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
 \bottomrule
 \end{tabular}
 \end{table}
+
+\begin{table}[!ht]
+\caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} (DeBERTa-v3-base, $r=8$). We compare three representative switching points (10\%, 30\%, 50\%) against the LoRA baseline ($T_{sw}=0\%$). All results are averaged over 5 random seeds.}
+\label{tab:jelly_sw_ablation_final}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3.5pt} 
+\begin{tabular}{l cccccccc}
+\toprule
+\textbf{$T_{sw}$ (\%)} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
+\midrule
+0\% (LoRA) & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+10\%       & -- & -- & -- & -- & -- & -- & -- & -- \\
+30\%       & -- & -- & -- & -- & -- & -- & -- & -- \\
+50\%       & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
 \paragraph{Sarcasm (DeBERTa-v3-base, $r\!=\!8$).}
 \begin{table}[!ht]
 \caption{Full Sarcasm results across 5 seeds (DeBERTa-v3-base, $r\!=\!8$). \jelly{} uses the per-task best setting (sequential for all three tasks). Best per seed is \textbf{bold}.}
@@ -728,11 +749,10 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
 \label{app:table7}
 
 Table~\ref{tab:t7_best_sw} summarizes the recommended switch fraction for each task.
-
 \begin{table}[!ht]
 \caption{Comprehensive experimental settings and optimal switch fraction ($T_{sw}$) across all categories. $lr$ denotes the initial learning rate, and Batch denotes the global batch size. Switch values are presented as percentages (\%).}
-\label{tab:master_experimental_settings}
-\centering\scriptsize % 열이 많으므로 단계를 낮춤
+\label{tab:master_experimental_settings_v2}
+\centering\scriptsize
 \begin{tabular}{lllcccc}
 \toprule
 \textbf{Category} & \textbf{Backbone} & \textbf{Task} & \textbf{Epochs} & \textbf{$lr$} & \textbf{Batch} & \textbf{Switch \%} \\
@@ -740,43 +760,43 @@ Table~\ref{tab:t7_best_sw} summarizes the recommended switch fraction for each t
 % --- NLU Section ---
 \multirow{7}{*}{\textbf{NLU}} 
     & \multirow{7}{*}{DeBERTa-v3} 
-    & CoLA      & 10 & $5\times 10^{-5}$ & 32 & 10 \\
-    & & MNLI      & 5  & $3\times 10^{-5}$ & 32 & 10 \\
-    & & MRPC      & 10 & $5\times 10^{-5}$ & 32 & 10 \\
-    & & QNLI      & 10 & $5\times 10^{-5}$ & 32 & 10 \\
-    & & RTE       & 20 & $5\times 10^{-5}$ & 32 & 10 \\
-    & & SST-2     & 10 & $5\times 10^{-5}$ & 32 & 10 \\
-    & & STS-B     & 10 & $5\times 10^{-5}$ & 32 & 10 \\
+    & CoLA      & 10 & 5e-5 & 32 & 10 \\
+    & & MNLI      & 5  & 3e-5 & 32 & 10 \\
+    & & MRPC      & 10 & 5e-5 & 32 & 10 \\
+    & & QNLI      & 10 & 5e-5 & 32 & 10 \\
+    & & RTE       & 20 & 5e-5 & 32 & 10 \\
+    & & SST-2     & 10 & 5e-5 & 32 & 10 \\
+    & & STS-B     & 10 & 5e-5 & 32 & 10 \\
 \midrule
 % --- NLG Section ---
 \multirow{15}{*}{\textbf{NLG}} 
     & \multirow{5}{*}{LLaMA-2-7B} 
-    & MBPP      & 3 & $2\times 10^{-4}$ & 128 & 30 \\
-    & & MATH      & 5 & $2\times 10^{-4}$ & 128 & 30 \\
-    & & GSM8K     & 3 & $2\times 10^{-4}$ & 128 & 30 \\
-    & & HumanEval & 3 & $2\times 10^{-4}$ & 128 & 30 \\
-    & & MT-Bench  & 3 & $2\times 10^{-4}$ & 128 & 30 \\
+    & MBPP      & 3 & 2e-4 & 128 & 30 \\
+    & & MATH      & 5 & 2e-4 & 128 & 30 \\
+    & & GSM8K     & 3 & 2e-4 & 128 & 30 \\
+    & & HumanEval & 3 & 2e-4 & 128 & 30 \\
+    & & MT-Bench  & 3 & 2e-4 & 128 & 30 \\
 \cmidrule{2-7}
     & \multirow{5}{*}{Mistral-7B} 
-    & MBPP      & 3 & $1\times 10^{-4}$ & 128 & 20 \\
-    & & MATH      & 3 & $1\times 10^{-4}$ & 128 & 30 \\
-    & & GSM8K     & 3 & $1\times 10^{-4}$ & 128 & 20 \\
-    & & HumanEval & 3 & $1\times 10^{-4}$ & 128 & 20 \\
-    & & MT-Bench  & 3 & $1\times 10^{-4}$ & 128 & 30 \\
+    & MBPP      & 3 & 1e-4 & 128 & 20 \\
+    & & MATH      & 3 & 1e-4 & 128 & 30 \\
+    & & GSM8K     & 3 & 1e-4 & 128 & 20 \\
+    & & HumanEval & 3 & 1e-4 & 128 & 20 \\
+    & & MT-Bench  & 3 & 1e-4 & 128 & 30 \\
 \cmidrule{2-7}
     & \multirow{5}{*}{Gemma-7B} 
-    & MBPP      & 3 & $1\times 10^{-4}$ & 128 & 30 \\
-    & & MATH      & 5 & $2\times 10^{-4}$ & 128 & 50 \\
-    & & GSM8K     & 3 & $1\times 10^{-4}$ & 128 & 30 \\
-    & & HumanEval & 3 & $1\times 10^{-4}$ & 128 & 30 \\
-    & & MT-Bench  & 5 & $2\times 10^{-4}$ & 128 & 50 \\
+    & MBPP      & 3 & 1e-4 & 128 & 30 \\
+    & & MATH      & 5 & 2e-4 & 128 & 50 \\
+    & & GSM8K     & 3 & 1e-4 & 128 & 30 \\
+    & & HumanEval & 3 & 1e-4 & 128 & 30 \\
+    & & MT-Bench  & 5 & 2e-4 & 128 & 50 \\
 \midrule
 % --- Sarcasm Section ---
-\multirow{3}{*}{\textbf{Sarcasm}}
-    & \multirow{3}{*}{DeBERTa-v3}
-    & Headlines & 10 & $1\times 10^{-4}$ & 32 & 10 \\
-    & & iSarcasm  & 15 & $1\times 10^{-4}$ & 32 & 50 \\
-    & & Sarc      & 3  & $1\times 10^{-4}$ & 32 & 10 \\
+\multirow{3}{*}{\textbf{Sarcasm}} 
+    & \multirow{3}{*}{DeBERTa-v3} 
+    & Headlines & 10 & 1e-4 & 32 & 10 \\
+    & & iSarcasm  & 15 & 1e-4 & 32 & 50 \\
+    & & Sarc      & 3  & 1e-4 & 32 & 10 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -930,7 +950,7 @@ After TIP, \jelly{} merges into $\Wbase + \Bpar\Apar$ and is structurally identi
 \centering\small
 \begin{tabular}{lcc}
 \toprule
-\textbf{Method} & \textbf{Topology at Inference} & \textbf{Relative Latency} \\
+\textbf{Method} & \textbf{Inference Mode} & \textbf{Latency} \\
 \midrule
 LoRA                        & Parallel (merged) & $1.00\times$ \\
 \jelly{} $T_{\text{sw}}=0.2$ & Parallel (merged) & $1.00\times$ \\
