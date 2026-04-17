@@ -430,12 +430,11 @@ The sequential gradient $\nabla_A \mathcal{L}|_{\mathrm{seq}} \propto (\Wbase x)
 The adapter first adapts along directions where $\Wbase$ has the strongest signal.
 The parallel gradient $\nabla_A \mathcal{L}|_{\mathrm{par}} \propto x^\top$ lacks this spectral bias and treats all directions equally.
 
-% =====================================================================
-% Tables 1--12 (from portal.xlsx experiment plan)
-% =====================================================================
+\section{Additional Experimental Results}
+\label{app:additional}
 
 %% ── Table 1. Task-specific optimal switching point ──────────────────
-\section{Table 1: Task-Specific Optimal Switching Point}
+\subsection{Task-Specific Optimal Switching Point}
 \label{app:table1}
 
 \begin{table}[h]
@@ -464,7 +463,7 @@ Sarc      & 100K  & 72.09 & --    & 72.43 & --    & \textbf{72.59} & +0.50 & --0
 \end{table}
 
 %% ── Table 2. Backbone-specific optimal switching point ──────────────
-\section{Table 2: Backbone-Specific Optimal Switching Point}
+\subsection{Backbone-Specific Optimal Switching Point}
 \label{app:table2}
 
 \begin{table}[h]
@@ -498,7 +497,7 @@ Conv (MT-Bench)  & --0.2 & +0.2 & --0.0 \\
 \end{table}
 
 %% ── Table 3. Asynchronous per-module switching ──────────────────────
-\section{Table 3: Asynchronous Per-Module Switching}
+\subsection{Asynchronous Per-Module Switching}
 \label{app:table3}
 
 \begin{table}[h]
@@ -526,7 +525,7 @@ Sequential          & $\infty$ & $\infty$ & $\infty$ & 95.64 & 91.04 & 90.11 \\
 \end{table}
 
 %% ── Table 4. Non-square matrix handling ─────────────────────────────
-\section{Table 4: Non-Square Matrix Handling}
+\subsection{Non-Square Matrix Handling}
 \label{app:table4}
 
 \begin{table}[h]
@@ -546,7 +545,7 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{table}
 
 %% ── Table 5. Full per-seed results ──────────────────────────────────
-\section{Table 5: Full Per-Seed Results}
+\subsection{Full Per-Seed Results}
 \label{app:table5}
 
 \subsection{NLU (DeBERTa-v3-base, $r\!=\!8$)}
@@ -642,7 +641,7 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 %% ── Table 6 is merged with Table 3 (same content, different layout) ─
 
 %% ── Table 7. Best hyperparameters ───────────────────────────────────
-\section{Table 7: Optimal $\Tswitch$ per Task (Summary)}
+\subsection{Optimal $\Tswitch$ per Task (Summary)}
 \label{app:table7}
 
 \begin{table}[h]
@@ -676,7 +675,7 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{table}
 
 %% ── Table 8. Rank ablation ──────────────────────────────────────────
-\section{Table 8: Rank Ablation}
+\subsection{Rank Ablation}
 \label{app:table8}
 
 \begin{table}[h]
@@ -703,7 +702,7 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{table}
 
 %% ── Table 9. Qualitative response examples ──────────────────────────
-\section{Table 9: Qualitative Response Examples}
+\subsection{Qualitative Response Examples}
 \label{app:table9}
 
 \begin{table}[h]
@@ -722,7 +721,7 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{table}
 
 %% ── Table 10. SVD computation time ──────────────────────────────────
-\section{Table 10: SVD Computation Time}
+\subsection{SVD Computation Time}
 \label{app:table10}
 
 \begin{table}[h]
@@ -749,7 +748,7 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{table}
 
 %% ── Table 11. Training latency ──────────────────────────────────────
-\section{Table 11: Training Latency}
+\subsection{Training Latency}
 \label{app:table11}
 
 \begin{table}[h]
@@ -771,7 +770,7 @@ PiSSA                        & -- & -- & -- \\
 \end{table}
 
 %% ── Table 12. Inference latency ─────────────────────────────────────
-\section{Table 12: Inference Latency}
+\subsection{Inference Latency}
 \label{app:table12}
 
 \begin{table}[h]
