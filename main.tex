@@ -433,19 +433,20 @@ The parallel gradient $\nabla_A \mathcal{L}|_{\mathrm{par}} \propto x^\top$ lack
 \section{Additional Experimental Results}
 \label{app:additional}
 
-%% ── Table 1. Task-specific optimal switching point ──────────────────
+This section provides comprehensive ablation studies and supplementary results. Each subsection addresses a specific experimental question, with the corresponding table placed immediately after the description.
+
 \subsection{Task-Specific Optimal Switching Point}
 \label{app:table1}
 
-\begin{table}[h]
-\caption{Optimal $\Tswitch$ per task (DeBERTa-v3-base, $r\!=\!8$, 5-seed avg).
-SB = Sequential Benefit ($J_\text{Seq} - J_\text{LoRA}$),
-SG = Switch Gain ($J_{\text{Best}_{T_{sw}}} - J_\text{Seq}$).}
+We decompose the \jelly{} gain into Sequential Benefit $\mathrm{SB} = J(\text{Seq}) - J(\text{LoRA})$ and Switch Gain $\mathrm{SG} = J(\text{Best}_{T_{sw}}) - J(\text{Seq})$. All ten tasks exhibit $\mathrm{SB} > 0$, confirming the universal benefit of sequential warm-up. The sign of $\mathrm{SG}$ partitions tasks into Regime~A ($\mathrm{SG} \leq 0$: sequential alone suffices) and Regime~B ($\mathrm{SG} > 0$: switching adds value). Table~\ref{tab:t1_task_switch} reports the full decomposition.
+
+\begin{table}[!ht]
+\caption{Switching point decomposition (DeBERTa-v3-base, $r\!=\!8$, 5-seed avg). $\Tswitch$ fractions 0.1/0.3/0.5 correspond to epoch 1.5/4.5/7.5 (15-ep tasks) or 1/3/5 (10-ep tasks).}
 \label{tab:t1_task_switch}
 \centering\small
 \begin{tabular}{lcccccc|ccl}
 \toprule
-\textbf{Task} & $|D|$ & \textbf{LoRA} & $T_{sw}\!=\!0.1$ & $T_{sw}\!=\!0.3$ & $T_{sw}\!=\!0.5$ & \textbf{Seq} & \textbf{SB} & \textbf{SG} & \textbf{Regime} \\
+\textbf{Task} & $|D|$ & \textbf{LoRA} & $\Tswitch\!=\!0.1$ & $\Tswitch\!=\!0.3$ & $\Tswitch\!=\!0.5$ & \textbf{Seq} & \textbf{SB} & \textbf{SG} & \textbf{Regime} \\
 \midrule
 CoLA      & 8.6K  & 65.92 & \textbf{67.08} & 66.72 & 66.12 & 66.45 & +0.53 & +0.63 & B \\
 MNLI      & 393K  & 89.93 & 90.16 & \textbf{90.23} & 90.21 & 90.11 & +0.18 & +0.12 & B \\
@@ -462,11 +463,12 @@ Sarc      & 100K  & 72.09 & --    & 72.43 & --    & \textbf{72.59} & +0.50 & --0
 \end{tabular}
 \end{table}
 
-%% ── Table 2. Backbone-specific optimal switching point ──────────────
 \subsection{Backbone-Specific Optimal Switching Point}
 \label{app:table2}
 
-\begin{table}[h]
+Different backbone models induce different switching trajectories on the same task. Table~\ref{tab:t2_model_switch} reports GSM8K accuracy across $\Tswitch$ values for MetaMath at $r\!=\!128$. Mistral-7B is \emph{switch-friendly} (monotonically increasing gain), LLaMA-2-7B is \emph{peaked}, and Gemma-7B is \emph{switch-fragile} (sequential constraint always hurts). Table~\ref{tab:t2_interaction} shows that the gain is not a model-only or task-only property but an interaction.
+
+\begin{table}[!ht]
 \caption{Model-level $\Tswitch$ sweep on MetaMath ($r\!=\!128$, seed 42, GSM8K \%).}
 \label{tab:t2_model_switch}
 \centering\small
@@ -481,7 +483,7 @@ Gemma-7B   & \textbf{71.27} & 70.51 & 70.20 & 69.52 & $\searrow$ fragile & --0.8
 \end{tabular}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[!ht]
 \caption{Model$\times$Task interaction: $\Delta$ vs LoRA ($r\!=\!128$, seed 42).}
 \label{tab:t2_interaction}
 \centering\small
@@ -496,12 +498,13 @@ Conv (MT-Bench)  & --0.2 & +0.2 & --0.0 \\
 \end{tabular}
 \end{table}
 
-%% ── Table 3. Asynchronous per-module switching ──────────────────────
 \subsection{Asynchronous Per-Module Switching}
 \label{app:table3}
 
-\begin{table}[h]
-\caption{Per-module switching (DeBERTa-v3-base, $r\!=\!8$, 5-seed avg). Early$\!=\!1.5$, Late$\!=\!7.5$ (out of 15 ep).}
+Instead of switching all modules simultaneously at $\Tswitch$, we test whether different modules ($W_q$, $W_k$, $W_v$) benefit from different switching schedules. ``Early'' denotes $\Tswitch\!=\!1.5$ and ``Late'' denotes $\Tswitch\!=\!7.5$ (out of 15 epochs). Results are reported in Table~\ref{tab:t3_async}.
+
+\begin{table}[!ht]
+\caption{Per-module asynchronous switching on DeBERTa-v3-base ($r\!=\!8$, 5-seed avg).}
 \label{tab:t3_async}
 \centering\small
 \begin{tabular}{lccc|ccc}
@@ -524,12 +527,13 @@ Sequential          & $\infty$ & $\infty$ & $\infty$ & 95.64 & 91.04 & 90.11 \\
 \end{tabular}
 \end{table}
 
-%% ── Table 4. Non-square matrix handling ─────────────────────────────
 \subsection{Non-Square Matrix Handling}
 \label{app:table4}
 
-\begin{table}[h]
-\caption{Non-square module strategy on LLaMA-2-7B ($r\!=\!128$, seed 42). TIP requires $d_\text{in}\!=\!d_\text{out}$; MLP projections default to parallel.}
+The Task-Isomorphic Projection requires $d_\text{in}\!=\!d_\text{out}$ (square weight matrices). Attention projections ($W_q, W_k, W_v, W_o$) satisfy this constraint; MLP projections ($W_\text{gate}, W_\text{up}, W_\text{down}$) do not and default to parallel mode from $t\!=\!0$. Table~\ref{tab:t4_nonsquare} compares adaptation strategies.
+
+\begin{table}[!ht]
+\caption{Non-square module strategy on LLaMA-2-7B ($r\!=\!128$, seed 42).}
 \label{tab:t4_nonsquare}
 \centering\small
 \begin{tabular}{ll|cccc}
@@ -544,14 +548,13 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{tabular}
 \end{table}
 
-%% ── Table 5. Full per-seed results ──────────────────────────────────
 \subsection{Full Per-Seed Results}
 \label{app:table5}
 
-\subsection{NLU (DeBERTa-v3-base, $r\!=\!8$)}
+Table~\ref{tab:t5_nlu_seeds} reports complete NLU results across five seeds ($42, 16, 32, 64, 128$) for all methods. All use $r\!=\!8$ and identical hyperparameters. \jelly{} uses the optimal $\Tswitch$ per task.
 
-\begin{table}[h]
-\caption{Full NLU results across 5 seeds.}
+\begin{table}[!ht]
+\caption{Full NLU results across 5 seeds on DeBERTa-v3-base ($r\!=\!8$).}
 \label{tab:t5_nlu_seeds}
 \centering\scriptsize
 \begin{tabular}{llcccccccc}
@@ -601,10 +604,10 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{tabular}
 \end{table}
 
-\subsection{NLG ($r\!=\!128$, seed 42)}
+Table~\ref{tab:t5_nlg_sweep} extends the NLG comparison with the full $\Tswitch$ sweep across three backbone models. All experiments use $r\!=\!128$, seed~42, and target $W_q, W_k, W_v, W_o$. Entries marked ``--'' denote experiments currently in progress.
 
-\begin{table}[h]
-\caption{Full NLG $\Tswitch$ sweep ($r\!=\!128$, seed 42). Target: $W_q,W_k,W_v,W_o$. ``--'' = experiment pending.}
+\begin{table}[!ht]
+\caption{Full NLG $\Tswitch$ sweep ($r\!=\!128$, seed 42). Target: $W_q,W_k,W_v,W_o$.}
 \label{tab:t5_nlg_sweep}
 \centering\small
 \resizebox{\linewidth}{!}{%
@@ -638,14 +641,13 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{tabular}}
 \end{table}
 
-%% ── Table 6 is merged with Table 3 (same content, different layout) ─
-
-%% ── Table 7. Best hyperparameters ───────────────────────────────────
-\subsection{Optimal $\Tswitch$ per Task (Summary)}
+\subsection{Optimal $\Tswitch$ per Task}
 \label{app:table7}
 
-\begin{table}[h]
-\caption{Recommended $\Tswitch$ for each task. NLU fractions are relative to total epochs.}
+Table~\ref{tab:t7_best_sw} summarizes the recommended $\Tswitch$ for each task based on the ablation studies above. For NLU tasks, the fraction is relative to total training epochs. Tasks where pure sequential mode achieves the best result are marked ``Seq.''
+
+\begin{table}[!ht]
+\caption{Recommended $\Tswitch$ per task.}
 \label{tab:t7_best_sw}
 \centering\small
 \begin{tabular}{llcc}
@@ -674,15 +676,16 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{tabular}
 \end{table}
 
-%% ── Table 8. Rank ablation ──────────────────────────────────────────
 \subsection{Rank Ablation}
 \label{app:table8}
 
-\begin{table}[h]
-\caption{Rank ablation on LLaMA-2-7B MetaMath ($\Tswitch\!=\!0.8$, $W_q,W_k,W_v,W_o$, seed 42).}
+We vary the adapter rank $r \in \{4, 8, 16, 32\}$ to assess how rank interacts with the sequential--parallel transition. All experiments use LLaMA-2-7B on MetaMath with $\Tswitch\!=\!0.8$ and target $W_q, W_k, W_v, W_o$.
+
+\begin{table}[!ht]
+\caption{Rank ablation on LLaMA-2-7B MetaMath ($\Tswitch\!=\!0.8$, seed 42).}
 \label{tab:t8_rank}
 \centering\small
-\begin{tabular}{llcccc}
+\begin{tabular}{llccc}
 \toprule
 \textbf{Method} & \textbf{Rank} & \textbf{Params(\%)} & \textbf{GSM8K} & \textbf{MATH} \\
 \midrule
@@ -701,17 +704,18 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{tabular}
 \end{table}
 
-%% ── Table 9. Qualitative response examples ──────────────────────────
 \subsection{Qualitative Response Examples}
 \label{app:table9}
 
-\begin{table}[h]
-\caption{Example responses from LoRA vs.\ \jelly{} on MetaMath, judged by GPT-4o-mini.}
+To provide qualitative insight into \jelly{}'s improvements, we present selected examples where the two methods differ in correctness. Responses are from LLaMA-2-7B ($r\!=\!128$) on MetaMath; MT-Bench examples are judged by GPT-4o-mini.
+
+\begin{table}[!ht]
+\caption{Selected qualitative examples from LoRA vs.\ \jelly{}.}
 \label{tab:t9_qualitative}
 \centering\small
 \begin{tabular}{p{3cm}p{5cm}p{5cm}c}
 \toprule
-\textbf{Question} & \textbf{LoRA Response} & \textbf{\jelly{} Response} & \textbf{Judge} \\
+\textbf{Question} & \textbf{LoRA Response} & \textbf{\jelly{} Response} & \textbf{Correct} \\
 \midrule
 (to be filled) & -- & -- & -- \\
 (to be filled) & -- & -- & -- \\
@@ -720,12 +724,13 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{tabular}
 \end{table}
 
-%% ── Table 10. SVD computation time ──────────────────────────────────
 \subsection{SVD Computation Time}
 \label{app:table10}
 
-\begin{table}[h]
-\caption{Per-layer SVD time (sec) on RTX PRO 6000. PiSSA: full $d{\times}d$ SVD $O(d^3)$; \jelly{} TIP: Double-QR + $r{\times}r$ SVD $O(dr^2{+}r^3)$.}
+Table~\ref{tab:t10_svd} compares the per-layer SVD cost of PiSSA (full $d \times d$ SVD, $O(d^3)$) and \jelly{}'s TIP (Double-QR + $r \times r$ core SVD, $O(dr^2 + r^3)$). Timings are measured on a single NVIDIA RTX PRO 6000 GPU, averaged over 10 runs.
+
+\begin{table}[!ht]
+\caption{Per-layer SVD time (seconds) by method and rank.}
 \label{tab:t10_svd}
 \centering\small
 \begin{tabular}{llcccc}
@@ -747,12 +752,13 @@ LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
 \end{tabular}
 \end{table}
 
-%% ── Table 11. Training latency ──────────────────────────────────────
 \subsection{Training Latency}
 \label{app:table11}
 
-\begin{table}[h]
-\caption{End-to-end training cost on LLaMA-2-7B MetaMath ($r\!=\!128$, 1 epoch, RTX PRO 6000).}
+Table~\ref{tab:t11_train} reports the end-to-end training cost, including the one-time SVD overhead at $\Tswitch$. Because TIP operates on a small $r \times r$ core, its cost is negligible relative to training time.
+
+\begin{table}[!ht]
+\caption{End-to-end training cost on LLaMA-2-7B MetaMath ($r\!=\!128$, 1 epoch).}
 \label{tab:t11_train}
 \centering\small
 \begin{tabular}{lccc}
@@ -769,12 +775,13 @@ PiSSA                        & -- & -- & -- \\
 \end{tabular}
 \end{table}
 
-%% ── Table 12. Inference latency ─────────────────────────────────────
 \subsection{Inference Latency}
 \label{app:table12}
 
-\begin{table}[h]
-\caption{Inference latency on LLaMA-2-7B. After TIP, \jelly{} merges into $\Wbase{+}\Bpar\Apar$ $\Rightarrow$ identical to LoRA.}
+After training, \jelly{}'s parallel adapters merge into $\Wbase + \Bpar\Apar$, producing a model structurally identical to LoRA. As shown in Table~\ref{tab:t12_infer}, the latency and throughput match the base model exactly, unlike sequential adapters which add $O(dr)$ computation per layer.
+
+\begin{table}[!ht]
+\caption{Inference latency on LLaMA-2-7B. After TIP, \jelly{} is identical to LoRA at inference.}
 \label{tab:t12_infer}
 \centering\small
 \begin{tabular}{lcc}
