@@ -626,6 +626,195 @@ All 7 linear & 0.30\% & -- & -- & -- \\
 The NLU $\Tswitch$ ablation in Table~\ref{tab:nlu_ablation} demonstrates that late switching or pure sequential mode is consistently optimal for classification tasks. For NLU tasks where alignment with $\Wbase$ is highest, running the entire training in sequential mode achieves the performance upper bound. While sequential mode incurs inference latency proportional to model depth, it remains a valid strategy when accuracy is the primary objective. This observation suggests that $\Tswitch$ can serve not only as an optimization hyperparameter but also as a deployment-aware knob: practitioners can choose the point on the retention--acquisition spectrum that best matches their latency constraints.
 
 %=============================================================================
+% Additional ablation tables (placeholder -- values to be filled)
+%=============================================================================
+
+\section{Task-Specific Switching Point Analysis}
+\label{app:task_switching}
+
+We decompose the PORTAL gain into two components: \emph{Sequential Benefit} $\mathrm{SB} = J(\text{Seq}) - J(\text{LoRA})$ and \emph{Switch Gain} $\mathrm{SG} = J(\text{Best}_{T_{sw}}) - J(\text{Seq})$, so that $\Delta_\text{PORTAL} = \mathrm{SB} + \mathrm{SG}$.
+All tasks exhibit $\mathrm{SB} > 0$, confirming the universal benefit of sequential warm-up. However, $\mathrm{SG}$ varies in sign, revealing two regimes: \textbf{Regime~A} ($\mathrm{SG} \leq 0$, sequential is sufficient) and \textbf{Regime~B} ($\mathrm{SG} > 0$, switching adds value).
+
+\begin{table}[h]
+\caption{Switching point decomposition on NLU and Sarcasm tasks (DeBERTa-v3-base, $r\!=\!8$, 5-seed avg). $T_{sw}$ fractions: 0.1/0.3/0.5 correspond to epoch 1.5/4.5/7.5 (15-ep tasks) or 1/3/5 (10-ep tasks). EGR = Early Gain Ratio.}
+\label{tab:task_switching}
+\centering
+\small
+\begin{tabular}{lcccccc|ccl}
+\toprule
+\textbf{Task} & $|D|$ & \textbf{LoRA} & $T_{sw}\!=\!0.1$ & $T_{sw}\!=\!0.3$ & $T_{sw}\!=\!0.5$ & \textbf{Seq} & \textbf{SB} & \textbf{SG} & \textbf{Regime} \\
+\midrule
+CoLA      & 8.6K  & 65.92 & \textbf{67.08} & 66.72 & 66.12 & 66.45 & +0.53 & +0.63 & B \\
+MNLI      & 393K  & 89.93 & 90.16 & \textbf{90.23} & 90.21 & 90.11 & +0.18 & +0.12 & B \\
+MRPC      & 3.7K  & 90.58 & 90.71 & 91.22 & \textbf{91.52} & 91.04 & +0.46 & +0.48 & B \\
+QNLI      & 105K  & 93.63 & 93.90 & 93.88 & 93.87 & \textbf{93.96} & +0.33 & --0.06 & A \\
+RTE       & 2.5K  & 80.36 & 77.55 & 79.35 & 80.69 & \textbf{81.68} & +1.32 & --0.99 & A \\
+SST-2     & 67K   & 94.95 & 95.17 & 95.63 & \textbf{95.71} & 95.64 & +0.69 & +0.07 & B \\
+STS-B     & 5.7K  & 89.51 & 89.32 & 89.78 & 90.07 & \textbf{90.19} & +0.68 & --0.12 & A \\
+\midrule
+Headlines & 14K   & 92.88 & \textbf{93.17} & 92.99 & 93.05 & 93.15 & +0.27 & +0.02 & B \\
+iSarcasm  & 3.5K  & 77.52 & 76.66 & 76.89 & 77.35 & \textbf{77.75} & +0.23 & --0.40 & A \\
+Sarc      & 100K  & 72.09 & -- & 72.43 & -- & \textbf{72.59} & +0.50 & --0.16 & A \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Model-Specific Switching Trajectory}
+\label{app:model_switching}
+
+The switching trajectory varies across backbone models. We observe three distinct shapes: \emph{switch-friendly} (Mistral: monotonically increasing gain), \emph{peaked} (LLaMA: optimal at intermediate $T_{sw}$), and \emph{switch-fragile} (Gemma: decreasing gain with longer sequential phase on MetaMath).
+
+\begin{table}[h]
+\caption{Model-level $T_{sw}$ sweep on MetaMath ($r\!=\!128$, seed 42). GSM8K accuracy (\%).}
+\label{tab:model_trajectory}
+\centering
+\small
+\begin{tabular}{l|cccc|cl}
+\toprule
+\textbf{Model} & \textbf{LoRA} & $T_{sw}\!=\!0.2$ & $T_{sw}\!=\!0.5$ & $T_{sw}\!=\!0.8$ & \textbf{Trajectory} & $\Delta_{\max}$ \\
+\midrule
+LLaMA-2-7B & 56.71 & \textbf{56.94} & 55.65 & 56.63 & $\cap$ peaked & +0.2 \\
+Mistral-7B & 67.48 & 68.76 & 68.01 & \textbf{69.45} & $\nearrow$ switch-friendly & +1.9 \\
+Gemma-7B & \textbf{71.27} & 70.51 & 70.20 & 69.52 & $\searrow$ switch-fragile & --0.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\caption{PORTAL gain ($\Delta$ vs LoRA) across model--task combinations ($r\!=\!128$, seed 42).}
+\label{tab:model_task_interaction}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+& \textbf{LLaMA-2-7B} & \textbf{Mistral-7B} & \textbf{Gemma-7B} \\
+\midrule
+MetaMath (GSM8K) & +0.2 & +1.9 & --0.8 \\
+Python (MBPP)    & +0.3 & +4.5 & +0.8 \\
+Conv (MT-Bench)  & --0.2 & +0.2 & --0.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Asynchronous Per-Module Switching}
+\label{app:async_switching}
+
+Instead of switching all modules simultaneously, we test whether different modules benefit from different switching schedules. ``Early'' = $T_{sw}\!=\!1.5$, ``Late'' = $T_{sw}\!=\!7.5$ (out of 15 epochs).
+
+\begin{table}[h]
+\caption{Per-module asynchronous switching on DeBERTa-v3-base (GLUE, $r\!=\!8$, 5-seed avg).}
+\label{tab:async_switch}
+\centering
+\small
+\begin{tabular}{lccc|ccc}
+\toprule
+& \multicolumn{3}{c|}{\textbf{Module $T_{sw}$}} & & & \\
+\textbf{Config} & $W_q$ & $W_k$ & $W_v$ & \textbf{SST-2} & \textbf{MRPC} & \textbf{MNLI} \\
+\midrule
+LoRA (all parallel) & 0 & 0 & 0 & 94.95 & 90.58 & 89.93 \\
+\jelly{} (synchronous) & 7.5 & 7.5 & 7.5 & 95.71 & 91.52 & 90.23 \\
+\midrule
+Q early, K\&V late & 1.5 & 7.5 & 7.5 & -- & -- & -- \\
+K early, Q\&V late & 7.5 & 1.5 & 7.5 & -- & -- & -- \\
+V early, Q\&K late & 7.5 & 7.5 & 1.5 & -- & -- & -- \\
+\midrule
+Q late, K\&V early & 7.5 & 1.5 & 1.5 & -- & -- & -- \\
+K late, Q\&V early & 1.5 & 7.5 & 1.5 & -- & -- & -- \\
+V late, Q\&K early & 1.5 & 1.5 & 7.5 & -- & -- & -- \\
+\midrule
+Sequential (no switch) & $\infty$ & $\infty$ & $\infty$ & 95.64 & 91.04 & 90.11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Non-Square Matrix Handling}
+\label{app:nonsquare}
+
+Attention projections ($W_q, W_k, W_v, W_o$; $d \times d$) support TIP natively.
+MLP projections ($W_{\mathrm{gate}}, W_{\mathrm{up}}$: $d_{\mathrm{ff}} \times d$; $W_{\mathrm{down}}$: $d \times d_{\mathrm{ff}}$) are non-square and bypass TIP, defaulting to parallel mode from $t\!=\!0$.
+
+\begin{table}[h]
+\caption{Non-square module handling on LLaMA-2-7B ($r\!=\!128$, seed 42).}
+\label{tab:nonsquare}
+\centering
+\small
+\begin{tabular}{ll|cccc}
+\toprule
+\textbf{Attn (Q,K,V,O)} & \textbf{MLP (Gate,Up,Down)} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} \\
+\midrule
+LoRA     & --- (not adapted) & -- & -- & -- & -- \\
+\jelly{} & --- (not adapted) & -- & -- & -- & -- \\
+LoRA     & LoRA              & 56.71 & 8.80 & 31.1 & 43.1 \\
+\jelly{} & LoRA (from $t\!=\!0$) & 56.63 & 9.50 & 31.7 & 43.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{SVD Computation Time}
+\label{app:svd_time}
+
+TIP uses Double-QR + rank-$r$ SVD with complexity $O(dr^2 + r^3)$, while PiSSA requires full SVD at $O(d^3)$.
+
+\begin{table}[h]
+\caption{SVD computation time (seconds) per layer on NVIDIA RTX PRO 6000. PiSSA uses full $d \times d$ SVD; \jelly{} uses Double-QR + $r \times r$ core SVD.}
+\label{tab:svd_time}
+\centering
+\small
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Module} & \textbf{Method} & $r\!=\!16$ & $r\!=\!32$ & $r\!=\!64$ & $r\!=\!128$ \\
+\midrule
+\multirow{2}{*}{Q,K,V,O ($4096 \times 4096$)} & PiSSA & -- & -- & -- & -- \\
+ & \jelly{} (TIP) & -- & -- & -- & -- \\
+\midrule
+\multirow{2}{*}{Q,K,V ($3072 \times 3072$)} & PiSSA & -- & -- & -- & -- \\
+ & \jelly{} (TIP) & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Training Latency}
+\label{app:train_latency}
+
+\begin{table}[h]
+\caption{End-to-end training cost on LLaMA-2-7B MetaMath ($r\!=\!128$, 1 epoch, NVIDIA RTX PRO 6000).}
+\label{tab:train_latency}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Train Time} & \textbf{SVD Time} & \textbf{Total} \\
+\midrule
+LoRA                      & -- & 0 & -- \\
+\jelly{} $\Tswitch\!=\!0.2$ & -- & -- & -- \\
+\jelly{} $\Tswitch\!=\!0.5$ & -- & -- & -- \\
+\jelly{} $\Tswitch\!=\!0.8$ & -- & -- & -- \\
+Sequential                & -- & 0 & -- \\
+PiSSA                     & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Qualitative Response Examples}
+\label{app:qualitative}
+
+\begin{table}[h]
+\caption{Example responses from LoRA vs.\ \jelly{} on MetaMath, judged by GPT-4o-mini.}
+\label{tab:qualitative}
+\centering
+\small
+\begin{tabular}{p{3cm}p{5cm}p{5cm}c}
+\toprule
+\textbf{Question} & \textbf{LoRA Response} & \textbf{\jelly{} Response} & \textbf{Judge} \\
+\midrule
+(to be filled) & -- & -- & -- \\
+(to be filled) & -- & -- & -- \\
+(to be filled) & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%=============================================================================
 \newpage
 \input{checklist.tex}
 
