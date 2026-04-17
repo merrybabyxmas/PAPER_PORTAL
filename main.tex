@@ -943,6 +943,26 @@ PiSSA                       & Parallel (merged) & $1.00\times$ \\
 \end{tabular}
 \end{table}
 
+% ─── Training Dynamics Figures ──────────────────────────────────────
+\subsection{Training Dynamics}
+\label{app:training_dynamics}
+
+Figures~\ref{fig:method_comparison} and~\ref{fig:switch_comparison} visualize the training dynamics of \jelly{} compared to baseline PEFT methods.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_training_method_comparison.pdf}
+\caption{Training loss (top) and gradient norm (bottom) across methods on SST-2 and Headlines (seed~64, $r\!=\!8$). \jelly{} (PORTAL) converges as fast as LoRA and PiSSA, with the TIP projection (vertical dashed line) causing no visible disruption to the training trajectory.}
+\label{fig:method_comparison}
+\end{figure}
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_training_switch_comparison.pdf}
+\caption{Effect of switching point $\Tswitch$ on training dynamics for SST-2 and CoLA (seed~64, $r\!=\!8$). Earlier switching (Sw@10\%) transitions to parallel mode sooner and converges similarly to LoRA, while later switching (Sw@50\%) retains the sequential phase longer, reaching lower training loss on CoLA. The purely sequential baseline exhibits increasing gradient norms in later epochs, suggesting instability without the TIP transition.}
+\label{fig:switch_comparison}
+\end{figure}
+
 %=============================================================================
 \newpage
 \input{checklist.tex}
