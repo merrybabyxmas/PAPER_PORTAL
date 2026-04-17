@@ -434,24 +434,40 @@ Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 
 
 \begin{table}[!ht]
-\caption{Performance ablation on NLG tasks across different switching points ($T_{sw}$). Best result per task is \textbf{bold}.}
-\label{tab:transposed_nlg_ablation}
+\caption{Performance ablation across NLG tasks and multiple backbones with different switching points ($T_{sw}$). Results represent the average performance, and the best result for each backbone is \textbf{bold}.}
+\label{tab:transposed_nlg_ablation_final}
 \centering
 \footnotesize
 \renewcommand{\arraystretch}{1.3}
-\setlength{\tabcolsep}{15pt} % 가독성을 위해 넓은 간격 유지
+\setlength{\tabcolsep}{8pt} % 열이 늘어났으므로 간격을 적절히 조절
 
-\begin{tabular}{l | ccc | c}
+\begin{tabular}{ll | ccc | c}
 \toprule
-\textbf{Switching Point} & \textbf{GSM8K} & \textbf{MBPP} & \textbf{MATH} & \textbf{Avg.} \\
+\textbf{Backbone} & \textbf{Switching Point} & \textbf{GSM8K} & \textbf{MBPP} & \textbf{MATH} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA)  & -- & -- & -- & -- \\
-20\%        & -- & -- & -- & -- \\
-50\%        & -- & -- & -- & -- \\
-80\%        & -- & -- & -- & -- \\
+\multirow{4}{*}{LLaMA-2-7B} 
+    & 0\% (LoRA)  & -- & -- & -- & -- \\
+    & 20\%        & -- & -- & -- & -- \\
+    & 50\%        & -- & -- & -- & -- \\
+    & 80\%        & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Mistral-7B} 
+    & 0\% (LoRA)  & -- & -- & -- & -- \\
+    & 20\%        & -- & -- & -- & -- \\
+    & 50\%        & -- & -- & -- & -- \\
+    & 80\%        & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Gemma-7B} 
+    & 0\% (LoRA)  & -- & -- & -- & -- \\
+    & 20\%        & -- & -- & -- & -- \\
+    & 50\%        & -- & -- & -- & -- \\
+    & 80\%        & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+
 \begin{table}[!ht]
 \caption{Performance ablation on Sarcasm detection tasks across different switching points ($T_{sw}$). Results are averaged over 5 seeds. Best result per task is \textbf{bold}.}
 \label{tab:transposed_sarc_ablation}
