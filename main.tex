@@ -446,31 +446,56 @@ This section provides comprehensive ablation studies and supplementary results.
 Table~\ref{tab:t1_task_switch_updated} investigates whether the optimal switching point varies across tasks. We sweep $\Tswitch$ at 10\%, 30\%, and 50\% of total training for NLU and Sarcasm tasks (5-seed average), and at 20\%, 50\%, and 80\% for NLG tasks (seed~42).
 
 \begin{table}[!ht]
-\caption{Optimal $T_{switch}$ per task. Best result per row is \textbf{bold}. NLU/Sarcasm columns correspond to $\Tswitch \in \{10\%, 30\%, 50\%\}$ of total epochs; NLG columns to $\Tswitch \in \{20\%, 50\%, 80\%\}$.}
-\label{tab:t1_task_switch_updated}
-\centering\small
-\begin{tabular}{l ccccc}
+\caption{Performance comparison on NLU (GLUE) tasks. Methods are presented as rows, and results are averaged over 5 seeds. Best result per task is \textbf{bold}.}
+\label{tab:transposed_nlu_final}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4.5pt} % 열 간격 최적화
+\begin{tabular}{l | ccccccc | c}
 \toprule
-\textbf{Task} & \textbf{LoRA} & \textbf{Sw@early} & \textbf{Sw@mid} & \textbf{Sw@late} & \textbf{Sequential} \\
+\textbf{Method} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-% NLU: Sw@early=10%, Sw@mid=30%, Sw@late=50%
-CoLA      & -- & -- & -- & -- & -- \\
-MNLI      & -- & -- & -- & -- & -- \\
-MRPC      & -- & -- & -- & -- & -- \\
-QNLI      & -- & -- & -- & -- & -- \\
-RTE       & -- & -- & -- & -- & -- \\
-SST-2     & -- & -- & -- & -- & -- \\
-STS-B     & -- & -- & -- & -- & -- \\
+LoRA           & -- & -- & -- & -- & -- & -- & -- & -- \\
+Portal 10\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
+Portal 30\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
+Portal 50\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
+Sequential     & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!ht]
+\caption{Performance comparison on Sarcasm detection tasks. Methods are presented as rows, and results are averaged over 5 seeds. Best result per task is \textbf{bold}.}
+\label{tab:transposed_sarc_final}
+\centering
+\small
+\begin{tabular}{l | ccc | c}
+\toprule
+\textbf{Method} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-% Sarcasm: Sw@early=10%, Sw@mid=30%, Sw@late=50%
-Headlines & 93.14 & \textbf{93.38} & 93.15 & \textbf{93.38} & 93.59 \\
-iSarcasm  & 78.04 & 77.64 & 77.75 & 78.04 & \textbf{78.50} \\
-Sarc      & 72.09 & \textbf{72.49} & 72.47 & 72.47 & 72.59 \\
+LoRA           & 93.14 & 78.04 & 72.09 & 81.09 \\
+Portal 10\%    & \textbf{93.38} & 77.64 & \textbf{72.49} & 81.17 \\
+Portal 30\%    & 93.15 & 77.75 & 72.47 & 81.12 \\
+Portal 50\%    & \textbf{93.38} & 78.04 & 72.47 & 81.30 \\
+Sequential     & 93.59 & \textbf{78.50} & 72.59 & \textbf{81.56} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!ht]
+\caption{Performance comparison across NLG tasks with methods as rows. For JELLY, switching points are set at 20\%, 50\%, and 80\% of total training. Best result per task is \textbf{bold}.}
+\label{tab:transposed_nlg}
+\centering
+\small
+\begin{tabular}{l ccc}
+\toprule
+\textbf{Method} & \textbf{GSM8K} & \textbf{MBPP} & \textbf{MATH} \\
 \midrule
-% NLG: Sw@early=20%, Sw@mid=50%, Sw@late=80%
-GSM8K (NLG) & -- & -- & -- & -- & -- \\
-MBPP (NLG)  & -- & -- & -- & -- & -- \\
-MATH (NLG)  & -- & -- & -- & -- & -- \\
+LoRA          & -- & -- & -- \\
+Portal(20\%)       & -- & -- & -- \\
+Portal(50\%)       & -- & -- & -- \\
+Portal(80\%)       & -- & -- & -- \\
+Sequential    & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -489,20 +514,20 @@ Table~\ref{tab:t2_model_switch} investigates whether the optimal switching point
 \centering\small
 \begin{tabular}{ll cccccc} % 열 개수를 8개로 수정 (ll cccccc)
 \toprule
-\textbf{Task} & \textbf{BackBone} & \textbf{LoRA (Parallel)} & \textbf{Switch@0.2} & \textbf{Switch@0.5} & \textbf{Switch@0.8} & \textbf{Sequential} & \textbf{$\Delta_{\text{max}}$} \\
+\textbf{Task} & \textbf{Backbone} & \textbf{LoRA} & \textbf{Portal 20\%} & \textbf{Portal 50\%} & \textbf{Portal 80\%} & \textbf{Sequential} & \textbf{$\Delta_{\text{max}}$} \\
 \midrule
-\multirow{3}{*}{\textbf{metaMath}} 
-    & LLaMA   & -- & -- & -- & -- & -- & -- \\
+\multirow{3}{*}{\textbf{MetaMath}} 
+    & LLaMA-2 & -- & -- & -- & -- & -- & -- \\
     & Mistral & -- & -- & -- & -- & -- & -- \\
     & Gemma   & -- & -- & -- & -- & -- & -- \\
 \midrule
 \multirow{3}{*}{\textbf{Python}} 
-    & LLaMA   & -- & -- & -- & -- & -- & -- \\
+    & LLaMA-2 & -- & -- & -- & -- & -- & -- \\
     & Mistral & -- & -- & -- & -- & -- & -- \\
     & Gemma   & -- & -- & -- & -- & -- & -- \\
 \midrule
 \multirow{3}{*}{\textbf{Conversation}} 
-    & LLaMA   & -- & -- & -- & -- & -- & -- \\
+    & LLaMA-2 & -- & -- & -- & -- & -- & -- \\
     & Mistral & -- & -- & -- & -- & -- & -- \\
     & Gemma   & -- & -- & -- & -- & -- & -- \\
 \bottomrule
