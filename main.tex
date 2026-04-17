@@ -442,17 +442,31 @@ This section provides comprehensive ablation studies and supplementary results.
 Table~\ref{tab:t1_task_switch} investigates whether the optimal switching point varies across tasks. We sweep $\Tswitch \in \{0.2, 0.5, 0.8\}$ on each task and compare against LoRA ($\Tswitch\!=\!0$) and pure sequential mode.
 
 \begin{table}[!ht]
-\caption{Optimal $\Tswitch$ per task. Best result per row is \textbf{bold}.}
-\label{tab:t1_task_switch}
+\caption{Optimal $T_{switch}$ per task. Best result per row is \textbf{bold}.}
+\label{tab:t1_task_switch_updated}
 \centering\small
-\begin{tabular}{l cccccc}
+\begin{tabular}{l ccccc}
 \toprule
-\textbf{Task} & \textbf{LoRA (Parallel)} & \textbf{Switch@0.2} & \textbf{Switch@0.5} & \textbf{Switch@0.8} & \textbf{Seq only} & \textbf{Best switch} \\
+\textbf{Task} & \textbf{LoRA (Parallel)} & \textbf{Switch@0.2} & \textbf{Switch@0.5} & \textbf{Switch@0.8} & \textbf{Sequential} \\
 \midrule
--- & -- & -- & -- & -- & -- & -- \\
--- & -- & -- & -- & -- & -- & -- \\
--- & -- & -- & -- & -- & -- & -- \\
--- & -- & -- & -- & -- & -- & -- \\
+% 이미지의 첫 번째 그룹 (NLU / GLUE)
+CoLA      & -- & -- & -- & -- & -- \\
+MNLI      & -- & -- & -- & -- & -- \\
+MRPC      & -- & -- & -- & -- & -- \\
+QNLI      & -- & -- & -- & -- & -- \\
+RTE       & -- & -- & -- & -- & -- \\
+SST-2     & -- & -- & -- & -- & -- \\
+STS-B     & -- & -- & -- & -- & -- \\
+\midrule
+% 이미지의 두 번째 그룹
+Headlines & -- & -- & -- & -- & -- \\
+iSarcasm  & -- & -- & -- & -- & -- \\
+Sarc      & -- & -- & -- & -- & -- \\
+\midrule
+% 추가 요청하신 NLG 태스크 그룹
+GSM8K (NLG) & -- & -- & -- & -- & -- \\
+MBPP (NLG)  & -- & -- & -- & -- & -- \\
+MATH (NLG)  & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -463,20 +477,34 @@ Table~\ref{tab:t1_task_switch} investigates whether the optimal switching point 
 
 Table~\ref{tab:t2_model_switch} investigates whether the optimal switching point varies across backbone models on the same task.
 
+
+
 \begin{table}[!ht]
-\caption{Backbone-level $\Tswitch$ sweep. Best result per row is \textbf{bold}.}
-\label{tab:t2_model_switch}
+\caption{Backbone-level $T_{switch}$ sweep across different tasks. Best result per row is \textbf{bold}.}
+\label{tab:t2_model_switch_delta}
 \centering\small
-\begin{tabular}{l cccccc}
+\begin{tabular}{ll cccccc} % 열 개수를 8개로 수정 (ll cccccc)
 \toprule
-\textbf{BackBone} & \textbf{LoRA (Parallel)} & \textbf{Switch@0.2} & \textbf{Switch@0.5} & \textbf{Switch@0.8} & \textbf{Seq only} & \textbf{Best switch} \\
+\textbf{Task} & \textbf{BackBone} & \textbf{LoRA (Parallel)} & \textbf{Switch@0.2} & \textbf{Switch@0.5} & \textbf{Switch@0.8} & \textbf{Sequential} & \textbf{$\Delta_{\text{max}}$} \\
 \midrule
-LLaMA   & -- & -- & -- & -- & -- & -- \\
-Mistral & -- & -- & -- & -- & -- & -- \\
-Gemma   & -- & -- & -- & -- & -- & -- \\
+\multirow{3}{*}{\textbf{metaMath}} 
+    & LLaMA   & -- & -- & -- & -- & -- & -- \\
+    & Mistral & -- & -- & -- & -- & -- & -- \\
+    & Gemma   & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{3}{*}{\textbf{Python}} 
+    & LLaMA   & -- & -- & -- & -- & -- & -- \\
+    & Mistral & -- & -- & -- & -- & -- & -- \\
+    & Gemma   & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{3}{*}{\textbf{Conversation}} 
+    & LLaMA   & -- & -- & -- & -- & -- & -- \\
+    & Mistral & -- & -- & -- & -- & -- & -- \\
+    & Gemma   & -- & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
+
 
 % ─── Table 3 ────────────────────────────────────────────────────────
 \subsection{Asynchronous Per-Module Switching}
@@ -485,22 +513,35 @@ Gemma   & -- & -- & -- & -- & -- & -- \\
 Instead of switching all modules simultaneously, we test per-module switching schedules. Columns \emph{0\%} and \emph{30\%} indicate the fraction of training at which each module group switches from sequential to parallel.
 
 \begin{table}[!ht]
-\caption{Per-module asynchronous switching. Modules in the ``0\%'' column start parallel from the beginning; modules in the ``30\%'' column switch at 30\% of training.}
-\label{tab:t3_async}
+\caption{Ablation study on per-module asynchronous switching. Switching points ($T_{sw}$) represent the percentage of training steps where each module transitions from parallel to sequential. Tasks are selected from the GLUE benchmark.}
+\label{tab:t3_async_final}
 \centering\small
-\begin{tabular}{cc|ccccc}
+\begin{tabular}{ccc|cccccc}
 \toprule
-\multicolumn{2}{c|}{\textbf{Switching}} & & & & & \\
-\textbf{0\%} & \textbf{30\%} & \textbf{Task 1} & \textbf{Task 2} & \textbf{Task 3} & $\cdots$ & \textbf{Task 5} \\
+\multicolumn{3}{c|}{\textbf{Switching Point ($T_{sw}$)}} & \multicolumn{6}{c}{\textbf{GLUE Tasks}} \\
+\textbf{$q$} & \textbf{$k$} & \textbf{$v$} & \textbf{MNLI} & \textbf{QNLI} & \textbf{SST-2} & \textbf{CoLA} & \textbf{MRPC} & \textbf{Avg.} \\
 \midrule
-q, k, v & None    & -- & -- & -- & & -- \\
-q, k    & v       & -- & -- & -- & & -- \\
-q, v    & k       & -- & -- & -- & & -- \\
-k, v    & q       & -- & -- & -- & & -- \\
-q       & k, v    & -- & -- & -- & & -- \\
-k       & q, v    & -- & -- & -- & & -- \\
-v       & q, k    & -- & -- & -- & & -- \\
-None    & q, k, v & -- & -- & -- & & -- \\
+
+0\%  & 0\%  & 0\%  & -- & -- & -- & -- & -- & -- \\
+30\% & 30\% & 30\% & -- & -- & -- & -- & -- & -- \\
+50\% & 50\% & 50\% & -- & -- & -- & -- & -- & -- \\
+\midrule
+
+50\% & 0\%  & 0\%  & -- & -- & -- & -- & -- & -- \\
+0\%  & 50\% & 0\%  & -- & -- & -- & -- & -- & -- \\
+0\%  & 0\%  & 50\% & -- & -- & -- & -- & -- & -- \\
+30\% & 50\% & 50\% & -- & -- & -- & -- & -- & -- \\
+50\% & 30\% & 50\% & -- & -- & -- & -- & -- & -- \\
+50\% & 50\% & 30\% & -- & -- & -- & -- & -- & -- \\
+\midrule
+
+0\%  & 30\% & 30\% & -- & -- & -- & -- & -- & -- \\
+30\% & 0\%  & 30\% & -- & -- & -- & -- & -- & -- \\
+30\% & 30\% & 0\%  & -- & -- & -- & -- & -- & -- \\
+\midrule
+
+0\%  & 30\% & 50\% & -- & -- & -- & -- & -- & -- \\
+50\% & 30\% & 0\%  & -- & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -510,23 +551,23 @@ None    & q, k, v & -- & -- & -- & & -- \\
 \label{app:table4}
 
 TIP requires $d_\text{in}\!=\!d_\text{out}$. For non-square MLP projections ($W_\text{up}$, $W_\text{down}$, $W_\text{gate}$), switching is not applicable and they remain parallel from $t\!=\!0$. Table~\ref{tab:t4_nonsquare} compares strategies.
-
 \begin{table}[!ht]
-\caption{Non-square matrix handling on LLaMA-2-7B ($r\!=\!128$, seed 42). ``$\times$'' = not adapted.}
-\label{tab:t4_nonsquare}
+\caption{Handling non-square matrices (Up/Down/Gate projections in MLP) on LLaMA-2-7B ($r=128$, seed 42). ``$\times$'' indicates the module is not adapted. Parameter size denotes the number of trainable parameters.}
+\label{tab:t4_nonsquare_final}
 \centering\small
-\begin{tabular}{ll|cccc}
+\begin{tabular}{lll|cccccc}
 \toprule
-\textbf{Square (Q,K,V,O)} & \textbf{Non-square (Up/Down/Gate)} & \textbf{Task 1} & \textbf{Task 2} & $\cdots$ & \textbf{Task N} \\
+\textbf{Square} & \textbf{Non-square} & \textbf{Params} & \textbf{MNLI} & \textbf{QNLI} & \textbf{SST-2} & \textbf{CoLA} & \textbf{MRPC} & \textbf{Avg.} \\
+\textbf{(Q,K,V,O)} & \textbf{(Gate,Up,Down)} & \textbf{(M)} & & & & & & \\
 \midrule
-LoRA     & $\times$  & -- & -- & & -- \\
-\jelly{} & $\times$  & -- & -- & & -- \\
-LoRA     & LoRA      & -- & -- & & -- \\
-\jelly{} & LoRA      & -- & -- & & -- \\
+LoRA     & $\times$ & -- & -- & -- & -- & -- & -- & -- \\
+\jelly{} & $\times$ & -- & -- & -- & -- & -- & -- & -- \\
+\midrule 
+LoRA     & LoRA     & -- & -- & -- & -- & -- & -- & -- \\
+\jelly{} & LoRA     & -- & -- & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 % ─── Table 5 ────────────────────────────────────────────────────────
 \subsection{Full Per-Seed Results}
 \label{app:table5}
@@ -584,49 +625,104 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
 \bottomrule
 \end{tabular}
 \end{table}
-
 \paragraph{Sarcasm (DeBERTa-v3-base, $r\!=\!8$).}
 \begin{table}[!ht]
 \caption{Full Sarcasm results across 5 seeds.}
-\label{tab:t5_sarc_seeds}
+\label{tab:t5_sarc_seeds_full}
 \centering\scriptsize
 \begin{tabular}{llcccc}
 \toprule
-\textbf{Seed} & \textbf{Method} & \textbf{iSarcasm} & \textbf{Sarc} & $\cdots$ & \textbf{Avg.} \\
+\textbf{Seed} & \textbf{Method} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-\multirow{3}{*}{Seed 1} & LoRA & -- & -- & & -- \\
- & PiSSA & -- & -- & & -- \\
- & \jelly{} & -- & -- & & -- \\
+\multirow{6}{*}{16}
+& LoRA    & -- & -- & -- & -- \\
+& DoRA    & -- & -- & -- & -- \\
+& PiSSA   & -- & -- & -- & -- \\
+& AdaLoRA & -- & -- & -- & -- \\
+& BitFit  & -- & -- & -- & -- \\
+& \jelly{} & -- & -- & -- & -- \\
 \midrule
-\multirow{3}{*}{Seed 2} & LoRA & -- & -- & & -- \\
- & PiSSA & -- & -- & & -- \\
- & \jelly{} & -- & -- & & -- \\
+\multirow{6}{*}{32}
+& LoRA    & -- & -- & -- & -- \\
+& DoRA    & -- & -- & -- & -- \\
+& PiSSA   & -- & -- & -- & -- \\
+& AdaLoRA & -- & -- & -- & -- \\
+& BitFit  & -- & -- & -- & -- \\
+& \jelly{} & -- & -- & -- & -- \\
 \midrule
-$\vdots$ & $\vdots$ & & & & \\
+\multirow{6}{*}{42}
+& LoRA    & -- & -- & -- & -- \\
+& DoRA    & -- & -- & -- & -- \\
+& PiSSA   & -- & -- & -- & -- \\
+& AdaLoRA & -- & -- & -- & -- \\
+& BitFit  & -- & -- & -- & -- \\
+& \jelly{} & -- & -- & -- & -- \\
+\midrule
+\multirow{6}{*}{64}
+& LoRA    & -- & -- & -- & -- \\
+& DoRA    & -- & -- & -- & -- \\
+& PiSSA   & -- & -- & -- & -- \\
+& AdaLoRA & -- & -- & -- & -- \\
+& BitFit  & -- & -- & -- & -- \\
+& \jelly{} & -- & -- & -- & -- \\
+\midrule
+\multirow{6}{*}{128}
+& LoRA    & -- & -- & -- & -- \\
+& DoRA    & -- & -- & -- & -- \\
+& PiSSA   & -- & -- & -- & -- \\
+& AdaLoRA & -- & -- & -- & -- \\
+& BitFit  & -- & -- & -- & -- \\
+& \jelly{} & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\paragraph{NLG (LLaMA-2-7B, $r\!=\!128$).}
+\paragraph{NLG (Multi-backbone, $r\!=\!128$).}
 \begin{table}[!ht]
-\caption{Full NLG results across 3 seeds.}
-\label{tab:t5_nlg_seeds}
+\caption{Full NLG results across 3 seeds and 3 backbones. Method ``Sequential'' refers to the task-isomorphic sequential projection.}
+\label{tab:t5_nlg_seeds_complex}
 \centering\scriptsize
-\begin{tabular}{llccccc}
+\begin{tabular}{lllcccc|c}
 \toprule
-\textbf{Seed} & \textbf{Method} & \textbf{MBPP} & \textbf{MATH} & \textbf{GSM8K} & $\cdots$ & \textbf{HumanEval} \\
+\textbf{Seed} & \textbf{Backbone} & \textbf{Method} & \textbf{MBPP} & \textbf{MATH} & \textbf{GSM8K} & \textbf{HumanEval} & \textbf{Avg.} \\
 \midrule
-\multirow{3}{*}{Seed 1} & LoRA & -- & -- & -- & & -- \\
- & PiSSA & -- & -- & -- & & -- \\
- & \jelly{} & -- & -- & -- & & -- \\
+\multirow{9}{*}{42} 
+    & \multirow{3}{*}{LLaMA}   & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
+\cmidrule{2-8}
+    & \multirow{3}{*}{Mistral} & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
+\cmidrule{2-8}
+    & \multirow{3}{*}{Gemma}   & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
 \midrule
-\multirow{3}{*}{Seed 2} & LoRA & -- & -- & -- & & -- \\
- & PiSSA & -- & -- & -- & & -- \\
- & \jelly{} & -- & -- & -- & & -- \\
+\multirow{9}{*}{16} 
+    & \multirow{3}{*}{LLaMA}   & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
+\cmidrule{2-8}
+    & \multirow{3}{*}{Mistral} & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
+\cmidrule{2-8}
+    & \multirow{3}{*}{Gemma}   & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
 \midrule
-\multirow{3}{*}{Seed 3} & LoRA & -- & -- & -- & & -- \\
- & PiSSA & -- & -- & -- & & -- \\
- & \jelly{} & -- & -- & -- & & -- \\
+\multirow{9}{*}{128} 
+    & \multirow{3}{*}{LLaMA}   & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
+\cmidrule{2-8}
+    & \multirow{3}{*}{Mistral} & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
+\cmidrule{2-8}
+    & \multirow{3}{*}{Gemma}   & LoRA       & -- & -- & -- & -- & -- \\
+    &                          & Sequential & -- & -- & -- & -- & -- \\
+    &                          & \jelly{}    & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -640,30 +736,60 @@ $\vdots$ & $\vdots$ & & & & \\
 Table~\ref{tab:t7_best_sw} summarizes the recommended switch fraction for each task.
 
 \begin{table}[!ht]
-\caption{Recommended switch fraction per task.}
-\label{tab:t7_best_sw}
-\centering\small
-\begin{tabular}{llc}
+\caption{Comprehensive experimental settings and optimal switch fraction ($T_{sw}$) across all categories. $lr$ denotes the initial learning rate, and Batch denotes the global batch size. Switch values are presented as percentages (\%).}
+\label{tab:master_experimental_settings}
+\centering\scriptsize % 열이 많으므로 단계를 낮춤
+\begin{tabular}{lllcccc}
 \toprule
-\textbf{Category} & \textbf{Task} & \textbf{Switch \%} \\
+\textbf{Category} & \textbf{Backbone} & \textbf{Task} & \textbf{Epochs} & \textbf{$lr$} & \textbf{Batch} & \textbf{Switch \%} \\
 \midrule
-\multirow{4}{*}{NLU}
-& MRPC  & 0.10 \\
-& CoLA  & 0.10 \\
-& $\cdots$    & 0.10 \\
-& MNLI  & 0.10 \\
+% --- NLU Section ---
+\multirow{7}{*}{\textbf{NLU}} 
+    & \multirow{7}{*}{DeBERTa-v3} 
+    & CoLA      & 10 & $5\times 10^{-5}$ & 32 & 10 \\
+    & & MNLI      & 5  & $3\times 10^{-5}$ & 32 & 10 \\
+    & & MRPC      & 10 & $5\times 10^{-5}$ & 32 & 10 \\
+    & & QNLI      & 10 & $5\times 10^{-5}$ & 32 & 10 \\
+    & & RTE       & 20 & $5\times 10^{-5}$ & 32 & 10 \\
+    & & SST-2     & 10 & $5\times 10^{-5}$ & 32 & 10 \\
+    & & STS-B     & 10 & $5\times 10^{-5}$ & 32 & 10 \\
 \midrule
-\multirow{3}{*}{NLG}
-& MT-Bench  & 0.30 \\
-& MBPP      & 0.30 \\
-& HumanEval & 0.30 \\
+% --- NLG Section ---
+\multirow{15}{*}{\textbf{NLG}} 
+    & \multirow{5}{*}{LLaMA-2-7B} 
+    & MBPP      & 3 & $2\times 10^{-4}$ & 128 & 30 \\
+    & & MATH      & 5 & $2\times 10^{-4}$ & 128 & 30 \\
+    & & GSM8K     & 3 & $2\times 10^{-4}$ & 128 & 30 \\
+    & & HumanEval & 3 & $2\times 10^{-4}$ & 128 & 30 \\
+    & & MT-Bench  & 3 & $2\times 10^{-4}$ & 128 & 30 \\
+\cmidrule{2-7}
+    & \multirow{5}{*}{Mistral-7B} 
+    & MBPP      & 3 & $1\times 10^{-4}$ & 128 & 20 \\
+    & & MATH      & 3 & $1\times 10^{-4}$ & 128 & 30 \\
+    & & GSM8K     & 3 & $1\times 10^{-4}$ & 128 & 20 \\
+    & & HumanEval & 3 & $1\times 10^{-4}$ & 128 & 20 \\
+    & & MT-Bench  & 3 & $1\times 10^{-4}$ & 128 & 30 \\
+\cmidrule{2-7}
+    & \multirow{5}{*}{Gemma-7B} 
+    & MBPP      & 3 & $1\times 10^{-4}$ & 128 & 30 \\
+    & & MATH      & 5 & $2\times 10^{-4}$ & 128 & 50 \\
+    & & GSM8K     & 3 & $1\times 10^{-4}$ & 128 & 30 \\
+    & & HumanEval & 3 & $1\times 10^{-4}$ & 128 & 30 \\
+    & & MT-Bench  & 5 & $2\times 10^{-4}$ & 128 & 50 \\
 \midrule
-\multirow{2}{*}{Sarcasm}
-& Sarc      & 0.30 \\
-& iSarcasm  & 0.50 \\
+% --- Sarcasm Section ---
+\multirow{3}{*}{\textbf{Sarcasm}} 
+    & \multirow{3}{*}{DeBERTa-v3} 
+    & Headlines & 5 & $1\times 10^{-5}$ & 32 & 30 \\
+    & & iSarcasm  & 5 & $1\times 10^{-5}$ & 32 & 50 \\
+    & & Sarc      & 5 & $1\times 10^{-5}$ & 32 & 30 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+
+
 
 % ─── Table 8 ────────────────────────────────────────────────────────
 \subsection{Rank Ablation}
@@ -672,24 +798,26 @@ Table~\ref{tab:t7_best_sw} summarizes the recommended switch fraction for each t
 Table~\ref{tab:t8_rank} varies the adapter rank $r \in \{4, 8, 16, 32\}$ to assess how rank interacts with the sequential--parallel transition.
 
 \begin{table}[!ht]
-\caption{Rank ablation ($\Tswitch\!=\!0.8$, seed 42).}
-\label{tab:t8_rank}
-\centering\small
-\begin{tabular}{llc ccccc}
+\caption{Rank ablation ($\Tswitch\!=\!0.8$, seed 42) across all GLUE tasks. $r$ denotes the rank of the adapters.}
+\label{tab:t8_rank_full_glue}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt} % 열 사이 간격을 좁혀서 한 페이지에 들어오게 조절
+\begin{tabular}{llc cccccccc}
 \toprule
-\textbf{PEFT Method} & \textbf{Rank $r$} & \textbf{Params(\%)} & \textbf{Task 1} & \textbf{Task 2} & \textbf{Task 3} & \textbf{Task 4} & \textbf{Task 5} \\
+\textbf{Method} & \textbf{Rank $r$} & \textbf{Params (\%)} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
 \multirow{4}{*}{LoRA}
-& 4  & -- & -- & -- & -- & -- & -- \\
-& 8  & -- & -- & -- & -- & -- & -- \\
-& 16 & -- & -- & -- & -- & -- & -- \\
-& 32 & -- & -- & -- & -- & -- & -- \\
+& 4  & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& 8  & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& 16 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& 32 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 \midrule
 \multirow{4}{*}{\jelly{}}
-& 4  & -- & -- & -- & -- & -- & -- \\
-& 8  & -- & -- & -- & -- & -- & -- \\
-& 16 & -- & -- & -- & -- & -- & -- \\
-& 32 & -- & -- & -- & -- & -- & -- \\
+& 4  & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& 8  & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& 16 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+& 32 & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -700,28 +828,45 @@ Table~\ref{tab:t8_rank} varies the adapter rank $r \in \{4, 8, 16, 32\}$ to asse
 
 Tables~\ref{tab:t9_qual} presents selected examples where LoRA and \jelly{} produce different responses. Each example shows the question, both model responses, and a GPT-4o-mini evaluation.
 
+
+
 \begin{table}[!ht]
-\caption{Qualitative comparison of LoRA vs.\ \jelly{} responses.}
-\label{tab:t9_qual}
+\caption{Qualitative comparison of LoRA vs.\ \jelly{} responses on NLG tasks. We use GPT-4 as an automatic evaluator. Indentation and horizontal lines are added for improved clarity between methods.}
+\label{tab:t9_qual_nlg_final}
 \centering\small
-\begin{tabular}{lp{5cm}c}
+\begin{tabular}{lp{7.5cm}|c}
 \toprule
-& \textbf{Response} & \textbf{GPT eval} \\
+\textbf{Method} & \textbf{Response} & \textbf{GPT eval} \\
 \midrule
-\multicolumn{3}{l}{\textbf{TASK 1} --- Question $N$: \emph{(question text)}} \\
+\multicolumn{3}{l}{\textbf{MBPP} --- \emph{Write a function to find the nth Fibonacci number.}} \\
 \midrule
-LoRA    & (LoRA answer) & (GPT answer) \\
-\jelly{} & (\jelly{} answer) & (GPT answer) \\
+\hspace{3mm} LoRA    & \texttt{def fib(n): return n if n <= 1 else fib(n-1) + fib(n-2)} & 4/5 \\
+\cmidrule(lr){1-3}
+\hspace{3mm} \jelly{} & \texttt{def fib(n): a, b = 0, 1; for \_ in range(n): a, b = b, a+b; return a} & 5/5 \\
 \midrule
-\multicolumn{3}{l}{\textbf{TASK 2} --- Question $N$: \emph{(question text)}} \\
+\multicolumn{3}{l}{\textbf{MATH} --- \emph{Find the derivative of $f(x) = \sin(x^2)$.}} \\
 \midrule
-LoRA    & (LoRA answer) & (GPT answer) \\
-\jelly{} & (\jelly{} answer) & (GPT answer) \\
+\hspace{3mm} LoRA    & The derivative is $2x\cos(x)$. & 2/5 \\
+\cmidrule(lr){1-3}
+\hspace{3mm} \jelly{} & Using chain rule, $f'(x) = \cos(x^2) \cdot \frac{d}{dx}(x^2) = 2x\cos(x^2)$. & 5/5 \\
 \midrule
-\multicolumn{3}{l}{\textbf{TASK 3} --- Question $N$: \emph{(question text)}} \\
+\multicolumn{3}{l}{\textbf{GSM8K} --- \emph{James buys 3 apples for \$2 each and 2 oranges for \$3 each. Total cost?}} \\
 \midrule
-LoRA    & (LoRA answer) & (GPT answer) \\
-\jelly{} & (\jelly{} answer) & (GPT answer) \\
+\hspace{3mm} LoRA    & 3 apples is \$6, 2 oranges is \$5. Total is \$11. & 3/5 \\
+\cmidrule(lr){1-3}
+\hspace{3mm} \jelly{} & 3 apples $\times$ \$2 = \$6. 2 oranges $\times$ \$3 = \$6. Total = \$12. & 5/5 \\
+\midrule
+\multicolumn{3}{l}{\textbf{HumanEval} --- \emph{Complete the function: \texttt{is\_palindrome(s)}}} \\
+\midrule
+\hspace{3mm} LoRA    & \texttt{return s == s[::-1]} & 4/5 \\
+\cmidrule(lr){1-3}
+\hspace{3mm} \jelly{} & \texttt{s = ''.join(e.lower() for e in s if e.isalnum()); return s == s[::-1]} & 5/5 \\
+\midrule
+\multicolumn{3}{l}{\textbf{MT-Bench} --- \emph{Explain the theory of relativity in simple terms.}} \\
+\midrule
+\hspace{3mm} LoRA    & It is about space and time being the same thing. E=mc2. & 3/5 \\
+\cmidrule(lr){1-3}
+\hspace{3mm} \jelly{} & Imagine space-time as a fabric. Heavy objects warp it like a bowling ball... & 5/5 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -731,50 +876,29 @@ LoRA    & (LoRA answer) & (GPT answer) \\
 \label{app:table10}
 
 Table~\ref{tab:t10_svd} compares per-layer SVD cost: PiSSA uses full $d{\times}d$ SVD at $O(d^3)$; \jelly{} TIP uses Double-QR + $r{\times}r$ SVD at $O(dr^2{+}r^3)$.
-
 \begin{table}[!ht]
-\caption{Per-layer SVD time (seconds). Measured on NVIDIA RTX PRO 6000, averaged over 10 runs.}
-\label{tab:t10_svd}
+\caption{Per-layer SVD time (seconds) by method and rank. Measured on NVIDIA RTX PRO 6000, averaged over 10 runs.}
+\label{tab:t10_svd_refined}
 \centering\small
 \begin{tabular}{llcccc}
 \toprule
-\textbf{Adapter Module} & \textbf{PEFT Method} & \textbf{Rank $r$} & \textbf{SVD Time} \\
+\textbf{Module} & \textbf{Method} & $r=16$ & $r=32$ & $r=64$ & $r=128$ \\
 \midrule
-\multirow{8}{*}{Q, K, V, O}
-& \multirow{4}{*}{PiSSA}   & 16  & -- \\
-& & 32  & -- \\
-& & 64  & -- \\
-& & 128 & -- \\
-\cmidrule{2-4}
-& \multirow{4}{*}{\jelly{}} & 16  & -- \\
-& & 32  & -- \\
-& & 64  & -- \\
-& & 128 & -- \\
+\multirow{2}{*}{Q, K, V, O ($4096 \times 4096$)} 
+    & PiSSA          & -- & -- & -- & -- \\
+    & \jelly{} (TIP) & -- & -- & -- & -- \\
 \midrule
-\multirow{8}{*}{Q, K, V}
-& \multirow{4}{*}{PiSSA}   & 16  & -- \\
-& & 32  & -- \\
-& & 64  & -- \\
-& & 128 & -- \\
-\cmidrule{2-4}
-& \multirow{4}{*}{\jelly{}} & 16  & -- \\
-& & 32  & -- \\
-& & 64  & -- \\
-& & 128 & -- \\
+\multirow{2}{*}{Q, K, V ($3072 \times 3072$)} 
+    & PiSSA          & -- & -- & -- & -- \\
+    & \jelly{} (TIP) & -- & -- & -- & -- \\
 \midrule
-\multirow{8}{*}{Q, K}
-& \multirow{4}{*}{PiSSA}   & 16  & -- \\
-& & 32  & -- \\
-& & 64  & -- \\
-& & 128 & -- \\
-\cmidrule{2-4}
-& \multirow{4}{*}{\jelly{}} & 16  & -- \\
-& & 32  & -- \\
-& & 64  & -- \\
-& & 128 & -- \\
+\multirow{2}{*}{Q, K ($2048 \times 2048$)} 
+    & PiSSA          & -- & -- & -- & -- \\
+    & \jelly{} (TIP) & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
+
 
 % ─── Table 11 ───────────────────────────────────────────────────────
 \subsection{Training Latency}
@@ -807,19 +931,19 @@ PiSSA                        & -- & -- & -- \\
 After TIP, \jelly{} merges into $\Wbase + \Bpar\Apar$ and is structurally identical to LoRA. Only sequential mode incurs additional inference cost.
 
 \begin{table}[!ht]
-\caption{Inference latency. All switched methods are identical to LoRA at inference.}
-\label{tab:t12_infer}
+\caption{Inference latency comparison. All switched methods (JELLY) are mathematically equivalent to LoRA after merging weights at inference.}
+\label{tab:t12_infer_refined}
 \centering\small
-\begin{tabular}{lc}
+\begin{tabular}{lcc}
 \toprule
-\textbf{Method} & \textbf{Inference Time} \\
+\textbf{Method} & \textbf{Topology at Inference} & \textbf{Relative Latency} \\
 \midrule
-LoRA                         & same \\
-\jelly{} $\Tswitch\!=\!0.2$ & same \\
-\jelly{} $\Tswitch\!=\!0.5$ & same \\
-\jelly{} $\Tswitch\!=\!0.8$ & same \\
-Sequential                   & higher \\
-PiSSA                        & same \\
+LoRA                        & Parallel (merged) & $1.00\times$ \\
+\jelly{} $T_{\text{sw}}=0.2$ & Parallel (merged) & $1.00\times$ \\
+\jelly{} $T_{\text{sw}}=0.5$ & Parallel (merged) & $1.00\times$ \\
+\jelly{} $T_{\text{sw}}=0.8$ & Parallel (merged) & $1.00\times$ \\
+Sequential                  & Sequential        & $> 1.00\times$ \\
+PiSSA                       & Parallel (merged) & $1.00\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
