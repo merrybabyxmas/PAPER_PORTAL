@@ -510,16 +510,16 @@ Table~\ref{tab:t2_model_switch} investigates whether the optimal switching point
 \subsection{Asynchronous Per-Module Switching}
 \label{app:table3}
 
-Instead of switching all modules simultaneously, we test per-module switching schedules. Columns \emph{0\%} and \emph{30\%} indicate the fraction of training at which each module group switches from sequential to parallel.
+Instead of switching all modules simultaneously, we test per-module switching schedules. Columns \emph{0\%}, \emph{30\%}, and \emph{50\%} indicate the fraction of training at which each module group switches from sequential to parallel. We evaluate on five GLUE tasks (SST-2, CoLA, MRPC, RTE, STS-B; all trained for 15 epochs) to keep the schedule semantics consistent across tasks.
 
 \begin{table}[!ht]
-\caption{Ablation study on per-module asynchronous switching. Switching points ($T_{sw}$) represent the percentage of training steps where each module transitions from parallel to sequential. Tasks are selected from the GLUE benchmark.}
+\caption{Ablation study on per-module asynchronous switching (DeBERTa-v3-base, $r\!=\!8$, 5-seed average). Switching points represent the fraction of training at which each module transitions from sequential to parallel; 0\% denotes parallel from the start (LoRA-equivalent for that module).}
 \label{tab:t3_async_final}
 \centering\small
-\begin{tabular}{ccc|cccccc}
+\begin{tabular}{ccc|ccccccc}
 \toprule
-\multicolumn{3}{c|}{\textbf{Switching Point ($T_{sw}$)}} & \multicolumn{6}{c}{\textbf{GLUE Tasks}} \\
-\textbf{$q$} & \textbf{$k$} & \textbf{$v$} & \textbf{MNLI} & \textbf{QNLI} & \textbf{SST-2} & \textbf{CoLA} & \textbf{MRPC} & \textbf{Avg.} \\
+\multicolumn{3}{c|}{\textbf{Switching Point ($T_{sw}$)}} & \multicolumn{7}{c}{\textbf{GLUE Tasks}} \\
+\textbf{$q$} & \textbf{$k$} & \textbf{$v$} & \textbf{SST-2} & \textbf{CoLA} & \textbf{MRPC} & \textbf{RTE} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
 
 0\%  & 0\%  & 0\%  & -- & -- & -- & -- & -- & -- \\
@@ -795,14 +795,14 @@ Table~\ref{tab:t7_best_sw} summarizes the recommended switch fraction for each t
 \subsection{Rank Ablation}
 \label{app:table8}
 
-Table~\ref{tab:t8_rank} varies the adapter rank $r \in \{4, 8, 16, 32\}$ to assess how rank interacts with the sequential--parallel transition.
+Table~\ref{tab:t8_rank_full_glue} varies the adapter rank $r \in \{4, 8, 16, 32\}$ to assess how rank interacts with the sequential--parallel transition. Each cell reports the mean over 5 seeds, and \jelly{} uses the per-task optimal $\Tswitch$ (see Table~\ref{tab:nlu_ablation}).
 
 \begin{table}[!ht]
-\caption{Rank ablation ($\Tswitch\!=\!0.8$, seed 42) across all GLUE tasks. $r$ denotes the rank of the adapters.}
+\caption{Rank ablation (5-seed average, per-task optimal $\Tswitch$) across GLUE tasks. $r$ denotes the adapter rank.}
 \label{tab:t8_rank_full_glue}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{3pt} % 열 사이 간격을 좁혀서 한 페이지에 들어오게 조절
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{llc cccccccc}
 \toprule
 \textbf{Method} & \textbf{Rank $r$} & \textbf{Params (\%)} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
