@@ -349,7 +349,7 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \end{table}
 
 \begin{table}[t]
-\caption{NLG evaluation}
+\caption{NLG evaluation across three 7B-parameter backbones on mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), and conversation (MT-Bench). Rank $r\!=\!128$, seed 42. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
 \label{tab:nlg_comprehensive}
 \centering
 \small
@@ -382,9 +382,9 @@ BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scri
 \caption{Sarcasm detection evaluation on DeBERTa-v3-base. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
 \label{tab:sarcasm}
 \centering
-\footnotesize % NLU와 글씨 크기를 맞추기 위해 직접 지정
-\renewcommand{\arraystretch}{1.3} % 세로 여백 확보
-\setlength{\tabcolsep}{8pt} % 태스크 수가 적으므로 간격을 조금 넓게 설정
+\footnotesize
+\renewcommand{\arraystretch}{1.3}
+\setlength{\tabcolsep}{8pt}
 
 \begin{tabular}{llcccc}
 \toprule
@@ -409,19 +409,28 @@ BitFit            & 0.10M (0.05\%) & -- \scriptsize{$\pm$ --} & -- \scriptsize{$
 
 \textbf{NLG (Table~\ref{tab:nlg_comprehensive}).} \jelly{} dominates LLaMA-2-7B across all four reasoning and code metrics (GSM8K $+0.23$, MATH $+0.70$, HumanEval $+0.6$, MBPP $+0.3$) and achieves the top MBPP score on both Mistral-7B ($60.6$, $+4.5$) and Gemma-7B ($62.7$, $+0.8$); LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. The divergence between GSM8K and MATH reflects task-manifold alignment: MATH benefits most from \jelly{}'s sequential warm-up, while GSM8K responds to both parallel and early-switch regimes.
 For code generation, \jelly{} also leads HumanEval on Gemma-7B ($51.8$, $+3.0$). For conversation quality, \jelly{} outperforms LoRA on Mistral-7B (MT-Bench $6.94$ vs.\ $6.74$, $+0.20$), while both methods score nearly identically on Gemma-7B (LoRA $6.91$, \jelly{} $6.89$); on LLaMA-2-7B, LoRA leads slightly ($6.26$ vs.\ $6.09$).
-Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 
+\textbf{Sarcasm (Table~\ref{tab:sarcasm}).} \jelly{} achieves the highest average (81.56) among PEFT methods, with the best Headlines F1 (93.50) and Sarc accuracy (72.55). Full fine-tuning retains the advantage on iSarcasm and Sarc due to the limited training data, but \jelly{} closes the gap to within 1 point on average.
+
+Training dynamics are visualized in Appendix~\ref{app:training_dynamics} (Figures~\ref{fig:method_comparison} and~\ref{fig:switch_comparison}).
+
+%-----------------------------------------------------------------------------
+\subsection{Switching Point Ablation}
+\label{sec:ablation}
+%-----------------------------------------------------------------------------
+
+The optimal $\Tswitch$ is task-dependent.
+Tables~\ref{tab:nlu_ablation}--\ref{tab:sarc_ablation} sweep $\Tswitch$ across NLU, NLG, and Sarcasm tasks to quantify this sensitivity.
 
 \begin{table}[!ht]
-\caption{Performance ablation on NLU (GLUE) tasks across different switching points ($T_{sw}$). Methods are presented as rows, and results are averaged over 5 seeds. Best result per task is \textbf{bold}.}
-\label{tab:transposed_nlu_ablation_final}
+\caption{$\Tswitch$ ablation on NLU (GLUE) tasks (DeBERTa-v3-base, $r\!=\!8$, 5-seed average). $\Tswitch\!=\!0\%$ corresponds to standard LoRA. Best per task is \textbf{bold}.}
+\label{tab:nlu_ablation}
 \centering
-\footnotesize % 글자 크기를 직접 지정하여 작아짐 방지
-\setlength{\tabcolsep}{4pt} 
-
+\footnotesize
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{l | ccccccc | c}
 \toprule
-\textbf{Switching Point} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
+$\Tswitch$ & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
 0\% (LoRA)  & -- & -- & -- & -- & -- & -- & -- & -- \\
 10\%        & -- & -- & -- & -- & -- & -- & -- & -- \\
@@ -431,33 +440,30 @@ Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 \end{tabular}
 \end{table}
 
-
-
 \begin{table}[!ht]
-\caption{Performance ablation across NLG tasks and multiple backbones with different switching points ($T_{sw}$). Results represent the average performance, and the best result for each backbone is \textbf{bold}.}
-\label{tab:transposed_nlg_ablation_final}
+\caption{$\Tswitch$ ablation across NLG tasks and backbones ($r\!=\!128$, seed 42). Best per backbone is \textbf{bold}.}
+\label{tab:nlg_ablation}
 \centering
 \footnotesize
-\renewcommand{\arraystretch}{1.3}
-\setlength{\tabcolsep}{8pt} % 열이 늘어났으므로 간격을 적절히 조절
-
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{6pt}
 \begin{tabular}{ll | ccc | c}
 \toprule
-\textbf{Backbone} & \textbf{Switching Point} & \textbf{GSM8K} & \textbf{MBPP} & \textbf{MATH} & \textbf{Avg.} \\
+\textbf{Backbone} & $\Tswitch$ & \textbf{GSM8K} & \textbf{MBPP} & \textbf{MATH} & \textbf{Avg.} \\
 \midrule
-\multirow{4}{*}{LLaMA-2-7B} 
+\multirow{4}{*}{LLaMA-2-7B}
     & 0\% (LoRA)  & -- & -- & -- & -- \\
     & 20\%        & -- & -- & -- & -- \\
     & 50\%        & -- & -- & -- & -- \\
     & 80\%        & -- & -- & -- & -- \\
 \midrule
-\multirow{4}{*}{Mistral-7B} 
+\multirow{4}{*}{Mistral-7B}
     & 0\% (LoRA)  & -- & -- & -- & -- \\
     & 20\%        & -- & -- & -- & -- \\
     & 50\%        & -- & -- & -- & -- \\
     & 80\%        & -- & -- & -- & -- \\
 \midrule
-\multirow{4}{*}{Gemma-7B} 
+\multirow{4}{*}{Gemma-7B}
     & 0\% (LoRA)  & -- & -- & -- & -- \\
     & 20\%        & -- & -- & -- & -- \\
     & 50\%        & -- & -- & -- & -- \\
@@ -466,34 +472,68 @@ Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 \end{tabular}
 \end{table}
 
-
-
 \begin{table}[!ht]
-\caption{Performance ablation on Sarcasm detection tasks across different switching points ($T_{sw}$). Results are averaged over 5 seeds. Best result per task is \textbf{bold}.}
-\label{tab:transposed_sarc_ablation}
+\caption{$\Tswitch$ ablation on Sarcasm detection tasks (DeBERTa-v3-base, $r\!=\!8$, 5-seed average). Best per task is \textbf{bold}.}
+\label{tab:sarc_ablation}
 \centering
 \footnotesize
-\renewcommand{\arraystretch}{1.3}
-\setlength{\tabcolsep}{12pt} % 열이 적으므로 간격을 넓게 설정
-
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{10pt}
 \begin{tabular}{l | ccc | c}
 \toprule
-\textbf{Switching Point} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
+$\Tswitch$ & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
 0\% (LoRA)  & 93.14 & 78.04 & 72.09 & 81.09 \\
 10\%        & \textbf{93.38} & 77.64 & \textbf{72.49} & 81.17 \\
 30\%        & 93.15 & 77.75 & 72.47 & 81.12 \\
-50\%        & \textbf{93.38} & 78.04 & 72.47 & 81.30 \\
+50\%        & \textbf{93.38} & \textbf{78.04} & 72.47 & \textbf{81.30} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+%-----------------------------------------------------------------------------
+\subsection{Switching Point Analysis}
+\label{sec:analysis}
+%-----------------------------------------------------------------------------
 
+The ablation reveals that the optimal $\Tswitch$ varies substantially across tasks and backbones: NLU tasks favor early switching ($\Tswitch \leq 10\%$), while MATH requires extended sequential probing ($\Tswitch = 80\%$).
+We introduce two diagnostic quantities to explain this variation.
 
+\paragraph{SB--SG Decomposition.}
+Let $\Delta_{\text{\textsc{Jelly}}}(\Tswitch) = \text{score}(\Tswitch) - \text{score}(\text{LoRA})$ denote the gain of \jelly{} over LoRA at switching point $\Tswitch$.
+We decompose this gain into a \emph{Sequential Benefit} (SB), the improvement from pure sequential training over LoRA, and a \emph{Switch Gain} (SG), the additional improvement from the TIP transition:
+\begin{equation}
+\underbrace{\Delta_{\text{\textsc{Jelly}}}(\Tswitch^*)}_{\text{Total Gain}} \;=\; \underbrace{\vphantom{\Delta}\text{Seq} - \text{LoRA}}_{\text{SB}} \;+\; \underbrace{\vphantom{\Delta}\Delta_{\text{\textsc{Jelly}}}(\Tswitch^*) - (\text{Seq} - \text{LoRA})}_{\text{SG}}
+\label{eq:sbsg}
+\end{equation}
+When $\text{SG} > 0$ (\emph{Regime~B}), the TIP projection adds value beyond sequential training alone.
+When $\text{SG} \leq 0$ (\emph{Regime~A}), sequential training is sufficient and switching yields diminishing returns.
 
-%=============================================================================
-% Analysis
-%=============================================================================
+\paragraph{Early Gain Ratio.}
+We define the \emph{Early Gain Ratio} $\text{EGR} = (\text{score}_{10\%} - \text{score}_{\text{LoRA}}) / (\text{score}_{\text{best}} - \text{score}_{\text{LoRA}})$, which measures how quickly sequential training saturates.
+High EGR ($\gg 1$) indicates that most gains are captured early, favoring a small $\Tswitch$; low EGR suggests extended sequential probing is needed.
+
+Figure~\ref{fig:task_analysis} visualizes these diagnostics.
+Panel~(a) shows a negative correlation ($r = -0.64$) between EGR and the optimal $\Tswitch^*/T$: tasks where sequential training saturates quickly (high EGR) require less sequential probing time.
+Panel~(b) decomposes each task's gain into SB and SG, revealing two clear regimes.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{figures/figA_task_analysis.pdf}
+\caption{\textbf{Task-specific switching point analysis.} \textbf{(a)} EGR vs.\ optimal switch fraction $\Tswitch^*/T$: tasks with high EGR (fast sequential saturation) benefit from early switching, while low-EGR tasks require extended sequential probing ($r = -0.64$). \textbf{(b)} SB--SG decomposition reveals two regimes: Regime~B (SG $> 0$, blue) where TIP adds value beyond sequential training, and Regime~A (SG $\leq 0$, red) where sequential training alone suffices.}
+\label{fig:task_analysis}
+\end{figure}
+
+\paragraph{Backbone-specific switching dynamics.}
+Figure~\ref{fig:model_analysis} extends the analysis to backbone models.
+Across MetaMath, Python, and Conversation tasks, the three backbones exhibit distinct switching profiles: Mistral-7B consistently benefits from later switching (\emph{switch-friendly}), LLaMA-2-7B peaks at intermediate $\Tswitch$ (\emph{peaked}), and Gemma-7B is sensitive to excessive sequential probing (\emph{switch-fragile}), reflecting differences in how each model's pretrained manifold aligns with downstream tasks.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{figures/figB_model_analysis.pdf}
+\caption{\textbf{Backbone-specific switching dynamics.} \textbf{(a)--(c)} Performance gain ($\Delta$ vs.\ LoRA) as a function of $\Tswitch/T$ for three NLG tasks across LLaMA-2-7B, Mistral-7B, and Gemma-7B. Mistral consistently improves with later switching; Gemma degrades with extended sequential probing. \textbf{(d)} Model$\times$Task gain heatmap summarizing the best $\Delta$ vs.\ LoRA for each combination.}
+\label{fig:model_analysis}
+\end{figure}
 
 %=============================================================================
 \section{Conclusion}
@@ -503,7 +543,7 @@ Figure~\ref{fig:training_dynamics} visualizes the training dynamics.
 We introduced \jelly{}, a framework that generalizes PEFT over the training time axis by dynamically transitioning adapter connectivity from sequential to parallel mode.
 The Task-Isomorphic Projection losslessly converts sequential adapters into parallel adapters via rank-$r$ double SVD with $O(dr^2)$ cost.
 Experiments demonstrate that \jelly{} consistently matches or outperforms LoRA, PiSSA, and DoRA across NLU, mathematical reasoning, code generation, and conversation.
-The $\Tswitch$ spectrum provides a principled mechanism for balancing knowledge retention and acquisition, with the optimal value reflecting the intrinsic alignment between task and pretrained manifold.
+The SB--SG decomposition and Early Gain Ratio (Section~\ref{sec:analysis}) show that $\Tswitch$ serves as a geometric indicator of task--manifold alignment, providing a principled mechanism for balancing knowledge retention and acquisition.
 
 \paragraph{Limitations.}
 The optimal $\Tswitch$ requires validation-based selection; an adaptive mechanism based on gradient coherence remains future work.
@@ -547,14 +587,14 @@ This section provides comprehensive ablation studies and supplementary results.
 \subsection{Task-Specific Optimal Switching Point}
 \label{app:table1}
 
-Table~\ref{tab:t1_task_switch_updated} investigates whether the optimal switching point varies across tasks. We sweep $\Tswitch$ at 10\%, 30\%, and 50\% of total training for NLU and Sarcasm tasks (5-seed average), and at 20\%, 50\%, and 80\% for NLG tasks (seed~42).
+Tables~\ref{tab:transposed_nlu_final}--\ref{tab:transposed_nlg} investigate whether the optimal switching point varies across tasks. We sweep $\Tswitch$ at 10\%, 30\%, and 50\% of total training for NLU and Sarcasm tasks (5-seed average), and at 20\%, 50\%, and 80\% for NLG tasks (seed~42).
 
 \begin{table}[!ht]
 \caption{Performance comparison on NLU (GLUE) tasks. Methods are presented as rows, and results are averaged over 5 seeds. Best result per task is \textbf{bold}.}
 \label{tab:transposed_nlu_final}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{4.5pt} % 열 간격 최적화
+\setlength{\tabcolsep}{4.5pt}
 \begin{tabular}{l | ccccccc | c}
 \toprule
 \textbf{Method} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
@@ -608,7 +648,7 @@ Portal(80\%)       & -- & -- & -- \\
 \subsection{Backbone-Specific Optimal Switching Point}
 \label{app:table2}
 
-Table~\ref{tab:t2_model_switch} investigates whether the optimal switching point varies across backbone models on the same task.
+Table~\ref{tab:t2_model_switch_delta} investigates whether the optimal switching point varies across backbone models on the same task.
 
 
 
@@ -616,7 +656,7 @@ Table~\ref{tab:t2_model_switch} investigates whether the optimal switching point
 \caption{Backbone-level $T_{switch}$ sweep across different tasks. Best result per row is \textbf{bold}.}
 \label{tab:t2_model_switch_delta}
 \centering\small
-\begin{tabular}{ll cccccc} % 열 개수를 8개로 수정 (ll cccccc)
+\begin{tabular}{ll cccccc}
 \toprule
 \textbf{Task} & \textbf{Backbone} & \textbf{LoRA} & \textbf{Portal 20\%} & \textbf{Portal 50\%} & \textbf{Portal 80\%} & \textbf{Sequential} & \textbf{$\Delta_{\text{max}}$} \\
 \midrule
@@ -648,9 +688,9 @@ Instead of switching all modules simultaneously, we test per-module switching sc
 \caption{Ablation study on per-module asynchronous switching (DeBERTa-v3-base, $r=8$, 5-seed average). Switching points represent the fraction of training at which each module transitions from sequential to parallel; 0\% denotes parallel from the start (LoRA-equivalent for that module).}
 \label{tab:t3_async_final}
 \centering\small
-\begin{tabular}{ccc|cccccc} % 7개에서 6개(태스크 5개 + Avg)로 수정하여 총 9개 열 선언
+\begin{tabular}{ccc|cccccc}
 \toprule
-\multicolumn{3}{c|}{\textbf{Switching Point ($T_{sw}$)}} & \multicolumn{6}{c}{\textbf{GLUE Tasks}} \\ % 7에서 6으로 수정
+\multicolumn{3}{c|}{\textbf{Switching Point ($T_{sw}$)}} & \multicolumn{6}{c}{\textbf{GLUE Tasks}} \\
 $q$ & $k$ & $v$ & \textbf{SST-2} & \textbf{CoLA} & \textbf{MRPC} & \textbf{RTE} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
 0\%  & 0\%  & 0\%  & -- & -- & -- & -- & -- & -- \\
@@ -678,7 +718,7 @@ $q$ & $k$ & $v$ & \textbf{SST-2} & \textbf{CoLA} & \textbf{MRPC} & \textbf{RTE} 
 \subsection{Non-Square Matrix Handling}
 \label{app:table4}
 
-TIP requires $d_\text{in}\!=\!d_\text{out}$. For non-square MLP projections ($W_\text{up}$, $W_\text{down}$, $W_\text{gate}$), switching is not applicable and they remain parallel from $t\!=\!0$. Table~\ref{tab:t4_nonsquare} compares strategies.
+TIP requires $d_\text{in}\!=\!d_\text{out}$. For non-square MLP projections ($W_\text{up}$, $W_\text{down}$, $W_\text{gate}$), switching is not applicable and they remain parallel from $t\!=\!0$. Table~\ref{tab:t4_nonsquare_final} compares strategies.
 \begin{table}[!ht]
 \caption{Handling non-square matrices (Up/Down/Gate projections in MLP) on LLaMA-2-7B ($r=128$, seed 42). ``$\times$'' indicates the module is not adapted. Parameter size denotes the number of trainable parameters.}
 \label{tab:t4_nonsquare_final}
@@ -700,7 +740,7 @@ LoRA     & LoRA     & -- & -- & -- & -- & -- & -- & -- \\
 \subsection{Full Per-Seed Results}
 \label{app:table5}
 
-Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-seed results for NLU, Sarcasm, and NLG tasks respectively.
+Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds_complex} report the complete per-seed results for NLU, Sarcasm, and NLG tasks respectively.
 
 \paragraph{NLU (DeBERTa-v3-base, $r\!=\!8$).}
 \begin{table}[!ht]
@@ -895,7 +935,7 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
 \label{tab:jelly_sw_ablation_nlg}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{4pt} % 열 간격 최적화
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{ll cccccc}
 \toprule
 \textbf{Backbone} & \textbf{$T_{sw}$ (\%)} & \textbf{MBPP} & \textbf{MATH} & \textbf{GSM8K} & \textbf{HumanEval} & \textbf{MT-Bench} & \textbf{Avg.} \\
@@ -927,7 +967,7 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds} report the complete per-se
 \subsection{Optimal $\Tswitch$ per Task (Hyperparameters)}
 \label{app:table7}
 
-Table~\ref{tab:t7_best_sw} summarizes the recommended switch fraction for each task.
+Table~\ref{tab:master_experimental_settings_v2} summarizes the experimental settings and recommended switch fraction for each task.
 \begin{table}[!ht]
 \caption{Comprehensive experimental settings and optimal switch fraction ($T_{sw}$) across all categories. $lr$ denotes the initial learning rate, and Batch denotes the global batch size. Switch values are presented as percentages (\%).}
 \label{tab:master_experimental_settings_v2}
@@ -1019,7 +1059,7 @@ Table~\ref{tab:t8_rank_full_glue} varies the adapter rank $r \in \{4, 8, 16, 32\
 \subsection{Qualitative Response Examples}
 \label{app:table9}
 
-Tables~\ref{tab:t9_qual} presents selected examples where LoRA and \jelly{} produce different responses. Each example shows the question, both model responses, and a GPT-4o-mini evaluation.
+Table~\ref{tab:t9_qual_nlg_final} presents selected examples where LoRA and \jelly{} produce different responses. Each example shows the question, both model responses, and a GPT-4 evaluation.
 
 
 
@@ -1068,7 +1108,7 @@ Tables~\ref{tab:t9_qual} presents selected examples where LoRA and \jelly{} prod
 \subsection{SVD Computation Time}
 \label{app:table10}
 
-Table~\ref{tab:t10_svd} compares per-layer SVD cost: PiSSA uses full $d{\times}d$ SVD at $O(d^3)$; \jelly{} TIP uses Double-QR + $r{\times}r$ SVD at $O(dr^2{+}r^3)$.
+Table~\ref{tab:t10_svd_refined} compares per-layer SVD cost: PiSSA uses full $d{\times}d$ SVD at $O(d^3)$; \jelly{} TIP uses Double-QR + $r{\times}r$ SVD at $O(dr^2{+}r^3)$.
 \begin{table}[!ht]
 \caption{Per-layer SVD time (seconds) by method and rank. Measured on NVIDIA RTX PRO 6000, averaged over 10 runs.}
 \label{tab:t10_svd_refined}
