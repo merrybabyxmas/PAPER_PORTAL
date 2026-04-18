@@ -22,6 +22,7 @@
 \usepackage{pifont}
 \usepackage{caption}
 \usepackage{bbm}
+\usepackage{colortbl}
 
 % Theorem environments
 \newtheorem{theorem}{Theorem}
@@ -490,9 +491,6 @@ $\Tswitch$ & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Av
 \end{tabular}
 \end{table}
 
-The optimal $\Tswitch$ is task-dependent.
-Tables~\ref{tab:nlu_ablation}--\ref{tab:sarc_ablation} sweep $\Tswitch$ across NLU, NLG, and Sarcasm tasks to quantify this sensitivity.
-
 %-----------------------------------------------------------------------------
 \subsection{Why Does the Optimal Switching Point Differ Across Tasks?}
 \label{sec:task_analysis}
@@ -538,7 +536,14 @@ Figure~\ref{fig:task_analysis} summarizes these two diagnostics.
 Panel~(a) shows a negative correlation ($r = -0.64$) between EGR and the optimal switch fraction $\Tswitch^*/T$: tasks with faster sequential saturation tend to prefer earlier switching, whereas tasks with slower saturation benefit from a longer sequential phase.
 Panel~(b) decomposes the total gain of each task into SB and SG, revealing two distinct regimes: tasks for which the switch itself provides additional value, and tasks for which sequential training is already sufficient.
 
-
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\textwidth]{figures/figA_task_analysis.png}
+\caption{\textbf{Task-specific switching point analysis.}
+\textbf{(a)} EGR vs.\ optimal switch fraction $\Tswitch^*/T$: tasks with high EGR (rapid sequential saturation) benefit from early switching, while low-EGR tasks require a longer sequential phase ($r = -0.64$).
+\textbf{(b)} SB--SG decomposition reveals two regimes: Regime~B (SG $> 0$, blue) where TIP adds value beyond sequential training, and Regime~A (SG $\leq 0$, red) where sequential training alone suffices.}
+\label{fig:task_analysis}
+\end{figure}
 
 %-----------------------------------------------------------------------------
 \subsection{Does the Optimal Switching Point Vary by Backbone?}
@@ -620,9 +625,9 @@ Tables~\ref{tab:transposed_nlu_final}--\ref{tab:transposed_nlg} investigate whet
 \textbf{Method} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
 LoRA           & -- & -- & -- & -- & -- & -- & -- & -- \\
-Portal 10\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
-Portal 30\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
-Portal 50\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
+\jelly{} 10\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
+\jelly{} 30\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
+\jelly{} 50\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
 
 \bottomrule
 \end{tabular}
@@ -638,9 +643,9 @@ Portal 50\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
 \textbf{Method} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
 LoRA           & 93.14 & 78.04 & 72.09 & 81.09 \\
-Portal 10\%    & \textbf{93.38} & 77.64 & \textbf{72.49} & 81.17 \\
-Portal 30\%    & 93.15 & 77.75 & 72.47 & 81.12 \\
-Portal 50\%    & \textbf{93.38} & 78.04 & 72.47 & 81.30 \\
+\jelly{} 10\%    & \textbf{93.38} & 77.64 & \textbf{72.49} & 81.17 \\
+\jelly{} 30\%    & 93.15 & 77.75 & 72.47 & 81.12 \\
+\jelly{} 50\%    & \textbf{93.38} & 78.04 & 72.47 & 81.30 \\
 
 \bottomrule
 \end{tabular}
@@ -656,9 +661,9 @@ Portal 50\%    & \textbf{93.38} & 78.04 & 72.47 & 81.30 \\
 \textbf{Method} & \textbf{GSM8K} & \textbf{MBPP} & \textbf{MATH} \\
 \midrule
 LoRA          & -- & -- & -- \\
-Portal(20\%)       & -- & -- & -- \\
-Portal(50\%)       & -- & -- & -- \\
-Portal(80\%)       & -- & -- & -- \\
+\jelly{}(20\%)       & -- & -- & -- \\
+\jelly{}(50\%)       & -- & -- & -- \\
+\jelly{}(80\%)       & -- & -- & -- \\
 
 \bottomrule
 \end{tabular}
@@ -678,7 +683,7 @@ Table~\ref{tab:t2_model_switch_delta} investigates whether the optimal switching
 \centering\small
 \begin{tabular}{ll cccccc}
 \toprule
-\textbf{Task} & \textbf{Backbone} & \textbf{LoRA} & \textbf{Portal 20\%} & \textbf{Portal 50\%} & \textbf{Portal 80\%} & \textbf{Sequential} & \textbf{$\Delta_{\text{max}}$} \\
+\textbf{Task} & \textbf{Backbone} & \textbf{LoRA} & \textbf{\jelly{} 20\%} & \textbf{\jelly{} 50\%} & \textbf{\jelly{} 80\%} & \textbf{Sequential} & \textbf{$\Delta_{\text{max}}$} \\
 \midrule
 \multirow{3}{*}{\textbf{MetaMath}} 
     & LLaMA-2 & -- & -- & -- & -- & -- & -- \\
