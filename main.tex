@@ -432,10 +432,10 @@ Training dynamics are visualized in Appendix~\ref{app:training_dynamics} (Figure
 \toprule
 $\Tswitch$ & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA)  & -- & -- & -- & -- & -- & -- & -- & -- \\
-10\%        & -- & -- & -- & -- & -- & -- & -- & -- \\
-30\%        & -- & -- & -- & -- & -- & -- & -- & -- \\
-50\%        & -- & -- & -- & -- & -- & -- & -- & -- \\
+0\% (LoRA)  & 65.92 & 89.93 & 90.58 & 93.63 & 80.36 & 94.95 & 89.51 & 86.41 \\
+10\%        & \textbf{67.08} & 90.16 & 90.71 & \textbf{93.90} & 77.55 & 95.17 & 89.32 & 86.27 \\
+30\%        & 66.72 & \textbf{90.23} & 91.22 & 93.88 & 79.35 & 95.63 & 89.78 & 86.69 \\
+50\%        & 66.12 & 90.21 & \textbf{91.52} & 93.87 & \textbf{80.69} & \textbf{95.71} & \textbf{90.07} & \textbf{86.88} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -483,10 +483,10 @@ $\Tswitch$ & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \te
 \toprule
 $\Tswitch$ & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA)  & 93.14 & 78.04 & 72.09 & 81.09 \\
-10\%        & \textbf{93.38} & 77.64 & \textbf{72.49} & 81.17 \\
-30\%        & 93.15 & 77.75 & 72.47 & 81.12 \\
-50\%        & \textbf{93.38} & \textbf{78.04} & 72.47 & \textbf{81.30} \\
+0\% (LoRA)  & 93.15 & \textbf{78.04} & 72.09 & 81.09 \\
+10\%        & \textbf{93.32} & 76.89 & \textbf{72.49} & 80.90 \\
+30\%        & 93.00 & 76.95 & 72.47 & 80.81 \\
+50\%        & 93.09 & \textbf{78.04} & 72.47 & \textbf{81.20} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -624,10 +624,10 @@ Tables~\ref{tab:transposed_nlu_final}--\ref{tab:transposed_nlg} investigate whet
 \toprule
 \textbf{Method} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-LoRA           & -- & -- & -- & -- & -- & -- & -- & -- \\
-\jelly{} 10\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
-\jelly{} 30\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
-\jelly{} 50\%    & -- & -- & -- & -- & -- & -- & -- & -- \\
+LoRA           & 65.92 & 89.93 & 90.58 & 93.63 & 80.36 & 94.95 & 89.51 & 86.41 \\
+\jelly{} 10\%    & \textbf{67.08} & 90.16 & 90.71 & \textbf{93.90} & 77.55 & 95.17 & 89.32 & 86.27 \\
+\jelly{} 30\%    & 66.72 & \textbf{90.23} & 91.22 & 93.88 & 79.35 & 95.63 & 89.78 & 86.69 \\
+\jelly{} 50\%    & 66.12 & 90.21 & \textbf{91.52} & 93.87 & \textbf{80.69} & \textbf{95.71} & \textbf{90.07} & \textbf{86.88} \\
 
 \bottomrule
 \end{tabular}
@@ -642,10 +642,10 @@ LoRA           & -- & -- & -- & -- & -- & -- & -- & -- \\
 \toprule
 \textbf{Method} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-LoRA           & 93.14 & 78.04 & 72.09 & 81.09 \\
-\jelly{} 10\%    & \textbf{93.38} & 77.64 & \textbf{72.49} & 81.17 \\
-\jelly{} 30\%    & 93.15 & 77.75 & 72.47 & 81.12 \\
-\jelly{} 50\%    & \textbf{93.38} & 78.04 & 72.47 & 81.30 \\
+LoRA           & 93.15 & \textbf{78.04} & 72.09 & 81.09 \\
+\jelly{} 10\%    & \textbf{93.32} & 76.89 & \textbf{72.49} & 80.90 \\
+\jelly{} 30\%    & 93.00 & 76.95 & 72.47 & 80.81 \\
+\jelly{} 50\%    & 93.09 & \textbf{78.04} & 72.47 & \textbf{81.20} \\
 
 \bottomrule
 \end{tabular}
