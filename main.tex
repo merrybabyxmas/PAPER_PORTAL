@@ -820,20 +820,20 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds_complex} report the complet
 \end{table}
 
 \begin{table}[!ht]
-\caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} (DeBERTa-v3-base, $r=8$). We compare three representative switching points (10\%, 30\%, 50\%) against the LoRA baseline ($T_{sw}=0\%$). All results are averaged over 5 random seeds.}
+\caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} (DeBERTa-v3-base, $r=8$). We compare three representative switching points (10\%, 30\%, 50\%) against the LoRA baseline ($T_{sw}=0\%$). Results are averaged over 5 random seeds; cells marked with $\dagger$ use 4-seed averages due to missing seed-42 data for that specific switch point.}
 \label{tab:jelly_sw_ablation_final}
 \centering
 \scriptsize
-\setlength{\tabcolsep}{3.5pt} 
+\setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{l cccccccc}
 \toprule
 \textbf{$T_{sw}$ (\%)} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA) & -- & -- & -- & -- & -- & -- & -- & -- \\
+0\% (LoRA) & 67.08 & 90.04 & 88.91 & 93.67 & 80.60 & 95.50 & 89.84 & 86.52 \\
 \midrule
-10\%       & -- & -- & -- & -- & -- & -- & -- & -- \\
-30\%       & -- & -- & -- & -- & -- & -- & -- & -- \\
-50\%       & -- & -- & -- & -- & -- & -- & -- & -- \\
+10\%       & 67.09 & 90.18$^\dagger$ & 90.58$^\dagger$ & 93.92 & 78.41 & 95.21$^\dagger$ & 88.98 & 86.34 \\
+30\%       & 66.86$^\dagger$ & 90.25 & 91.13$^\dagger$ & 93.88 & 80.79 & 95.58$^\dagger$ & 89.72 & 86.89 \\
+50\%       & 65.99$^\dagger$ & 90.22$^\dagger$ & 91.38 & 93.89 & 81.59 & 95.67 & 90.02 & 86.96 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -894,11 +894,11 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds_complex} report the complet
 \toprule
 \textbf{$T_{sw}$ (\%)} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA)  & 93.15 & 78.10 & 72.09 & 81.11 \\
+0\% (LoRA)  & 93.15 & 78.04 & 72.09 & 81.09 \\
 \midrule
-10\%        & -- & -- & -- & -- \\
-30\%        & -- & -- & -- & -- \\
-50\%        & -- & -- & -- & -- \\
+10\%        & 93.32 & 76.89 & 72.49 & 80.90 \\
+30\%        & 93.00 & 76.95 & 72.47 & 80.81 \\
+50\%        & 93.09 & 78.04 & 72.47 & 81.20 \\
 \bottomrule
 \end{tabular}
 \end{table}
