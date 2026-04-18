@@ -494,37 +494,51 @@ The optimal $\Tswitch$ is task-dependent.
 Tables~\ref{tab:nlu_ablation}--\ref{tab:sarc_ablation} sweep $\Tswitch$ across NLU, NLG, and Sarcasm tasks to quantify this sensitivity.
 
 %-----------------------------------------------------------------------------
-\subsection{Does the Optimal Switching Point Vary by Task?}
+\subsection{Why Does the Optimal Switching Point Differ Across Tasks?}
 \label{sec:task_analysis}
 %-----------------------------------------------------------------------------
 
-The ablation tables above reveal that the optimal $\Tswitch$ varies substantially across tasks: NLU tasks favor early switching ($\Tswitch \leq 10\%$), while MATH requires extended sequential probing ($\Tswitch = 80\%$).
-To explain this variation, we introduce two diagnostic quantities.
+The ablation results above show that the optimal $\Tswitch$ is strongly task-dependent. NLU tasks consistently favor early switching ($\Tswitch \leq 10\%$), whereas MATH benefits from substantially longer sequential probing ($\Tswitch = 80\%$).
+To explain this variation, we analyze task-specific switching dynamics through two complementary diagnostics: \emph{Sequential Saturation} and \emph{Gain Decomposition}.
 
-\paragraph{SB--SG Decomposition.}
-Let $\Delta_{\text{\textsc{Jelly}}}(\Tswitch) = \text{score}(\Tswitch) - \text{score}(\text{LoRA})$ denote the gain of \jelly{} over LoRA at switching point $\Tswitch$.
-We decompose this gain into a \emph{Sequential Benefit} (SB), the improvement from pure sequential training over LoRA, and a \emph{Switch Gain} (SG), the additional improvement from the TIP transition:
+\noindent\textbf{Sequential Saturation (EGR).}
+We quantify how quickly the benefit of sequential training saturates using the \emph{Early Gain Ratio} (EGR):
 \begin{equation}
-\underbrace{\Delta_{\text{\textsc{Jelly}}}(\Tswitch^*)}_{\text{Total Gain}} \;=\; \underbrace{\vphantom{\Delta}\text{Seq} - \text{LoRA}}_{\text{SB}} \;+\; \underbrace{\vphantom{\Delta}\Delta_{\text{\textsc{Jelly}}}(\Tswitch^*) - (\text{Seq} - \text{LoRA})}_{\text{SG}}
+\mathrm{EGR}
+=
+\frac{\text{score}_{10\%} - \text{score}_{\text{LoRA}}}
+{\text{score}_{\text{best}} - \text{score}_{\text{LoRA}}}.
+\label{eq:egr}
+\end{equation}
+A high EGR indicates that most of the improvement over LoRA is already realized at an early switching point, favoring a short sequential phase.
+A low EGR, by contrast, suggests that useful task-aligned structure continues to emerge over a longer portion of training, favoring a later switch.
+
+\noindent\textbf{Gain Decomposition (SB--SG).}
+Let
+\[
+\Delta_{\text{\textsc{Jelly}}}(\Tswitch)
+=
+\text{score}(\Tswitch) - \text{score}(\text{LoRA})
+\]
+denote the gain of \jelly{} over LoRA at switching point $\Tswitch$.
+At the optimal switching point $\Tswitch^*$, we decompose this gain into two components:
+the \emph{Sequential Benefit} (SB), defined as the improvement of pure sequential training over LoRA, and the \emph{Switch Gain} (SG), defined as the additional improvement obtained from the TIP transition beyond sequential training alone:
+\begin{equation}
+\underbrace{\Delta_{\text{\textsc{Jelly}}}(\Tswitch^*)}_{\text{Total Gain}}
+\;=\;
+\underbrace{\vphantom{\Delta}\text{Seq} - \text{LoRA}}_{\text{SB}}
+\;+\;
+\underbrace{\vphantom{\Delta}\Delta_{\text{\textsc{Jelly}}}(\Tswitch^*) - (\text{Seq} - \text{LoRA})}_{\text{SG}}.
 \label{eq:sbsg}
 \end{equation}
-When $\text{SG} > 0$ (\emph{Regime~B}), the TIP projection adds value beyond sequential training alone.
-When $\text{SG} \leq 0$ (\emph{Regime~A}), sequential training is sufficient and switching yields diminishing returns.
+When $\text{SG} > 0$ (\emph{Regime~B}), the TIP projection contributes additional value beyond what sequential training alone can provide.
+When $\text{SG} \leq 0$ (\emph{Regime~A}), most of the achievable benefit is already captured during the sequential phase, so switching offers limited or diminishing returns.
 
-\paragraph{Early Gain Ratio.}
-We define the \emph{Early Gain Ratio} $\text{EGR} = (\text{score}_{10\%} - \text{score}_{\text{LoRA}}) / (\text{score}_{\text{best}} - \text{score}_{\text{LoRA}})$, which measures how quickly sequential training saturates.
-High EGR ($\gg 1$) indicates that most gains are captured early, favoring a small $\Tswitch$; low EGR suggests extended sequential probing is needed.
+Figure~\ref{fig:task_analysis} summarizes these two diagnostics.
+Panel~(a) shows a negative correlation ($r = -0.64$) between EGR and the optimal switch fraction $\Tswitch^*/T$: tasks with faster sequential saturation tend to prefer earlier switching, whereas tasks with slower saturation benefit from a longer sequential phase.
+Panel~(b) decomposes the total gain of each task into SB and SG, revealing two distinct regimes: tasks for which the switch itself provides additional value, and tasks for which sequential training is already sufficient.
 
-Figure~\ref{fig:task_analysis} visualizes these diagnostics.
-Panel~(a) shows a negative correlation ($r = -0.64$) between EGR and the optimal $\Tswitch^*/T$: tasks where sequential training saturates quickly (high EGR) require less sequential probing time.
-Panel~(b) decomposes each task's gain into SB and SG, revealing two clear regimes.
 
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=\textwidth]{figures/figA_task_analysis.png}
-\caption{\textbf{Task-specific switching point analysis.} \textbf{(a)} EGR vs.\ optimal switch fraction $\Tswitch^*/T$: tasks with high EGR (fast sequential saturation) benefit from early switching, while low-EGR tasks require extended sequential probing ($r = -0.64$). \textbf{(b)} SB--SG decomposition reveals two regimes: Regime~B (SG $> 0$, blue) where TIP adds value beyond sequential training, and Regime~A (SG $\leq 0$, red) where sequential training alone suffices.}
-\label{fig:task_analysis}
-\end{figure}
 
 %-----------------------------------------------------------------------------
 \subsection{Does the Optimal Switching Point Vary by Backbone?}
