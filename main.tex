@@ -744,7 +744,7 @@ Table~\ref{tab:t2_model_switch_delta} investigates whether the optimal switching
 
 Instead of switching all modules simultaneously, we test per-module switching schedules. Columns \emph{0\%}, \emph{30\%}, and \emph{50\%} indicate the fraction of training at which each module group switches from sequential to parallel. We evaluate on five GLUE tasks (SST-2, CoLA, MRPC, RTE, STS-B; all trained for 15 epochs) to keep the schedule semantics consistent across tasks.
 \begin{table}[!ht]
-\caption{Ablation study on per-module asynchronous switching (DeBERTa-v3-base, $r=8$, 5-seed average). Switching points represent the fraction of training at which each module transitions from sequential to parallel; 0\% denotes parallel from the start (LoRA-equivalent for that module).}
+\caption{Ablation study on per-module asynchronous switching (DeBERTa-v3-base, $r=8$, 3-seed average). Switching points represent the fraction of training at which each module transitions from sequential to parallel; 0\% denotes parallel from the start (LoRA-equivalent for that module). Best results are in \textbf{bold}.}
 \label{tab:t3_async_final}
 \centering\small
 \begin{tabular}{ccc|cccccc}
@@ -752,27 +752,26 @@ Instead of switching all modules simultaneously, we test per-module switching sc
 \multicolumn{3}{c|}{\textbf{Switching Point ($T_{sw}$)}} & \multicolumn{6}{c}{\textbf{GLUE Tasks}} \\
 $q$ & $k$ & $v$ & \textbf{SST-2} & \textbf{CoLA} & \textbf{MRPC} & \textbf{RTE} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-0\%  & 0\%  & 0\%  & -- & -- & -- & -- & -- & -- \\
-30\% & 30\% & 30\% & -- & -- & -- & -- & -- & -- \\
-50\% & 50\% & 50\% & -- & -- & -- & -- & -- & -- \\
+0\%  & 0\%  & 0\%  & 95.4 & 66.4 & 88.9 & 82.1 & 89.6 & 84.5 \\
+30\% & 30\% & 30\% & 95.9 & 67.6 & 90.0 & 82.1 & 89.5 & 85.0 \\
+50\% & 50\% & 50\% & 96.0 & 67.6 & 89.9 & 82.7 & 89.8 & 85.2 \\
 \midrule
-50\% & 0\%  & 0\%  & -- & -- & -- & -- & -- & -- \\
-0\%  & 50\% & 0\%  & -- & -- & -- & -- & -- & -- \\
-0\%  & 0\%  & 50\% & -- & -- & -- & -- & -- & -- \\
-30\% & 50\% & 50\% & -- & -- & -- & -- & -- & -- \\
-50\% & 30\% & 50\% & -- & -- & -- & -- & -- & -- \\
-50\% & 50\% & 30\% & -- & -- & -- & -- & -- & -- \\
+50\% & 0\%  & 0\%  & 95.7 & 67.2 & 88.9 & 81.8 & 89.7 & 84.7 \\
+0\%  & 50\% & 0\%  & 95.5 & 67.8 & 89.6 & 81.5 & 88.8 & 84.6 \\
+0\%  & 0\%  & 50\% & 95.7 & 67.1 & 89.3 & 82.8 & 88.6 & 84.7 \\
+30\% & 50\% & 50\% & \textbf{96.1} & 67.7 & \textbf{90.0} & \textbf{83.0} & 89.7 & \textbf{85.3} \\
+50\% & 30\% & 50\% & 95.9 & 67.2 & 89.9 & 82.3 & 89.8 & 85.0 \\
+50\% & 50\% & 30\% & 96.0 & 67.5 & \textbf{90.0} & 82.2 & 89.7 & 85.1 \\
 \midrule
-0\%  & 30\% & 30\% & -- & -- & -- & -- & -- & -- \\
-30\% & 0\%  & 30\% & -- & -- & -- & -- & -- & -- \\
-30\% & 30\% & 0\%  & -- & -- & -- & -- & -- & -- \\
+0\%  & 30\% & 30\% & 95.9 & 67.3 & 89.7 & 81.5 & 89.7 & 84.8 \\
+30\% & 0\%  & 30\% & 95.8 & 66.7 & 89.3 & 81.9 & 89.6 & 84.7 \\
+30\% & 30\% & 0\%  & 95.6 & 67.4 & 89.4 & 81.9 & 89.1 & 84.7 \\
 \midrule
-0\%  & 30\% & 50\% & -- & -- & -- & -- & -- & -- \\
-50\% & 30\% & 0\%  & -- & -- & -- & -- & -- & -- \\
+0\%  & 30\% & 50\% & 95.8 & \textbf{67.8} & 89.7 & 81.9 & \textbf{89.8} & 85.0 \\
+50\% & 30\% & 0\%  & 95.6 & 67.6 & 89.4 & 81.5 & 89.2 & 84.7 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 % ─── Table 4 ────────────────────────────────────────────────────────
 \subsection{Non-Square Matrix Handling}
 \label{app:table4}
