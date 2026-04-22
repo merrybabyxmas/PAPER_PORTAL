@@ -560,6 +560,41 @@ Across MetaMath, Python, and Conversation tasks, the three backbones exhibit dis
 \label{fig:model_analysis}
 \end{figure}
 
+
+
+%-----------------------------------------------------------------------------
+\subsection{Why only handle Sequential to parallel?}
+\label{sec:efficiency_logic}
+%-----------------------------------------------------------------------------
+
+While JELLY generalizes PEFT over the training time axis, one might ask why we strictly enforce a transition from sequential to a parallel topology instead of remaining in a sequential state or reversing the transition order. [cite: 71, 92] We address these architectural choices through the following analysis:
+
+\noindent\textbf{Inference Latency.} 
+If we were to setting $T_{sw} = 1$, the framework would recover a pure sequential adapter. [cite: 134, 151] However, sequential topologies (e.g., Houlsby adapters) are fundamentally limited by inference latency.  Because they process the output of the base layer ($W_0x$), they incur a computational delay proportional to the model's depth. [cite: 48, 131, 135] In contrast, JELLY’s transition to a parallel structure at $t = T_{sw}$ allows the final adapter weights to be merged into $W_0$, achieving the zero-latency property essential for large-scale deployment. [cite: 31, 75, 511]
+
+\noindent\textbf{Task aware Probing.} 
+Transitioning from a parallel to a sequential topology is counterproductive. [cite: 82, 92] The primary goal of the initial sequential phase is \textit{Task-Aware Probing}, which utilizes the pretrained manifold of $W_0$ as an implicit prior to identify the task-intrinsic subspace from data during early optimization. [cite: 29, 49, 73] Reversing this order would not only forfeit these early convergence benefits but also re-introduce the inference latency overhead at the end of training. 
+
+
+\begin{table}[!ht]
+\caption{Comparison of adapter topologies. JELLY unifies the optimization benefits of sequential probing with the inference efficiency of parallel adapters. [cite: 56, 137]}
+\label{tab:topology_comparison}
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{l | ccc | c}
+\toprule
+\textbf{Feature} & \textbf{Parallel (LoRA)} & \textbf{Sequential (Houlsby)} & \textbf{JELLY (Ours)} \\
+\midrule
+Task-Aware Probing [cite: 73] & $\times$ & \checkmark & \checkmark \\
+Inference Latency [cite: 91] & \textbf{Zero} & $O(\text{Depth})$ & \textbf{Zero} \\
+Weight Merging [cite: 511] & \checkmark & $\times$ & \checkmark \\
+Optimal Phase [cite: 133] & Late Training & Early Probing & All-axis \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 %=============================================================================
 \section{Conclusion}
 \label{sec:conclusion}
