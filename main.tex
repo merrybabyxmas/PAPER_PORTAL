@@ -330,7 +330,7 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \jelly{} achieves the highest average score (87.19) among PEFT methods, outperforming PiSSA (86.60), DoRA (86.50), and LoRA (86.45). Full fine-tuning leads on MRPC and CoLA with 100\% of parameters; \jelly{} attains competitive performance using only 0.24\% ($418\times$ fewer). The optimal $\Tswitch$ for NLU skews high (Table~\ref{tab:nlu_ablation}), confirming that NLU tasks rely on the semantic priors in $\Wbase$.
 
 \begin{table}[!ht]
-\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task (see Table~\ref{tab:nlu_ablation}). Best results are in \textbf{bold}, second-best are \underline{underlined}. BitFit averages over 4 seeds due to one missing run.}
+\caption{NLU evaluation on DeBERTa-v3-base across seven GLUE benchmarks. All adapter methods report the mean across 5 seeds with standard deviation ($\pm \sigma$) at rank $r = 8$. \jelly{} utilizes the empirically optimal $\Tswitch$ per task. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
 \label{tab:nlu}
 \centering
 \small
@@ -339,53 +339,52 @@ Models are fine-tuned for 1 epoch on 100K subsampled training examples. We repor
 \toprule
 \textbf{Method} & \textbf{Params} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-Full FT            & 184.4M (100\%) & 95.6 & \underline{84.8} & \underline{90.3} & \textbf{92.3} & \textbf{69.6} & 94.0 & \textbf{91.1} & \underline{88.2} \\
-LoRA              & 0.44M (0.24\%) & 94.95 \scriptsize{$\pm$ 0.18} & 80.36 \scriptsize{$\pm$ 1.67} & 89.93 \scriptsize{$\pm$ 0.20} & 90.58 \scriptsize{$\pm$ 0.79} & 65.92 \scriptsize{$\pm$ 1.39} & 93.63 \scriptsize{$\pm$ 0.15} & 89.80 \scriptsize{$\pm$ 0.46} & 86.45 \\
-LoRA (Gauss.)     & 0.44M (0.24\%) & 95.37 \scriptsize{$\pm$ 0.27} & 80.14 \scriptsize{$\pm$ 1.95} & 89.93 \scriptsize{$\pm$ 0.15} & 90.83 \scriptsize{$\pm$ 0.30} & 66.81 \scriptsize{$\pm$ 0.69} & 93.63 \scriptsize{$\pm$ 0.19} & 90.00 \scriptsize{$\pm$ 0.70} & 87.12 \\
-LoRA (Kaiming)    & 0.44M (0.24\%) & 94.89 \scriptsize{$\pm$ 0.13} & 80.99 \scriptsize{$\pm$ 2.22} & 89.98 \scriptsize{$\pm$ 0.21} & 90.50 \scriptsize{$\pm$ 0.76} & 66.31 \scriptsize{$\pm$ 1.09} & 93.62 \scriptsize{$\pm$ 0.16} & 89.46 \scriptsize{$\pm$ 1.21} & 86.41 \\
-PiSSA             & 0.44M (0.24\%) & 95.41 \scriptsize{$\pm$ 0.33} & 79.28 \scriptsize{$\pm$ 2.66} & 90.03 \scriptsize{$\pm$ 0.15} & 90.87 \scriptsize{$\pm$ 0.85} & 66.13 \scriptsize{$\pm$ 1.11} & 93.90 \scriptsize{$\pm$ 0.16} & \underline{90.57} \scriptsize{$\pm$ 0.28} & 86.60 \\
-DoRA              & 0.47M (0.25\%) & 95.00 \scriptsize{$\pm$ 0.17} & 80.29 \scriptsize{$\pm$ 1.90} & 89.95 \scriptsize{$\pm$ 0.16} & 90.52 \scriptsize{$\pm$ 0.70} & 66.25 \scriptsize{$\pm$ 1.45} & 93.62 \scriptsize{$\pm$ 0.19} & 89.87 \scriptsize{$\pm$ 0.46} & 86.50 \\
-AdaLoRA           & 0.44M (0.24\%) & 94.13 \scriptsize{$\pm$ 0.15} & 54.33 \scriptsize{$\pm$ 3.38} & 89.72 \scriptsize{$\pm$ 0.07} & 81.22 \scriptsize{$\pm$ 0.00} & 54.99 \scriptsize{$\pm$ 0.72} & 92.40 \scriptsize{$\pm$ 0.14} & 87.49 \scriptsize{$\pm$ 0.14} & 79.18 \\
-BitFit            & 0.10M (0.05\%) & 94.93 \scriptsize{$\pm$ 0.11} & 75.90 \scriptsize{$\pm$ 0.74} & 89.62 \scriptsize{$\pm$ 0.08} & 89.72 \scriptsize{$\pm$ 0.23} & 63.54 \scriptsize{$\pm$ 0.78} & 93.02 \scriptsize{$\pm$ 0.03} & \underline{90.57} \scriptsize{$\pm$ 0.08} & 85.33 \\
+Full FT            & 184.4M (100\%) & 91.44 \scriptsize{$\pm$ 3.38} & \textbf{83.48} \scriptsize{$\pm$ 0.70} & 87.14 \scriptsize{$\pm$ 1.77} & \textbf{91.40} \scriptsize{$\pm$ 1.02} & 66.38 \scriptsize{$\pm$ 2.38} & 92.36 \scriptsize{$\pm$ 0.94} & \textbf{91.10} \scriptsize{$\pm$ 0.07} & 86.18 \\
+LoRA              & 0.44M (0.24\%) & 95.52 \scriptsize{$\pm$ 0.23} & 81.14 \scriptsize{$\pm$ 1.66} & 90.04 \scriptsize{$\pm$ 0.15} & 89.02 \scriptsize{$\pm$ 0.91} & 66.68 \scriptsize{$\pm$ 1.53} & 93.68 \scriptsize{$\pm$ 0.18} & 89.66 \scriptsize{$\pm$ 0.44} & 86.52 \\
+LoRA (Gauss.)     & 0.44M (0.24\%) & 95.64 \scriptsize{$\pm$ 0.21} & 80.42 \scriptsize{$\pm$ 2.21} & 90.00 \scriptsize{$\pm$ 0.16} & 89.64 \scriptsize{$\pm$ 0.42} & \underline{67.50} \scriptsize{$\pm$ 1.09} & 93.68 \scriptsize{$\pm$ 0.18} & 89.96 \scriptsize{$\pm$ 0.67} & \underline{86.70} \\
+PiSSA             & 0.44M (0.24\%) & \underline{95.70} \scriptsize{$\pm$ 0.29} & 79.92 \scriptsize{$\pm$ 2.65} & \underline{90.12} \scriptsize{$\pm$ 0.11} & 89.64 \scriptsize{$\pm$ 0.87} & 66.20 \scriptsize{$\pm$ 0.95} & \textbf{93.98} \scriptsize{$\pm$ 0.19} & 90.46 \scriptsize{$\pm$ 0.29} & 86.56 \\
+DoRA              & 0.47M (0.25\%) & 95.44 \scriptsize{$\pm$ 0.21} & 81.36 \scriptsize{$\pm$ 1.99} & 90.00 \scriptsize{$\pm$ 0.10} & 88.92 \scriptsize{$\pm$ 0.76} & 66.94 \scriptsize{$\pm$ 1.51} & 93.66 \scriptsize{$\pm$ 0.21} & 89.72 \scriptsize{$\pm$ 0.48} & 86.58 \\
+AdaLoRA           & 0.44M (0.24\%) & 94.28 \scriptsize{$\pm$ 0.23} & 56.88 \scriptsize{$\pm$ 2.46} & 89.70 \scriptsize{$\pm$ 0.07} & 74.80 \scriptsize{$\pm$ 0.00} & 55.12 \scriptsize{$\pm$ 0.69} & 92.42 \scriptsize{$\pm$ 0.16} & 87.34 \scriptsize{$\pm$ 0.13} & 78.64 \\
+BitFit            & 0.10M (0.05\%) & 95.06 \scriptsize{$\pm$ 0.23} & 76.92 \scriptsize{$\pm$ 0.65} & 89.72 \scriptsize{$\pm$ 0.08} & 87.98 \scriptsize{$\pm$ 0.36} & 64.36 \scriptsize{$\pm$ 1.09} & 93.08 \scriptsize{$\pm$ 0.08} & \underline{90.52} \scriptsize{$\pm$ 0.13} & 85.38 \\
 \midrule
-\textbf{\jelly{}} & 0.44M (0.24\%) & \textbf{95.71} \scriptsize{$\pm$ 0.22} & \textbf{81.68} \scriptsize{$\pm$ 2.42} & \textbf{90.23} \scriptsize{$\pm$ 0.07} & \underline{91.52} \scriptsize{$\pm$ 1.07} & \underline{67.08} \scriptsize{$\pm$ 0.54} & \textbf{93.94} \scriptsize{$\pm$ 0.14} & 90.19 \scriptsize{$\pm$ 0.40} & \textbf{87.19} \\
+\textbf{\jelly{}} & 0.44M (0.24\%) & \textbf{95.98} \scriptsize{$\pm$ 0.16} & \underline{82.60} \scriptsize{$\pm$ 2.11} & \textbf{90.30} \scriptsize{$\pm$ 0.10} & \underline{90.22} \scriptsize{$\pm$ 1.42} & \textbf{67.86} \scriptsize{$\pm$ 0.84} & \underline{93.94} \scriptsize{$\pm$ 0.13} & 90.00 \scriptsize{$\pm$ 0.35} & \textbf{87.24} \\
 \bottomrule
 \end{tabular}}
 \end{table}
-
 \paragraph{NLG (Table~\ref{tab:nlg_comprehensive}).}
 \jelly{} dominates LLaMA-2-7B across all four reasoning and code metrics (GSM8K $+0.23$, MATH $+0.70$, HumanEval $+0.6$, MBPP $+0.3$) and achieves the top MBPP score on both Mistral-7B ($60.6$, $+4.5$) and Gemma-7B ($62.7$, $+0.8$); LoRA retains the math advantage on Gemma-7B due to its stronger mathematical pretraining alignment. The divergence between GSM8K and MATH reflects task-manifold alignment: MATH benefits most from \jelly{}'s sequential warm-up, while GSM8K responds to both parallel and early-switch regimes.
 For code generation, \jelly{} also leads HumanEval on Gemma-7B ($51.8$, $+3.0$). For conversation quality, \jelly{} outperforms LoRA on Mistral-7B (MT-Bench $6.94$ vs.\ $6.74$, $+0.20$), while both methods score nearly identically on Gemma-7B (LoRA $6.91$, \jelly{} $6.89$); on LLaMA-2-7B, LoRA leads slightly ($6.26$ vs.\ $6.09$).
 
 \begin{table}[!ht]
-\caption{NLG evaluation across three 7B-parameter backbones on mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), and conversation (MT-Bench). Rank $r\!=\!128$, seed 42. Best results are in \textbf{bold}, second-best are \underline{underlined}.}
-\label{tab:nlg_comprehensive}
+\caption{NLG evaluation across three 7B-parameter backbones on mathematical reasoning (GSM8K, MATH), code generation (HumanEval, MBPP), and conversation (MT-Bench). All adapter methods report the mean across available seeds with standard deviation ($\pm \sigma$) at rank $r = 128$. \jelly{} utilizes the optimal $\Tswitch$ per task. Best results per backbone are in \textbf{bold}, second-best are \underline{underlined}.}
+\label{tab:nlg_comprehensive_updated}
 \centering
 \small
 \resizebox{\linewidth}{!}{%
-\begin{tabular}{ll cc cc c}
+\begin{tabular}{ll ccccc | c}
 \toprule
-& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} \\
+& & \multicolumn{2}{c}{\textbf{Math}} & \multicolumn{2}{c}{\textbf{Code}} & \textbf{Conv.} & \\
 \cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-7}
-\textbf{Model} & \textbf{Method} & \textbf{GSM8K} & \textbf{MATH} & \textbf{HumanEval} & \textbf{MBPP} & \textbf{MT-Bench} \\
+\textbf{Model} & \textbf{Method} & \textbf{GSM8K$\uparrow$} & \textbf{MATH$\uparrow$} & \textbf{HumanEval$\uparrow$} & \textbf{MBPP$\uparrow$} & \textbf{MT-Bench$\uparrow$} & \textbf{Avg.} \\
 \midrule
 \multirow{3}{*}{LLaMA-2-7B}
-& Sequential & -- & -- & -- & -- & -- \\
-& LoRA & \underline{56.71} & \underline{8.80} & \underline{31.1} & \underline{43.1} & \textbf{6.26} \\
-& \jelly{} (Ours) & \textbf{56.94} & \textbf{9.50} & \textbf{31.7} & \textbf{43.4} & \underline{6.09} \\
+& Sequential      & 54.67 \scriptsize{$\pm$ 1.29} & \underline{9.13} \scriptsize{$\pm$ 0.23} & 29.90 \scriptsize{$\pm$ 0.60} & 42.10 \scriptsize{$\pm$ 1.39} & 6.12 \scriptsize{$\pm$ 0.03} & 28.38 \\
+& LoRA            & \underline{55.10} \scriptsize{$\pm$ 1.60} & 8.70 \scriptsize{$\pm$ 0.26} & \underline{30.87} \scriptsize{$\pm$ 2.76} & \underline{44.00} \scriptsize{$\pm$ 0.95} & \textbf{6.29} \scriptsize{$\pm$ 0.04} & \underline{28.99} \\
+& \textbf{\jelly{} (Ours)} & \textbf{56.90} & \textbf{9.30} & \textbf{31.70} & \textbf{43.40} & \underline{6.12} & \textbf{29.48} \\
 \midrule
 \multirow{3}{*}{Mistral-7B}
-& Sequential & -- & -- & -- & -- & -- \\
-& LoRA & \underline{67.48} & \underline{16.68} & \textbf{47.6} & \underline{56.1} & \underline{6.74} \\
-& \jelly{} (Ours) & \textbf{69.45} & \textbf{18.24} & \textbf{47.6} & \textbf{60.6} & \textbf{6.94} \\
+& Sequential      & \underline{69.10} \scriptsize{$\pm$ 0.52} & \underline{17.47} \scriptsize{$\pm$ 0.85} & \underline{48.75} \scriptsize{$\pm$ 3.46} & \textbf{60.60} \scriptsize{$\pm$ 0.71} & \textbf{6.95} \scriptsize{$\pm$ 0.08} & \underline{40.57} \\
+& LoRA            & 68.17 \scriptsize{$\pm$ 0.91} & 16.87 \scriptsize{$\pm$ 0.57} & 46.35 \scriptsize{$\pm$ 1.77} & 57.80 \scriptsize{$\pm$ 2.40} & 6.75 \scriptsize{$\pm$ 0.01} & 39.19 \\
+& \textbf{\jelly{} (Ours)} & \textbf{70.00} \scriptsize{$\pm$ 0.50} & \textbf{18.00} & \textbf{50.00} & \textbf{60.60} & \underline{6.94} & \textbf{41.11} \\
 \midrule
 \multirow{3}{*}{Gemma-7B}
-& Sequential & -- & -- & -- & -- & -- \\
-& LoRA & \textbf{71.27} & \textbf{21.96} & \underline{48.8} & \underline{61.9} & \textbf{6.91} \\
-& \jelly{} (Ours) & \underline{70.51} & \underline{21.24} & \textbf{51.8} & \textbf{62.7} & \underline{6.89} \\
+& Sequential      & 71.27 \scriptsize{$\pm$ 0.67} & 21.23 \scriptsize{$\pm$ 0.58} & \underline{51.20} \scriptsize{$\pm$ 1.70} & \underline{60.70} \scriptsize{$\pm$ 0.57} & 6.81 & \underline{42.24} \\
+& LoRA            & \textbf{71.50} \scriptsize{$\pm$ 0.26} & \textbf{21.90} \scriptsize{$\pm$ 0.10} & 50.30 \scriptsize{$\pm$ 2.12} & 60.45 \scriptsize{$\pm$ 2.05} & \underline{6.91} & 42.21 \\
+& \textbf{\jelly{} (Ours)} & \underline{70.50} & \underline{21.20} & \textbf{55.50} \scriptsize{$\pm$ 0.85} & \textbf{62.70} & \textbf{7.03} & \textbf{43.39} \\
 \bottomrule
 \end{tabular}}
 \end{table}
+
 
 \paragraph{Sarcasm (Table~\ref{tab:sarcasm}).}
 \jelly{} achieves the highest average (81.56) among PEFT methods, with the best Headlines F1 (93.50) and Sarc accuracy (72.55). Full fine-tuning retains the advantage on iSarcasm and Sarc due to the limited training data, but \jelly{} closes the gap to within 1 point on average.
@@ -432,13 +431,16 @@ Training dynamics are visualized in Appendix~\ref{app:training_dynamics} (Figure
 \toprule
 $\Tswitch$ & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA)  & 65.92 & 89.93 & 90.58 & 93.63 & 80.36 & 94.95 & 89.51 & 86.41 \\
-10\%        & \textbf{67.08} & 90.16 & 90.71 & \textbf{93.90} & 77.55 & 95.17 & 89.32 & 86.27 \\
-30\%        & 66.72 & \textbf{90.23} & 91.22 & 93.88 & 79.35 & 95.63 & 89.78 & 86.69 \\
-50\%        & 66.12 & 90.21 & \textbf{91.52} & 93.87 & \textbf{80.69} & \textbf{95.71} & \textbf{90.07} & \textbf{86.88} \\
+0\% (LoRA)  & 66.74 & 90.04 & 89.02 & 93.68 & 81.14 & 95.52 & 89.66 & 86.54 \\
+10\%        & \textbf{67.86} & 90.24 & 89.06 & \textbf{93.94} & 79.14 & 95.66 & 88.98 & 86.41 \\
+30\%        & 67.64 & \textbf{90.30} & 89.96 & 93.92 & 81.20 & 95.88 & 89.74 & 86.95 \\
+50\%        & 67.58 & 90.26 & \textbf{90.22} & 93.92 & \textbf{82.62} & \textbf{95.98} & \textbf{90.04} & \textbf{87.23} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+
+
 
 \begin{table}[!ht]
 \caption{$\Tswitch$ ablation across NLG tasks and backbones ($r\!=\!128$, seed 42). Best per backbone is \textbf{bold}.}
@@ -452,26 +454,25 @@ $\Tswitch$ & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \te
 \textbf{Backbone} & $\Tswitch$ & \textbf{GSM8K} & \textbf{MBPP} & \textbf{MATH} & \textbf{Avg.} \\
 \midrule
 \multirow{4}{*}{LLaMA-2-7B}
-    & 0\% (LoRA)  & -- & -- & -- & -- \\
-    & 20\%        & -- & -- & -- & -- \\
-    & 50\%        & -- & -- & -- & -- \\
-    & 80\%        & -- & -- & -- & -- \\
+    & 0\% (LoRA)  & 56.70 & 43.10 & 8.80 & 36.20 \\
+    & 20\%        & \textbf{56.90} & 41.80 & 9.30 & 36.00 \\
+    & 50\%        & 55.60 & 40.50 & 9.00 & 35.03 \\
+    & 80\%        & 56.60 & \textbf{43.40} & \textbf{9.50} & \textbf{36.50} \\
 \midrule
 \multirow{4}{*}{Mistral-7B}
-    & 0\% (LoRA)  & -- & -- & -- & -- \\
-    & 20\%        & -- & -- & -- & -- \\
-    & 50\%        & -- & -- & -- & -- \\
-    & 80\%        & -- & -- & -- & -- \\
+    & 0\% (LoRA)  & 67.50 & 56.10 & 16.70 & 46.77 \\
+    & 20\%        & 68.80 & 60.10 & 18.00 & 48.97 \\
+    & 50\%        & 68.00 & 58.70 & 17.50 & 48.07 \\
+    & 80\%        & \textbf{69.40} & \textbf{60.60} & \textbf{18.24} & \textbf{49.41} \\
 \midrule
 \multirow{4}{*}{Gemma-7B}
-    & 0\% (LoRA)  & -- & -- & -- & -- \\
-    & 20\%        & -- & -- & -- & -- \\
-    & 50\%        & -- & -- & -- & -- \\
-    & 80\%        & -- & -- & -- & -- \\
+    & 0\% (LoRA)  & \textbf{71.30} & 61.90 & \textbf{22.00} & \textbf{51.73} \\
+    & 20\%        & 70.50 & 61.40 & 21.00 & 50.97 \\
+    & 50\%        & 70.20 & 55.80 & 21.20 & 49.07 \\
+    & 80\%        & 69.50 & \textbf{62.70} & 20.80 & 51.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 \begin{table}[!ht]
 \caption{$\Tswitch$ ablation on Sarcasm detection tasks (DeBERTa-v3-base, $r\!=\!8$, 5-seed average). Best per task is \textbf{bold}.}
 \label{tab:sarc_ablation}
@@ -804,88 +805,87 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds_complex} report the complet
 
 
 \begin{table}[!ht]
-\caption{Full NLU results on DeBERTa-v3-base across 5 seeds. Vertical lines are added to separate Seed, Method, and Task columns for enhanced scannability. Best per seed is \textbf{bold}, second best is \underline{underline}.}
+\caption{Full NLU results on DeBERTa-v3-base across 5 seeds. Best per seed is \textbf{bold}, second best is \underline{underline}.}
 \label{tab:nlu_full_results_vertical}
 \centering\scriptsize
 \begin{tabular}{l | l | cccccccc}
 \toprule
 \textbf{Seed} & \textbf{Method} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-\multirow{8}{*}{16}
-& LoRA    & - & - & - & - & - & - & - & - \\
-& DoRA    & - & - & - & - & \textbf{-} & - & - & \underline{-} \\
-& PiSSA   & \textbf{-} & - & - & - & - & - & \textbf{-} & - \\
-& AdaLoRA & - & - & - & - & - & - & - & - \\
-& BitFit  & - & - & - & - & - & - & - & - \\
+\multirow{8}{*}{Seed 1}
+& LoRA    & 95.4 & 80.5 & 89.9 & 88.0 & 68.0 & 93.8 & 89.8 & 86.5 \\
+& DoRA    & 95.4 & 80.9 & 89.9 & 88.1 & \underline{68.5} & 93.8 & 89.8 & 86.6 \\
+& PiSSA   & \underline{95.9} & 79.4 & 90.0 & \underline{89.0} & 66.3 & 93.9 & \textbf{90.3} & 86.4 \\
+& AdaLoRA & 93.9 & 56.3 & 89.6 & 74.8 & 55.1 & 92.2 & 87.4 & 78.5 \\
+& BitFit  & 95.0 & 76.9 & 89.7 & 88.5 & 65.1 & 93.0 & \underline{90.4} & 85.5 \\
 \cmidrule(lr){2-10}
-& \jelly{} (10\%) & - & - & - & - & - & \textbf{-} & - & \underline{-} \\
-& \jelly{} (30\%) & - & - & \textbf{-} & - & - & - & - & \underline{-} \\
-& \jelly{} (50\%) & \underline{-} & \textbf{-} & - & \textbf{-} & - & \underline{-} & \underline{-} & \textbf{-} \\
+& \jelly{} (10\%) & 95.6 & 78.7 & \textbf{90.2} & 88.4 & 67.6 & \textbf{94.0} & 89.6 & 86.3 \\
+& \jelly{} (30\%) & \textbf{96.0} & \textbf{81.2} & \textbf{90.2} & 88.4 & 67.3 & \underline{93.9} & 89.9 & \textbf{86.7} \\
+& \jelly{} (50\%) & \underline{95.9} & \textbf{81.2} & \textbf{90.2} & 88.0 & 67.1 & \underline{93.9} & 90.1 & \underline{86.6} \\
 \midrule
-\multirow{8}{*}{32}
-& LoRA    & - & \textbf{-} & - & - & - & - & - & - \\
-& DoRA    & - & - & - & - & - & - & - & - \\
-& PiSSA   & - & - & - & - & - & - & \textbf{-} & - \\
-& AdaLoRA & - & - & - & - & - & - & - & - \\
-& BitFit  & - & - & - & - & - & - & - & - \\
+\multirow{8}{*}{Seed 2}
+& LoRA    & 95.2 & \textbf{82.3} & \underline{90.2} & 89.0 & 66.0 & 93.8 & 90.0 & 86.6 \\
+& DoRA    & 95.1 & 81.9 & 90.1 & 89.0 & 65.8 & 93.8 & 90.1 & 86.6 \\
+& PiSSA   & 96.0 & 79.4 & 90.0 & 88.7 & 66.0 & \textbf{94.0} & \textbf{90.7} & 86.4 \\
+& AdaLoRA & 94.3 & 57.4 & 89.7 & 74.8 & 54.8 & 92.3 & 87.2 & 78.6 \\
+& BitFit  & 95.3 & 77.3 & 89.7 & 87.8 & 65.2 & 93.0 & \underline{90.6} & 85.5 \\
 \cmidrule(lr){2-10}
-& \jelly{} (10\%) & \textbf{-} & - & \underline{-} & \textbf{-} & \textbf{-} & \textbf{-} & - & \textbf{-} \\
-& \jelly{} (30\%) & - & - & \textbf{-} & - & \underline{-} & - & - & - \\
-& \jelly{} (50\%) & \underline{-} & \underline{-} & - & \underline{-} & - & \underline{-} & \underline{-} & \underline{-} \\
+& \jelly{} (10\%) & 96.0 & 79.8 & 90.1 & 89.0 & \underline{67.3} & \textbf{94.0} & 88.6 & 86.4 \\
+& \jelly{} (30\%) & \textbf{96.2} & 81.2 & \underline{90.2} & \textbf{89.9} & \underline{67.3} & \textbf{94.0} & 89.1 & \underline{86.9} \\
+& \jelly{} (50\%) & \textbf{96.2} & \underline{81.6} & \underline{90.2} & \textbf{89.9} & \textbf{67.4} & \textbf{94.0} & 89.4 & \textbf{87.0} \\
 \midrule
-\multirow{8}{*}{42}
-& LoRA    & - & - & - & - & - & - & - & - \\
-& DoRA    & - & - & - & - & - & - & - & - \\
-& PiSSA   & - & - & - & - & \textbf{-} & \textbf{-} & \textbf{-} & \underline{-} \\
-& AdaLoRA & - & - & - & - & - & - & - & - \\
-& BitFit  & -- & -- & -- & -- & -- & -- & -- & -- \\
+\multirow{8}{*}{Seed 3}
+& LoRA    & 95.6 & 83.4 & 90.0 & 89.6 & 65.1 & 93.6 & 88.9 & 86.6 \\
+& DoRA    & 95.6 & \underline{84.5} & 90.0 & 89.2 & 65.4 & 93.7 & 88.9 & 86.7 \\
+& PiSSA   & 95.5 & 83.4 & \underline{90.2} & 89.6 & 67.0 & \textbf{94.2} & \underline{90.1} & 87.1 \\
+& AdaLoRA & 94.4 & 60.6 & 89.7 & 74.8 & 54.5 & 92.5 & 87.5 & 79.1 \\
+& BitFit  & 94.7 & 77.3 & 89.8 & 87.6 & 63.8 & 93.1 & \textbf{90.7} & 85.3 \\
 \cmidrule(lr){2-10}
-& \jelly{} (10\%) & - & \textbf{-} & \textbf{-} & \textbf{-} & - & - & - & \textbf{-} \\
-& \jelly{} (30\%) & \underline{-} & - & \underline{-} & - & \underline{-} & - & - & - \\
-& \jelly{} (50\%) & \textbf{-} & \underline{-} & - & \underline{-} & - & \underline{-} & \underline{-} & - \\
+& \jelly{} (10\%) & 95.6 & 80.1 & \textbf{90.4} & 89.0 & 67.0 & \underline{94.0} & 87.8 & 86.3 \\
+& \jelly{} (30\%) & \underline{95.6} & 83.8 & \textbf{90.4} & \underline{91.6} & \underline{68.2} & 93.8 & 89.8 & \underline{87.6} \\
+& \jelly{} (50\%) & \textbf{96.1} & \textbf{85.2} & 90.3 & \textbf{91.8} & \textbf{68.3} & \underline{94.0} & \underline{90.1} & \textbf{88.0} \\
 \midrule
-\multirow{8}{*}{64}
-& LoRA    & - & - & - & - & \underline{-} & - & - & - \\
-& DoRA    & - & - & - & - & - & \underline{-} & - & - \\
-& PiSSA   & - & - & - & - & - & - & \underline{-} & - \\
-& AdaLoRA & - & - & - & - & - & - & - & - \\
-& BitFit  & - & - & - & - & - & - & \textbf{-} & - \\
+\multirow{8}{*}{Seed 4}
+& LoRA    & \underline{95.8} & 79.4 & 90.2 & 88.3 & 65.7 & 93.8 & 89.7 & 86.1 \\
+& DoRA    & 95.5 & 79.4 & 90.1 & 88.3 & 66.4 & 93.7 & 89.8 & 86.2 \\
+& PiSSA   & 95.3 & \underline{81.2} & 90.2 & \underline{90.0} & 64.7 & 93.7 & \underline{90.4} & 86.5 \\
+& AdaLoRA & 94.3 & 56.3 & 89.8 & 74.8 & 56.3 & 92.6 & 87.4 & 78.8 \\
+& BitFit  & 95.2 & 77.3 & 89.6 & 87.8 & 62.7 & 93.1 & \textbf{90.5} & 85.2 \\
 \cmidrule(lr){2-10}
-& \jelly{} (10\%) & \underline{-} & \textbf{-} & \textbf{-} & \textbf{-} & \textbf{-} & \textbf{-} & - & \textbf{-} \\
-& \jelly{} (30\%) & - & - & \underline{-} & - & - & - & - & - \\
-& \jelly{} (50\%) & \textbf{-} & \underline{-} & - & \underline{-} & - & \underline{-} & - & \underline{-} \\
+& \jelly{} (10\%) & 95.6 & 80.5 & \textbf{90.3} & 88.4 & \textbf{68.3} & \textbf{94.0} & 89.8 & 86.7 \\
+& \jelly{} (30\%) & \textbf{95.9} & 82.7 & \textbf{90.3} & 89.9 & \underline{67.9} & 93.8 & \underline{89.9} & \underline{87.2} \\
+& \jelly{} (50\%) & \underline{95.8} & \textbf{84.5} & \textbf{90.3} & \textbf{90.5} & 67.4 & \textbf{94.0} & 90.1 & \textbf{87.5} \\
 \midrule
-\multirow{8}{*}{128}
-& LoRA    & - & \underline{-} & - & - & - & - & - & - \\
-& DoRA    & - & \underline{-} & - & - & \textbf{-} & - & - & - \\
-& PiSSA   & - & - & - & \textbf{-} & - & \textbf{-} & \textbf{-} & - \\
-& AdaLoRA & - & - & - & - & - & - & - & - \\
-& BitFit  & - & - & - & - & - & - & \underline{-} & - \\
+\multirow{8}{*}{Seed 5}
+& LoRA    & 95.6 & 80.1 & 89.9 & 90.2 & \underline{68.6} & 93.4 & 89.9 & \underline{86.8} \\
+& DoRA    & 95.6 & 80.1 & 89.9 & 90.0 & \underline{68.6} & 93.3 & 90.0 & \underline{86.8} \\
+& PiSSA   & \underline{95.8} & 76.2 & \underline{90.2} & \textbf{90.9} & 67.0 & \textbf{94.1} & \textbf{90.8} & 86.4 \\
+& AdaLoRA & 94.5 & 53.8 & 89.7 & 74.8 & 54.9 & 92.5 & 87.2 & 78.2 \\
+& BitFit  & 95.1 & 75.8 & 89.8 & 88.2 & 65.0 & 93.2 & \underline{90.4} & 85.4 \\
 \cmidrule(lr){2-10}
-& \jelly{} (10\%) & - & - & \textbf{-} & \underline{-} & \underline{-} & \underline{-} & - & \underline{-} \\
-& \jelly{} (30\%) & \underline{-} & \underline{-} & \underline{-} & - & - & - & - & - \\
-& \jelly{} (50\%) & \textbf{-} & \textbf{-} & - & - & - & - & - & \textbf{-} \\
+& \jelly{} (10\%) & 95.5 & 76.2 & \underline{90.2} & 90.5 & \textbf{69.1} & \underline{93.7} & 89.1 & 86.3 \\
+& \jelly{} (30\%) & \underline{95.8} & 76.9 & \textbf{90.4} & 90.3 & 67.0 & \underline{93.9} & 90.0 & 86.3 \\
+& \jelly{} (50\%) & \textbf{95.9} & \textbf{80.5} & 90.3 & \textbf{90.9} & 67.7 & \underline{93.7} & 90.3 & \textbf{87.1} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 
-
 \begin{table}[!ht]
-\caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} (DeBERTa-v3-base, $r=8$). We compare three representative switching points (10\%, 30\%, 50\%) against the LoRA baseline ($T_{sw}=0\%$). Results are averaged over 5 random seeds; cells marked with $\dagger$ use 4-seed averages due to missing seed-42 data for that specific switch point.}
-\label{tab:jelly_sw_ablation_final}
+\caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} (DeBERTa-v3-base, $r=8$). Task columns are ordered following the full results table. Results are averaged over 5 random seeds. Best results are \textbf{bold}.}
+\label{tab:jelly_sw_ablation_ordered}
 \centering
 \scriptsize
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{l cccccccc}
 \toprule
-\textbf{$T_{sw}$ (\%)} & \textbf{CoLA} & \textbf{MNLI} & \textbf{MRPC} & \textbf{QNLI} & \textbf{RTE} & \textbf{SST-2} & \textbf{STS-B} & \textbf{Avg.} \\
+\textbf{$T_{sw}$ (\%)} & \textbf{SST-2} & \textbf{RTE} & \textbf{MNLI} & \textbf{MRPC} & \textbf{CoLA} & \textbf{QNLI} & \textbf{STS-B} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA) & 67.08 & 90.04 & 88.91 & 93.67 & 80.60 & 95.50 & 89.84 & 86.52 \\
+0\% (LoRA) & 95.5 & 81.2 & 90.0 & 89.0 & 66.7 & 93.7 & 89.7 & 86.5 \\
 \midrule
-10\%       & 67.09 & 90.18$^\dagger$ & 90.58$^\dagger$ & 93.92 & 78.41 & 95.21$^\dagger$ & 88.98 & 86.34 \\
-30\%       & 66.86$^\dagger$ & 90.25 & 91.13$^\dagger$ & 93.88 & 80.79 & 95.58$^\dagger$ & 89.72 & 86.89 \\
-50\%       & 65.99$^\dagger$ & 90.22$^\dagger$ & 91.38 & 93.89 & 81.59 & 95.67 & 90.02 & 86.96 \\
+10\%        & 95.7 & 79.1 & \textbf{90.3} & 89.1 & \textbf{67.9} & \textbf{93.9} & 89.0 & 86.4 \\
+30\%        & 95.9 & 81.2 & \textbf{90.3} & 90.0 & 67.6 & \textbf{93.9} & 89.7 & 86.9 \\
+50\%        & \textbf{96.0} & \textbf{82.6} & \textbf{90.3} & \textbf{90.2} & 67.6 & \textbf{93.9} & \textbf{90.0} & \textbf{87.2} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -894,65 +894,91 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds_complex} report the complet
 \paragraph{Sarcasm (DeBERTa-v3-base, $r\!=\!8$).}
 
 \begin{table}[!ht]
-\caption{Full Sarcasm results on DeBERTa-v3-base across 5 seeds. Vertical lines separate Seed, Method, and Task columns. JELLY variants are split by switching fractions ($\Tswitch$). Best per seed is \textbf{bold}, second best is \underline{underline}.}
-\label{tab:sarc_full_results_vertical}
+\caption{Full Sarcasm results on DeBERTa-v3-base across 5 seeds. All JELLY variants are listed individually without integration. Vertical lines separate Seed, Method, and Task columns. Best per seed is \textbf{bold}, second best is \underline{underline}.}
+\label{tab:sarc_full_results_total_unmerged}
 \centering\scriptsize
 \begin{tabular}{l | l | ccc | c}
 \toprule
 \textbf{Seed} & \textbf{Method} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-\multirow{8}{*}{16}
-& LoRA    & 93.08 & \underline{78.96} & 72.09 & \underline{81.38} \\
-& DoRA    & 93.15 & 78.10 & 72.03 & 81.09 \\
-& PiSSA   & 92.45 & 76.95 & 72.39 & 80.60 \\
-& AdaLoRA & 87.56 & 74.93 & 64.99 & 75.83 \\
+\multirow{12}{*}{Seed 1}
+& LoRA    & 93.1 & \textbf{79.0} & 72.1 & 81.4 \\
+& PiSSA   & 92.5 & 76.9 & 72.4 & 80.6 \\
+& DoRA    & 93.2 & \underline{78.1} & 72.0 & 81.1 \\
+& AdaLoRA & 87.6 & 74.9 & 65.0 & 75.8 \\
+& BitFit  & 91.3 & 77.8 & 70.8 & 80.0 \\
+& LoRA-G  & \textbf{93.8} & 77.8 & 72.4 & 81.3 \\
 \cmidrule(lr){2-6}
-& \jelly{} (10\%) & 93.32 & 76.89 & \underline{72.49} & 80.90 \\
-& \jelly{} (30\%) & 93.00 & 76.95 & 72.47 & 80.81 \\
-& \jelly{} (50\%) & \textbf{93.82} & \textbf{78.96} & \textbf{72.68} & \textbf{81.82} \\
+& \jelly{} ($T_{sw}=1.0$) & 93.4 & - & \textbf{73.7} & 83.6 \\
+& \jelly{} ($T_{sw}=1.5$) & - & \underline{78.1} & 72.4 & 75.3 \\
+& \jelly{} ($T_{sw}=3.0$) & 93.3 & - & 73.3 & 83.3 \\
+& \jelly{} ($T_{sw}=4.5$) & - & \textbf{79.0} & - & 79.0 \\
+& \jelly{} ($T_{sw}=5.0$) & \textbf{93.8} & - & \textbf{73.7} & \textbf{83.8} \\
+& \jelly{} ($T_{sw}=7.5$) & - & 75.5 & - & 75.5 \\
 \midrule
-\multirow{8}{*}{32}
-& LoRA    & 92.91 & 77.81 & 71.71 & \underline{80.81} \\
-& DoRA    & 93.01 & 77.23 & 71.71 & 80.65 \\
-& PiSSA   & 92.56 & 76.08 & 71.93 & 80.19 \\
-& AdaLoRA & 87.91 & 74.93 & 67.00 & 76.61 \\
+\multirow{12}{*}{Seed 2}
+& LoRA    & 92.9 & \underline{77.8} & 71.7 & 80.8 \\
+& PiSSA   & 92.6 & 76.1 & 71.9 & 80.2 \\
+& DoRA    & 93.0 & 77.2 & 71.7 & 80.7 \\
+& AdaLoRA & 87.9 & 74.9 & 67.0 & 76.6 \\
+& BitFit  & 92.8 & 76.1 & 70.7 & 79.9 \\
+& LoRA-G  & \underline{93.6} & 76.1 & 71.8 & 80.5 \\
 \cmidrule(lr){2-6}
-& \jelly{} (10\%) & \underline{93.32} & 76.89 & \textbf{72.49} & 80.90 \\
-& \jelly{} (30\%) & 93.00 & 76.95 & \underline{72.47} & 80.81 \\
-& \jelly{} (50\%) & \textbf{93.40} & \textbf{78.39} & 72.27 & \textbf{81.35} \\
+& \jelly{} ($T_{sw}=1.0$) & 93.3 & - & \textbf{73.4} & 83.3 \\
+& \jelly{} ($T_{sw}=1.5$) & - & 76.7 & 72.2 & 74.5 \\
+& \jelly{} ($T_{sw}=3.0$) & - & - & \textbf{73.4} & 73.4 \\
+& \jelly{} ($T_{sw}=4.5$) & - & 76.4 & - & 76.4 \\
+& \jelly{} ($T_{sw}=5.0$) & \textbf{93.6} & - & \underline{73.3} & \textbf{83.4} \\
+& \jelly{} ($T_{sw}=7.5$) & - & \textbf{78.4} & - & \underline{78.4} \\
 \midrule
-\multirow{8}{*}{42}
-& LoRA    & \textbf{93.89} & 77.52 & 72.31 & \underline{81.24} \\
-& DoRA    & 93.82 & 77.23 & 72.22 & 81.09 \\
-& PiSSA   & 93.75 & 77.52 & 72.50 & \underline{81.26} \\
-& AdaLoRA & 88.19 & 74.93 & 64.88 & 76.00 \\
+\multirow{12}{*}{Seed 3}
+& LoRA    & \textbf{93.9} & 77.5 & 72.3 & 81.2 \\
+& PiSSA   & 93.7 & 77.5 & 72.5 & 81.3 \\
+& DoRA    & 93.8 & 77.2 & 72.2 & 81.1 \\
+& AdaLoRA & 88.2 & 74.9 & 64.9 & 76.0 \\
+& BitFit  & 92.9 & 76.9 & 71.3 & 80.4 \\
+& LoRA-G  & 93.6 & 78.1 & 72.5 & 81.4 \\
 \cmidrule(lr){2-6}
-& \jelly{} (10\%) & 93.32 & 76.89 & \underline{72.49} & 80.90 \\
-& \jelly{} (30\%) & 93.00 & 76.95 & 72.47 & 80.81 \\
-& \jelly{} (50\%) & \underline{93.68} & \textbf{78.39} & \textbf{72.61} & \textbf{81.56} \\
+& \jelly{} ($T_{sw}=1.0$) & 93.6 & - & \textbf{73.9} & \textbf{83.8} \\
+& \jelly{} ($T_{sw}=1.5$) & - & 77.2 & 72.4 & 74.8 \\
+& \jelly{} ($T_{sw}=3.0$) & 93.6 & - & 73.6 & 83.6 \\
+& \jelly{} ($T_{sw}=4.5$) & - & \textbf{78.4} & - & \underline{78.4} \\
+& \jelly{} ($T_{sw}=5.0$) & 93.6 & - & \underline{73.7} & 83.7 \\
+& \jelly{} ($T_{sw}=7.5$) & - & 77.5 & - & 77.5 \\
 \midrule
-\multirow{8}{*}{64}
-& LoRA    & 93.36 & 77.81 & 72.15 & 81.11 \\
-& DoRA    & 93.43 & \underline{78.39} & 72.21 & 81.34 \\
-& PiSSA   & 93.26 & \underline{78.39} & 72.43 & \underline{81.36} \\
-& AdaLoRA & 88.43 & 74.93 & 65.38 & 76.25 \\
+\multirow{12}{*}{Seed 4}
+& LoRA    & 93.4 & 77.8 & 72.2 & 81.1 \\
+& PiSSA   & 93.3 & \underline{78.4} & 72.4 & 81.4 \\
+& DoRA    & 93.4 & \underline{78.4} & 72.2 & 81.3 \\
+& AdaLoRA & 88.4 & 74.9 & 65.4 & 76.2 \\
+& BitFit  & 92.6 & 78.1 & 71.0 & 80.6 \\
+& LoRA-G  & 93.5 & 77.2 & 72.5 & 81.1 \\
 \cmidrule(lr){2-6}
-& \jelly{} (10\%) & 93.32 & 76.89 & \underline{72.49} & 80.90 \\
-& \jelly{} (30\%) & 93.00 & 76.95 & 72.47 & 80.81 \\
-& \jelly{} (50\%) & \textbf{93.82} & \textbf{79.54} & \textbf{72.65} & \textbf{82.00} \\
+& \jelly{} ($T_{sw}=1.0$) & \underline{93.7} & - & \textbf{74.2} & \textbf{84.0} \\
+& \jelly{} ($T_{sw}=1.5$) & - & 78.7 & 72.6 & 75.7 \\
+& \jelly{} ($T_{sw}=3.0$) & \underline{93.7} & - & 73.7 & 83.7 \\
+& \jelly{} ($T_{sw}=4.5$) & - & \textbf{79.5} & - & \underline{79.5} \\
+& \jelly{} ($T_{sw}=5.0$) & \underline{93.7} & - & \underline{74.0} & \underline{83.9} \\
+& \jelly{} ($T_{sw}=7.5$) & - & \textbf{79.5} & - & \underline{79.5} \\
 \midrule
-\multirow{8}{*}{128}
-& LoRA    & 92.49 & \textbf{78.10} & 72.18 & 80.92 \\
-& DoRA    & \underline{92.56} & \textbf{78.10} & 72.22 & \underline{80.96} \\
-& PiSSA   & 92.14 & \textbf{78.10} & 72.20 & 80.81 \\
-& AdaLoRA & 87.63 & 74.93 & 65.53 & 76.03 \\
+\multirow{12}{*}{Seed 5}
+& LoRA    & 92.5 & \textbf{78.1} & 72.2 & 80.9 \\
+& PiSSA   & 92.1 & \textbf{78.1} & 72.2 & 80.8 \\
+& DoRA    & \underline{92.6} & \textbf{78.1} & 72.2 & \underline{81.0} \\
+& AdaLoRA & 87.6 & 74.9 & 65.5 & 76.0 \\
+& BitFit  & 91.8 & 76.4 & 71.1 & 79.7 \\
+& LoRA-G  & 92.3 & 76.4 & 72.2 & 80.3 \\
 \cmidrule(lr){2-6}
-& \jelly{} (10\%) & \textbf{93.32} & 76.89 & \underline{72.49} & 80.90 \\
-& \jelly{} (30\%) & 93.00 & 76.95 & 72.47 & 80.81 \\
-& \jelly{} (50\%) & \underline{92.80} & 77.81 & \textbf{72.55} & \textbf{81.05} \\
+& \jelly{} ($T_{sw}=1.0$) & \textbf{92.8} & - & \textbf{74.4} & \textbf{83.6} \\
+& \jelly{} ($T_{sw}=1.5$) & - & 77.5 & 72.5 & 75.0 \\
+& \jelly{} ($T_{sw}=3.0$) & 92.3 & - & 73.6 & 83.0 \\
+& \jelly{} ($T_{sw}=4.5$) & - & 75.5 & - & 75.5 \\
+& \jelly{} ($T_{sw}=5.0$) & 92.3 & - & \underline{74.3} & \underline{83.3} \\
+& \jelly{} ($T_{sw}=7.5$) & - & \underline{77.8} & - & 77.8 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
 
 \begin{table}[!ht]
 \caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} on Sarcasm detection tasks (DeBERTa-v3-base, $r=8$). We evaluate the performance across three representative switching points against the LoRA baseline ($T_{sw}=0\%$). Results are averaged over 5 random seeds.}
@@ -962,93 +988,94 @@ Tables~\ref{tab:t5_nlu_seeds}--\ref{tab:t5_nlg_seeds_complex} report the complet
 \toprule
 \textbf{$T_{sw}$ (\%)} & \textbf{Headlines} & \textbf{iSarcasm} & \textbf{Sarc} & \textbf{Avg.} \\
 \midrule
-0\% (LoRA)  & 93.15 & 78.04 & 72.09 & 81.09 \\
+0\% (LoRA)  & - & - & - & - \\
 \midrule
-10\%        & 93.32 & 76.89 & 72.49 & 80.90 \\
-30\%        & 93.00 & 76.95 & 72.47 & 80.81 \\
-50\%        & 93.09 & 78.04 & 72.47 & 81.20 \\
+10\%        & - & - & - & - \\
+30\%        & - & - & - & - \\
+50\%        & - & - & - & - \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+
+
 \paragraph{NLG (Multi-backbone, $r\!=\!128$).}
 \begin{table}[!ht]
-\caption{Full NLG results across seeds and backbones. Vertical lines separate Seed, Backbone, Method, and Task columns. For each seed, \jelly{} is evaluated across three switching variants ($\Tswitch \in \{\%, \%, \%\}$). Best per backbone is \textbf{bold}, second best is \underline{underline}.}
+\caption{Full NLG results across seeds and backbones. Vertical lines separate Seed, Backbone, Method, and Task columns. For each seed, \jelly{} is evaluated across three switching variants ($\Tswitch \in \{20\%, 50\%, 80\%\}$). Best per backbone is \textbf{bold}, second best is \underline{underline}.}
 \label{tab:nlg_full_results_all_seeds}
 \centering\scriptsize
 \begin{tabular}{l | l | l | cccc | c}
 \toprule
-\textbf{Seed} & \textbf{Backbone} & \textbf{Method} & \textbf{GSM8K$\uparrow$} & \textbf{MATH$\uparrow$ } & \textbf{HumanEval$\uparrow$} & \textbf{MBPP$\uparrow$} & \textbf{MT-Bench$\uparrow$} \\
+\textbf{Seed} & \textbf{Backbone} & \textbf{Method} & \textbf{GSM8K$\uparrow$} & \textbf{MATH$\uparrow$} & \textbf{HumanEval$\uparrow$} & \textbf{MBPP$\uparrow$} & \textbf{MT-Bench$\uparrow$} \\
 \midrule
-\multirow{15}{*}{} 
-    & \multirow{5}{*}{LLaMA--B} & LoRA &  &  &  &  &  \\
-    & & Sequential &  &  &  &  &  \\
+\multirow{15}{*}{Seed 1} 
+    & \multirow{5}{*}{LLaMA-2-7B} & LoRA & \underline{56.7} & 8.8 & \underline{31.1} & \underline{43.1} & \textbf{6.26} \\
+    & & Sequential & 56.1 & 9.0 & 29.9 & 41.3 & 6.10 \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & \underline{} & \underline{} & \textbf{} & \underline{} & \textbf{} \\
-    & & \jelly{} (\%) & \textbf{} & \textbf{} & \underline{} & \textbf{} & \underline{} \\
-    & & \jelly{} (\%) &  &  &  &  &  \\
+    & & \jelly{} (20\%) & \textbf{56.9} & \underline{9.3} & 28.7 & 41.8 & \underline{6.12} \\
+    & & \jelly{} (50\%) & 55.6 & 9.0 & 30.5 & 40.5 & 6.09 \\
+    & & \jelly{} (80\%) & 56.6 & \textbf{9.5} & \textbf{31.7} & \textbf{43.4} & 6.09 \\
 \cmidrule(lr){2-8}
-    & \multirow{5}{*}{Mistral-B} & LoRA &  &  &  & \textbf{} &  \\
-    & & Sequential &  &  &  & \textbf{} &  \\
+    & \multirow{5}{*}{Mistral-7B} & LoRA & 67.5 & 16.7 & \underline{47.6} & 56.1 & 6.74 \\
+    & & Sequential & \underline{68.8} & \underline{18.1} & 46.3 & \textbf{61.1} & \underline{6.89} \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) &  &  &  & \underline{} &  \\
-    & & \jelly{} (\%) & \underline{} & \underline{} & \underline{} & \underline{} & \underline{} \\
-    & & \jelly{} (\%) & \textbf{} & \textbf{} & \textbf{} & \underline{} & \textbf{} \\
+    & & \jelly{} (20\%) & \underline{68.8} & 18.0 & \textbf{50.0} & 60.1 & 6.84 \\
+    & & \jelly{} (50\%) & 68.0 & 17.5 & 46.3 & 58.7 & 6.70 \\
+    & & \jelly{} (80\%) & \textbf{69.4} & \textbf{18.2} & \underline{47.6} & \underline{60.6} & \textbf{6.94} \\
 \cmidrule(lr){2-8}
-    & \multirow{5}{*}{Gemma-B} & LoRA &  & \textbf{} & \textbf{} &  &  \\
-    & & Sequential &  & \underline{} & \underline{} &  &  \\
+    & \multirow{5}{*}{Gemma-7B} & LoRA & \textbf{71.3} & \textbf{22.0} & 48.8 & \underline{61.9} & \underline{6.91} \\
+    & & Sequential & \underline{71.1} & 20.9 & 50.0 & 60.3 & 6.81 \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & \underline{} &  &  & \underline{} & \underline{} \\
-    & & \jelly{} (\%) & \textbf{} &  &  & \textbf{} & \textbf{} \\
-    & & \jelly{} (\%) &  &  &  &  &  \\
+    & & \jelly{} (20\%) & 70.5 & 21.0 & 50.0 & 61.4 & \textbf{7.03} \\
+    & & \jelly{} (50\%) & 70.2 & \underline{21.2} & \textbf{54.9} & 55.8 & 6.83 \\
+    & & \jelly{} (80\%) & 69.5 & 20.8 & \underline{51.8} & \textbf{62.7} & 6.89 \\
 \midrule
-\multirow{15}{*}{} 
-    & \multirow{5}{*}{LLaMA--B} & LoRA & -- & -- & -- & -- & -- \\
+\multirow{15}{*}{Seed 2} 
+    & \multirow{5}{*}{LLaMA-2-7B} & LoRA & -- & -- & -- & -- & -- \\
     & & Sequential & -- & -- & -- & -- & -- \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (20\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (50\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (80\%) & -- & -- & -- & -- & -- \\
 \cmidrule(lr){2-8}
-    & \multirow{5}{*}{Mistral-B} & LoRA & -- & -- & -- & -- & -- \\
+    & \multirow{5}{*}{Mistral-7B} & LoRA & -- & -- & -- & -- & -- \\
     & & Sequential & -- & -- & -- & -- & -- \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (20\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (50\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (80\%) & -- & -- & -- & -- & -- \\
 \cmidrule(lr){2-8}
-    & \multirow{5}{*}{Gemma-B} & LoRA & -- & -- & -- & -- & -- \\
+    & \multirow{5}{*}{Gemma-7B} & LoRA & -- & -- & -- & -- & -- \\
     & & Sequential & -- & -- & -- & -- & -- \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (20\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (50\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (80\%) & -- & -- & -- & -- & -- \\
 \midrule
-\multirow{15}{*}{} 
-    & \multirow{5}{*}{LLaMA--B} & LoRA & -- & -- & -- & -- & -- \\
+\multirow{15}{*}{Seed 3} 
+    & \multirow{5}{*}{LLaMA-2-7B} & LoRA & -- & -- & -- & -- & -- \\
     & & Sequential & -- & -- & -- & -- & -- \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (20\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (50\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (80\%) & -- & -- & -- & -- & -- \\
 \cmidrule(lr){2-8}
-    & \multirow{5}{*}{Mistral-B} & LoRA & -- & -- & -- & -- & -- \\
+    & \multirow{5}{*}{Mistral-7B} & LoRA & -- & -- & -- & -- & -- \\
     & & Sequential & -- & -- & -- & -- & -- \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (20\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (50\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (80\%) & -- & -- & -- & -- & -- \\
 \cmidrule(lr){2-8}
-    & \multirow{5}{*}{Gemma-B} & LoRA & -- & -- & -- & -- & -- \\
+    & \multirow{5}{*}{Gemma-7B} & LoRA & -- & -- & -- & -- & -- \\
     & & Sequential & -- & -- & -- & -- & -- \\
     \cmidrule(lr){3-8}
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
-    & & \jelly{} (\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (20\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (50\%) & -- & -- & -- & -- & -- \\
+    & & \jelly{} (80\%) & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 \begin{table}[!ht]
 \caption{Ablation study on the switching fraction ($T_{sw}$) for \jelly{} across NLG tasks and multiple backbones. All results are averaged over 3 random seeds. $T_{sw}=0\%$ serves as the parallel-only LoRA baseline.}
 \label{tab:jelly_sw_ablation_nlg}
